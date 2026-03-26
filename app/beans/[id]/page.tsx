@@ -1,0 +1,137 @@
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { getBeanById, getBrewsByBeanId, countryFlags } from '@/lib/data'
+import { BottomNav } from '@/components/bottom-nav'
+import { BrewCard } from '@/components/brew-card'
+import { RoastLevel } from '@/components/roast-level'
+import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
+
+interface BeanDetailPageProps {
+  params: Promise<{ id: string }>
+}
+
+export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
+  const { id } = await params
+  const bean = getBeanById(id)
+
+  if (!bean) {
+    notFound()
+  }
+
+  const brews = getBrewsByBeanId(id)
+  const flag = countryFlags[bean.country] || ''
+  const avgRating = brews.length > 0
+    ? (brews.reduce((sum, b) => sum + b.overall, 0) / brews.length).toFixed(1)
+    : '-'
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <Link 
+              href="/beans" 
+              className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <span className="font-medium">Bean Details</span>
+          </div>
+          <Link
+            href={`/new?type=brew&bean=${id}`}
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+          </Link>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-md px-4 py-6">
+        {/* Bean Hero */}
+        <section className="mb-6 rounded-xl bg-card p-5 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
+              {flag}
+            </div>
+            <div className="flex-1">
+              <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{bean.roaster}</p>
+              <div className="mt-2">
+                <RoastLevel level={bean.roast} size="sm" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Origin Info */}
+        <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Origin
+          </h2>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{bean.region}</p>
+                <p className="text-xs text-muted-foreground">{bean.country}</p>
+              </div>
+            </div>
+            {bean.farm && (
+              <div className="flex items-center gap-3">
+                <Factory className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm text-foreground">{bean.farm}</p>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <Leaf className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-foreground">{bean.variety}</span>
+                <span className="text-muted-foreground">|</span>
+                <span className="text-sm text-muted-foreground">{bean.process}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Notes */}
+        {bean.notes && (
+          <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
+            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Notes
+            </h2>
+            <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
+          </section>
+        )}
+
+        {/* Stats */}
+        <section className="mb-6 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-card p-4 shadow-sm">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Brews</span>
+            <p className="mt-1 font-mono text-2xl font-medium">{brews.length}</p>
+          </div>
+          <div className="rounded-xl bg-card p-4 shadow-sm">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Avg Rating</span>
+            <p className="mt-1 font-mono text-2xl font-medium">{avgRating}</p>
+          </div>
+        </section>
+
+        {/* Brew History */}
+        {brews.length > 0 && (
+          <section>
+            <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Brew History
+            </h2>
+            <div className="flex flex-col gap-3">
+              {brews.map((brew) => (
+                <BrewCard key={brew.id} brew={brew} />
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+
+      <BottomNav />
+    </div>
+  )
+}
