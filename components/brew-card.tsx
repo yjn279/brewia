@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils'
 
 interface BrewCardProps {
   brew: BrewWithBean
+  showBeanInfo?: boolean
   className?: string
 }
 
-export function BrewCard({ brew, className }: BrewCardProps) {
+export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps) {
   const date = new Date(brew.created)
   const flag = countryFlags[brew.bean.country] || ''
   
@@ -22,13 +23,21 @@ export function BrewCard({ brew, className }: BrewCardProps) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-lg" aria-label={brew.bean.country}>{flag}</span>
-            <h3 className="truncate font-medium text-foreground">{brew.bean.name}</h3>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {brew.bean.roaster}
-          </p>
+          {showBeanInfo ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-lg" aria-label={brew.bean.country}>{flag}</span>
+                <h3 className="truncate font-medium text-foreground">{brew.bean.name}</h3>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {brew.bean.roaster}
+              </p>
+            </>
+          ) : (
+            <time className="text-sm font-medium text-foreground">
+              {date.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
+            </time>
+          )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {brew.flavors.slice(0, 3).map((flavor) => (
               <span 

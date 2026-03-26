@@ -1,6 +1,7 @@
 import { beans, brews, getBrewsByBeanId, countryFlags } from '@/lib/data'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
+import { Greeting, CurrentDate } from '@/components/greeting'
 import { Coffee, Flame, Globe, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -32,13 +33,7 @@ export default function HomePage() {
             <span className="font-medium tracking-tight">Brew Log</span>
           </div>
           <div className="flex items-center gap-2">
-            <time className="font-mono text-xs text-muted-foreground">
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'short',
-                month: 'short', 
-                day: 'numeric' 
-              })}
-            </time>
+            <CurrentDate />
             <Link
               href="/new?type=bean"
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
@@ -52,9 +47,7 @@ export default function HomePage() {
       <main className="mx-auto max-w-md px-4 py-6">
         {/* Welcome */}
         <section className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Good morning
-          </h1>
+          <Greeting />
           <p className="mt-1 text-muted-foreground">
             Your coffee journey continues
           </p>

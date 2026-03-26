@@ -123,7 +123,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             </h2>
             <div className="flex flex-col gap-3">
               {brews.map((brew) => (
-                <BrewCard key={brew.id} brew={brew} />
+                <BrewCard key={brew.id} brew={brew} showBeanInfo={false} />
               ))}
             </div>
           </section>
