@@ -19,9 +19,6 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
 
   const brews = getBrewsByBeanId(id)
   const flag = countryFlags[bean.country] || ''
-  const avgRating = brews.length > 0
-    ? (brews.reduce((sum, b) => sum + b.overall, 0) / brews.length).toFixed(1)
-    : '-'
 
   return (
     <div className="min-h-screen bg-background">
@@ -102,18 +99,6 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
           </section>
         )}
-
-        {/* Stats */}
-        <section className="mb-6 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-card p-4 shadow-sm">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Brews</span>
-            <p className="mt-1 font-mono text-2xl font-medium">{brews.length}</p>
-          </div>
-          <div className="rounded-xl bg-card p-4 shadow-sm">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Avg Rating</span>
-            <p className="mt-1 font-mono text-2xl font-medium">{avgRating}</p>
-          </div>
-        </section>
 
         {/* Brew History */}
         {brews.length > 0 && (

@@ -12,16 +12,10 @@ export default function HomePage() {
   const uniqueCountries = new Set(beans.map((b) => b.country)).size
   const avgRating = (brews.reduce((sum, b) => sum + b.overall, 0) / totalBrews).toFixed(1)
 
-  // Group beans by country
-  const beansByCountry = beans.reduce((acc, bean) => {
-    if (!acc[bean.country]) {
-      acc[bean.country] = []
-    }
-    acc[bean.country].push(bean)
-    return acc
-  }, {} as Record<string, typeof beans>)
-
-  const countries = Object.keys(beansByCountry).sort()
+  // Sort beans by updated descending
+  const sortedBeans = [...beans].sort(
+    (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,31 +76,18 @@ export default function HomePage() {
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Bean Library
           </h2>
-          
-          {/* Beans by Country */}
-          {countries.map((country) => (
-            <div key={country} className="mb-6">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-lg">{countryFlags[country] || ''}</span>
-                <span className="text-sm font-medium text-foreground">{country}</span>
-                <span className="text-xs text-muted-foreground">
-                  ({beansByCountry[country].length})
-                </span>
-              </div>
-              <div className="flex flex-col gap-3">
-                {beansByCountry[country].map((bean) => {
-                  const beanBrews = getBrewsByBeanId(bean.id)
-                  return (
-                    <BeanCard 
-                      key={bean.id} 
-                      bean={bean} 
-                      brewCount={beanBrews.length}
-                    />
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+          <div className="flex flex-col gap-3">
+            {sortedBeans.map((bean) => {
+              const beanBrews = getBrewsByBeanId(bean.id)
+              return (
+                <BeanCard 
+                  key={bean.id} 
+                  bean={bean} 
+                  brewCount={beanBrews.length}
+                />
+              )
+            })}
+          </div>
         </section>
       </main>
     </div>

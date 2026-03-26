@@ -314,4 +314,5 @@ export const countryFlags: Record<string, string> = {
   Indonesia: '🇮🇩',
   Rwanda: '🇷🇼',
   Yemen: '🇾🇪',
+  Blended: '🫙',
 }
