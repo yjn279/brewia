@@ -1,12 +1,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { BottomNav } from '@/components/bottom-nav'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
 
 export default function NewPage() {
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center px-4">
@@ -27,8 +26,6 @@ export default function NewPage() {
           <NewEntryTabs />
         </Suspense>
       </main>
-
-      <BottomNav />
     </div>
   )
 }

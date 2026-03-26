@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getBeanById, getBrewsByBeanId, countryFlags } from '@/lib/data'
-import { BottomNav } from '@/components/bottom-nav'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
 import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
@@ -25,13 +24,13 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
     : '-'
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Link 
-              href="/beans" 
+              href="/" 
               className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -130,8 +129,6 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
           </section>
         )}
       </main>
-
-      <BottomNav />
     </div>
   )
 }

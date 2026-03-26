@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getBrewById, countryFlags } from '@/lib/data'
-import { BottomNav } from '@/components/bottom-nav'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
 import { ArrowLeft, Thermometer, Scale, Coffee } from 'lucide-react'
@@ -23,13 +22,13 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Link 
-              href="/brews" 
+              href={`/beans/${brew.bean.id}`} 
               className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -154,8 +153,6 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
           </section>
         )}
       </main>
-
-      <BottomNav />
     </div>
   )
 }
