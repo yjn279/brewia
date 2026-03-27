@@ -46,8 +46,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
           <Area
             type="monotone"
             dataKey="water"
-            stroke="var(--chart-2)"
-            strokeWidth={2}
+            stroke="none"
             fill="url(#waterGradient)"
           />
         </AreaChart>
