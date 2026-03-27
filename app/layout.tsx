@@ -15,7 +15,7 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Brew Log | Coffee Flight Journal',
+  title: 'Brewia | Coffee Flight Journal',
   description: 'Track your coffee journey - beans, brews, and tasting notes from around the world',
 }
 

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { countryFlags } from '@/lib/data'
+import { COUNTRY_FLAGS } from '@/lib/types'
 import type { BrewWithBean } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -11,7 +11,7 @@ interface BrewCardProps {
 
 export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps) {
   const date = new Date(brew.created)
-  const flag = countryFlags[brew.bean.country] || ''
+  const flag = COUNTRY_FLAGS[brew.bean.country]
   
   return (
     <Link

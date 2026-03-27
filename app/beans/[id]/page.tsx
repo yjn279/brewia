@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBeanById, getBrewsByBeanId, countryFlags } from '@/lib/data'
+import { getBeanById, getBrewsByBeanId } from '@/lib/data'
+import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
 import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
@@ -18,7 +19,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
   }
 
   const brews = getBrewsByBeanId(id)
-  const flag = countryFlags[bean.country] || ''
+  const flag = COUNTRY_FLAGS[bean.country]
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,7 +53,8 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             </div>
             <div className="flex-1">
               <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{bean.roaster}</p>
+              <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Roastery</p>
+              <p className="text-sm text-foreground">{bean.roaster}</p>
               <div className="mt-2">
                 <RoastLevel level={bean.roast} size="sm" />
               </div>
@@ -69,22 +71,27 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <div className="flex items-center gap-3">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Region</p>
                 <p className="text-sm font-medium text-foreground">{bean.region}</p>
-                <p className="text-xs text-muted-foreground">{bean.country}</p>
+                <p className="text-xs text-muted-foreground">Country: {bean.country}</p>
               </div>
             </div>
             {bean.farm && (
               <div className="flex items-center gap-3">
                 <Factory className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm text-foreground">{bean.farm}</p>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Producer</p>
+                  <p className="text-sm text-foreground">{bean.farm}</p>
+                </div>
               </div>
             )}
             <div className="flex items-center gap-3">
               <Leaf className="h-4 w-4 text-muted-foreground" />
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
                 <span className="text-sm text-foreground">{bean.variety}</span>
-                <span className="text-muted-foreground">|</span>
-                <span className="text-sm text-muted-foreground">{bean.process}</span>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
+                <span className="text-sm text-foreground">{bean.process}</span>
               </div>
             </div>
           </div>
