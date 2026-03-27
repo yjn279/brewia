@@ -36,6 +36,8 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
           ) : (
             <time className="text-sm font-medium text-foreground">
               {date.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
+              {' '}
+              {date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false })}
             </time>
           )}
           <div className="mt-2 flex flex-wrap gap-1.5">

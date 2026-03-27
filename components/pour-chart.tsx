@@ -25,8 +25,8 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
         <AreaChart data={steps} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
           <defs>
             <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           <XAxis
@@ -52,7 +52,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
           <Area
             type="monotone"
             dataKey="water"
-            stroke="hsl(var(--primary))"
+            stroke="hsl(var(--chart-2))"
             strokeWidth={2}
             fill="url(#waterGradient)"
           />

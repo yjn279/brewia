@@ -37,7 +37,11 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <span className="font-medium">Brew Details</span>
           </div>
           <time className="font-mono text-xs text-muted-foreground">
-            {date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            {date.toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            })}
           </time>
         </div>
       </header>
