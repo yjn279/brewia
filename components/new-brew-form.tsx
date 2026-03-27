@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { beans, flavors, countryFlags } from '@/lib/data'
+import { beans, flavors } from '@/lib/data'
+import { COUNTRY_FLAGS } from '@/lib/types'
 import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -27,7 +28,7 @@ const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedBean, setSelectedBean] = useState(initialBeanId || '')
+  const [selectedBean, setSelectedBean] = useState(initialBeanId)
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([])
   
   // Brew parameters
@@ -82,7 +83,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
             {beans.map((bean) => (
               <SelectItem key={bean.id} value={bean.id}>
                 <span className="flex items-center gap-2">
-                  <span>{countryFlags[bean.country] || ''}</span>
+                  <span>{COUNTRY_FLAGS[bean.country]}</span>
                   <span>{bean.name}</span>
                 </span>
               </SelectItem>

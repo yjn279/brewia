@@ -1,26 +1,27 @@
 import { cn } from '@/lib/utils'
+import { ROAST_LEVELS, type RoastLevel } from '@/lib/types'
 
 interface RoastLevelProps {
-  level: number
+  level: RoastLevel
   size?: 'sm' | 'md'
 }
 
-const roastLabels = ['', 'Light', 'Light-Medium', 'Medium', 'Medium-Dark', 'Dark']
-
 export function RoastLevel({ level, size = 'md' }: RoastLevelProps) {
+  const currentLevelIndex = ROAST_LEVELS.indexOf(level)
+
   return (
     <div className="flex items-center gap-2">
       <div className={cn(
         'flex gap-1',
         size === 'sm' ? 'gap-0.5' : 'gap-1'
       )}>
-        {[1, 2, 3, 4, 5].map((i) => (
+        {ROAST_LEVELS.map((roast, roastIndex) => (
           <div
-            key={i}
+            key={roast}
             className={cn(
               'rounded-full transition-colors',
               size === 'sm' ? 'h-2 w-2' : 'h-3 w-3',
-              i <= level 
+              roastIndex <= currentLevelIndex
                 ? 'bg-primary' 
                 : 'bg-border'
             )}
@@ -31,7 +32,7 @@ export function RoastLevel({ level, size = 'md' }: RoastLevelProps) {
         'text-muted-foreground',
         size === 'sm' ? 'text-xs' : 'text-sm'
       )}>
-        {roastLabels[level]}
+        {level}
       </span>
     </div>
   )

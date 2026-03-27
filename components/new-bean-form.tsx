@@ -14,29 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { COUNTRIES, COUNTRY_FLAGS, ROAST_LEVELS } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
 
-const countries = [
-  'Ethiopia',
-  'Kenya',
-  'Colombia',
-  'Brazil',
-  'Guatemala',
-  'Panama',
-  'Costa Rica',
-  'Indonesia',
-  'Rwanda',
-  'Yemen',
-]
-
 const processes = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Wet Hulled']
-
-const roastLabels = ['', 'Light', 'Light-Medium', 'Medium', 'Medium-Dark', 'Dark']
 
 export function NewBeanForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [roast, setRoast] = useState([3])
+  const [roastIndex, setRoastIndex] = useState([2])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -81,9 +67,12 @@ export function NewBeanForm() {
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent>
-                {countries.map((country) => (
+                {COUNTRIES.map((country) => (
                   <SelectItem key={country} value={country}>
-                    {country}
+                    <span className="flex items-center gap-2">
+                      <span>{COUNTRY_FLAGS[country]}</span>
+                      <span>{country}</span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -128,19 +117,19 @@ export function NewBeanForm() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Label>Roast Level</Label>
-              <span className="text-sm text-muted-foreground">{roastLabels[roast[0]]}</span>
+              <span className="text-sm text-muted-foreground">{ROAST_LEVELS[roastIndex[0]]}</span>
             </div>
             <Slider
-              value={roast}
-              onValueChange={setRoast}
-              min={1}
-              max={5}
+              value={roastIndex}
+              onValueChange={setRoastIndex}
+              min={0}
+              max={ROAST_LEVELS.length - 1}
               step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Light</span>
-              <span>Dark</span>
+              <span>{ROAST_LEVELS[0]}</span>
+              <span>{ROAST_LEVELS[ROAST_LEVELS.length - 1]}</span>
             </div>
           </div>
         </div>

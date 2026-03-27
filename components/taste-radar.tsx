@@ -48,8 +48,8 @@ export function TasteRadar({ aroma, acidity, sweetness, body, overall }: TasteRa
         <Radar
           name="Taste"
           dataKey="value"
-          stroke="hsl(var(--primary))"
-          fill="hsl(var(--primary))"
+          stroke="hsl(var(--chart-1))"
+          fill="hsl(var(--chart-1))"
           fillOpacity={0.25}
           strokeWidth={2}
         />

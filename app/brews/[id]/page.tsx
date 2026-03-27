@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBrewById, countryFlags } from '@/lib/data'
+import { getBrewById } from '@/lib/data'
+import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
 import { ArrowLeft, Thermometer, Scale, Coffee } from 'lucide-react'
@@ -17,7 +18,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
     notFound()
   }
 
-  const flag = countryFlags[brew.bean.country] || ''
+  const flag = COUNTRY_FLAGS[brew.bean.country]
   const date = new Date(brew.created)
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
 

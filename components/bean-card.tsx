@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { countryFlags } from '@/lib/data'
+import { COUNTRY_FLAGS } from '@/lib/types'
 import type { Bean } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -9,10 +9,8 @@ interface BeanCardProps {
   className?: string
 }
 
-const roastLabels = ['', 'Light', 'Light-Medium', 'Medium', 'Medium-Dark', 'Dark']
-
 export function BeanCard({ bean, brewCount = 0, className }: BeanCardProps) {
-  const flag = countryFlags[bean.country] || ''
+  const flag = COUNTRY_FLAGS[bean.country]
   
   return (
     <Link
@@ -36,7 +34,7 @@ export function BeanCard({ bean, brewCount = 0, className }: BeanCardProps) {
               <span className="font-medium text-foreground">{bean.process}</span>
             </span>
             <span className="text-border">|</span>
-            <span>{roastLabels[bean.roast]}</span>
+            <span>{bean.roast}</span>
             <span className="text-border">|</span>
             <span className="font-mono">{brewCount} brew{brewCount !== 1 ? 's' : ''}</span>
           </div>
