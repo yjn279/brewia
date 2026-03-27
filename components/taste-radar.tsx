@@ -30,12 +30,12 @@ export function TasteRadar({ aroma, acidity, sweetness, body, overall }: TasteRa
     <ResponsiveContainer width="100%" height={220}>
       <RadarChart data={data} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
         <PolarGrid 
-          stroke="hsl(var(--border))" 
+          stroke="var(--border)" 
           strokeOpacity={0.5}
         />
         <PolarAngleAxis 
           dataKey="attribute" 
-          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+          tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
           tickLine={false}
         />
         <PolarRadiusAxis 
@@ -48,10 +48,9 @@ export function TasteRadar({ aroma, acidity, sweetness, body, overall }: TasteRa
         <Radar
           name="Taste"
           dataKey="value"
-          stroke="hsl(var(--chart-1))"
-          fill="hsl(var(--chart-1))"
+          stroke="none"
+          fill="var(--chart-1)"
           fillOpacity={0.25}
-          strokeWidth={2}
         />
       </RadarChart>
     </ResponsiveContainer>
