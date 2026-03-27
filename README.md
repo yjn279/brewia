@@ -5,6 +5,7 @@
 ## Specification
 
 ### Core Features
+
 - 豆（Bean）情報の登録・閲覧
 - 抽出（Brew）ログの作成・閲覧
 - 風味（Flavor）タグ付け
@@ -12,12 +13,14 @@
 - テイスティングスコア（aroma / acidity / sweetness / body / overall）の記録
 
 ### Primary Screens
+
 - トップ: 豆・抽出のサマリー表示
 - 新規作成: 豆登録 / 抽出登録
 - 豆詳細: 豆の基本情報 + 紐づく抽出履歴
 - 抽出詳細: レシピ、ステップ、評価、フレーバー
 
 ### Non-functional Requirements
+
 - モバイル利用を前提にした操作性
 - 数値入力のしやすさ（グラム、秒、温度）
 - 将来の永続化層差し替えを考慮した型中心設計
