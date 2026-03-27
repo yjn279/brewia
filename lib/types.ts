@@ -38,7 +38,7 @@ export const COUNTRY_FLAGS: Record<Country, string> = {
   Indonesia: '🇮🇩',
   Rwanda: '🇷🇼',
   Yemen: '🇾🇪',
-  Blended: '🌏',
+  Blended: '🏳️‍🌈',
 }
 
 export interface Bean {
