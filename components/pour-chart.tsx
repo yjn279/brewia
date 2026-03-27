@@ -6,7 +6,6 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts'
 import type { BrewStep } from '@/lib/types'
 
@@ -43,11 +42,6 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             tickLine={false}
             axisLine={false}
             width={40}
-          />
-          <ReferenceLine 
-            y={totalWater} 
-            stroke="var(--border)" 
-            strokeDasharray="3 3" 
           />
           <Area
             type="monotone"

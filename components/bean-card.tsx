@@ -5,11 +5,10 @@ import { cn } from '@/lib/utils'
 
 interface BeanCardProps {
   bean: Bean
-  brewCount?: number
   className?: string
 }
 
-export function BeanCard({ bean, brewCount = 0, className }: BeanCardProps) {
+export function BeanCard({ bean, className }: BeanCardProps) {
   const flag = COUNTRY_FLAGS[bean.country]
   
   return (
@@ -39,8 +38,6 @@ export function BeanCard({ bean, brewCount = 0, className }: BeanCardProps) {
             </span>
             <span className="text-border">|</span>
             <span>{bean.roast}</span>
-            <span className="text-border">|</span>
-            <span className="font-mono">{brewCount} brew{brewCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
       </div>

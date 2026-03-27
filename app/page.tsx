@@ -1,4 +1,4 @@
-import { beans, brews, getBrewsByBeanId } from '@/lib/data'
+import { beans, brews } from '@/lib/data'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
@@ -76,12 +76,10 @@ export default function HomePage() {
           </h2>
           <div className="flex flex-col gap-3">
             {sortedBeans.map((bean) => {
-              const beanBrews = getBrewsByBeanId(bean.id)
               return (
                 <BeanCard 
                   key={bean.id} 
-                  bean={bean} 
-                  brewCount={beanBrews.length}
+                  bean={bean}
                 />
               )
             })}
