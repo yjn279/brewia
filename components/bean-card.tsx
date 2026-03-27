@@ -31,6 +31,10 @@ export function BeanCard({ bean, brewCount = 0, className }: BeanCardProps) {
           </p>
           <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
+              <span className="font-medium text-foreground">{bean.variety}</span>
+            </span>
+            <span className="text-border">|</span>
+            <span className="flex items-center gap-1">
               <span className="font-medium text-foreground">{bean.process}</span>
             </span>
             <span className="text-border">|</span>

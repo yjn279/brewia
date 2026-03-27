@@ -22,9 +22,8 @@ export default function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-5 w-5 text-primary" />
-            <span className="font-medium tracking-tight">Brewia</span>
+          <div className="flex items-center">
+            <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
           </div>
           <div className="flex items-center gap-2">
             <Link
