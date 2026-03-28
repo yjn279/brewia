@@ -135,7 +135,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="grindSize">Grind</Label>
+            <Label htmlFor="grindSize">Grind (clicks)</Label>
             <Input
               id="grindSize"
               type="number"
@@ -148,7 +148,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           </div>
         </div>
         <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
-          <span className="text-sm text-muted-foreground">Ratio</span>
+          <span className="text-sm text-muted-foreground">Brew Ratio</span>
           <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
         </div>
       </div>

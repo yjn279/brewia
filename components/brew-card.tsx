@@ -12,10 +12,11 @@ interface BrewCardProps {
 export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps) {
   const date = new Date(brew.created)
   const flag = COUNTRY_FLAGS[brew.bean.country]
-  const historyDateLabel = date
-    .toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
-    .replace('(', '（')
-    .replace(')', '）')
+  const historyDateLabel = date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
   
   return (
     <Link
@@ -59,9 +60,6 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
           <span className="font-mono text-lg font-medium text-primary">
             {brew.overall}/5
           </span>
-          <time className="text-xs text-muted-foreground">
-            {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </time>
         </div>
       </div>
     </Link>
