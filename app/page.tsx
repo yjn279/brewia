@@ -1,4 +1,4 @@
-import { beans, brews, getBrewsByBeanId } from '@/lib/data'
+import { beans, brews } from '@/lib/data'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
@@ -22,9 +22,8 @@ export default function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-5 w-5 text-primary" />
-            <span className="font-medium tracking-tight">Brewia</span>
+          <div className="flex items-center">
+            <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
           </div>
           <div className="flex items-center gap-2">
             <Link
@@ -77,12 +76,10 @@ export default function HomePage() {
           </h2>
           <div className="flex flex-col gap-3">
             {sortedBeans.map((bean) => {
-              const beanBrews = getBrewsByBeanId(bean.id)
               return (
                 <BeanCard 
                   key={bean.id} 
-                  bean={bean} 
-                  brewCount={beanBrews.length}
+                  bean={bean}
                 />
               )
             })}
