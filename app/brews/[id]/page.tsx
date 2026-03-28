@@ -20,6 +20,10 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
   const flag = COUNTRY_FLAGS[brew.bean.country]
   const date = new Date(brew.created)
+  const detailDateLabel = date
+    .toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
+    .replace('(', '（')
+    .replace(')', '）')
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
 
   return (
@@ -37,11 +41,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <span className="font-medium">Brew Details</span>
           </div>
           <time className="font-mono text-xs text-muted-foreground">
-            {date.toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-            })}
+            {detailDateLabel} {date.getHours()}:{date.getMinutes()}
           </time>
         </div>
       </header>
@@ -104,13 +104,13 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.beanGrind}</p>
-                <p className="text-xs text-muted-foreground">Grind (clicks)</p>
+                <p className="text-xs text-muted-foreground">Grind (⚙)</p>
               </div>
             </div>
-          </div>
-          <div className="mt-4 border-t border-border/60 pt-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Brew Ratio</p>
-            <p className="font-mono text-sm font-medium text-foreground">1:{ratio}</p>
+            <div className="col-span-2 rounded-lg bg-secondary px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Brew Ratio</p>
+              <p className="font-mono text-base font-semibold text-foreground">1:{ratio}</p>
+            </div>
           </div>
         </section>
 
