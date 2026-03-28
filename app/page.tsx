@@ -1,21 +1,24 @@
-import { beans, brews, getBrewsByBeanId } from '@/lib/data'
+import { getBeans, getBrews, getBrewCountByBeanIdMap } from '@/lib/db'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
 import { Coffee, Flame, Globe, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [beans, brews, brewCountByBeanId] = await Promise.all([
+    getBeans(),
+    getBrews(),
+    getBrewCountByBeanIdMap(),
+  ])
+
   // Calculate stats
   const totalBrews = brews.length
   const totalBeans = beans.length
   const uniqueCountries = new Set(beans.map((b) => b.country)).size
-  const avgRating = (brews.reduce((sum, b) => sum + b.overall, 0) / totalBrews).toFixed(1)
-
-  // Sort beans by updated descending
-  const sortedBeans = [...beans].sort(
-    (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
-  )
+  const avgRating = totalBrews > 0
+    ? (brews.reduce((sum, b) => sum + b.overall, 0) / totalBrews).toFixed(1)
+    : '0.0'
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,23 +51,23 @@ export default function HomePage() {
 
         {/* Stats Grid */}
         <section className="mb-8 grid grid-cols-2 gap-3">
-          <StatsCard 
-            label="Total Brews" 
+          <StatsCard
+            label="Total Brews"
             value={totalBrews}
             icon={<Flame className="h-3.5 w-3.5" />}
           />
-          <StatsCard 
-            label="Bean Varieties" 
+          <StatsCard
+            label="Bean Varieties"
             value={totalBeans}
             icon={<Coffee className="h-3.5 w-3.5" />}
           />
-          <StatsCard 
-            label="Countries" 
+          <StatsCard
+            label="Countries"
             value={uniqueCountries}
             icon={<Globe className="h-3.5 w-3.5" />}
           />
-          <StatsCard 
-            label="Avg Rating" 
+          <StatsCard
+            label="Avg Rating"
             value={avgRating}
             icon={<Star className="h-3.5 w-3.5" />}
           />
@@ -76,16 +79,13 @@ export default function HomePage() {
             Bean Library
           </h2>
           <div className="flex flex-col gap-3">
-            {sortedBeans.map((bean) => {
-              const beanBrews = getBrewsByBeanId(bean.id)
-              return (
-                <BeanCard 
-                  key={bean.id} 
-                  bean={bean} 
-                  brewCount={beanBrews.length}
-                />
-              )
-            })}
+            {beans.map((bean) => (
+              <BeanCard
+                key={bean.id}
+                bean={bean}
+                brewCount={brewCountByBeanId.get(bean.id) ?? 0}
+              />
+            ))}
           </div>
         </section>
       </main>

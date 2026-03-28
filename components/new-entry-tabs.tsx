@@ -5,13 +5,19 @@ import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { NewBeanForm } from '@/components/new-bean-form'
 import { NewBrewForm } from '@/components/new-brew-form'
+import type { Bean, Flavor } from '@/lib/types'
 import { Coffee, Flame } from 'lucide-react'
 
-export function NewEntryTabs() {
+interface NewEntryTabsProps {
+  beans: Bean[]
+  flavors: Flavor[]
+}
+
+export function NewEntryTabs({ beans, flavors }: NewEntryTabsProps) {
   const searchParams = useSearchParams()
   const initialType = searchParams.get('type') || 'brew'
   const initialBean = searchParams.get('bean') || ''
-  
+
   const [activeTab, setActiveTab] = useState<'bean' | 'brew'>(
     initialType === 'bean' ? 'bean' : 'brew'
   )
@@ -55,7 +61,7 @@ export function NewEntryTabs() {
 
       {/* Forms */}
       {activeTab === 'brew' ? (
-        <NewBrewForm initialBeanId={initialBean} />
+        <NewBrewForm initialBeanId={initialBean} beans={beans} flavors={flavors} />
       ) : (
         <NewBeanForm />
       )}

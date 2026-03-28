@@ -14,18 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { beans, flavors } from '@/lib/data'
+import type { Bean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NewBrewFormProps {
   initialBeanId?: string
+  beans: Bean[]
+  flavors: Flavor[]
 }
 
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 
-export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
+export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBean, setSelectedBean] = useState(initialBeanId)

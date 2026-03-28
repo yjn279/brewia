@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBrewById } from '@/lib/data'
+import { getBrewById } from '@/lib/db'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
@@ -12,7 +12,7 @@ interface BrewDetailPageProps {
 
 export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
   const { id } = await params
-  const brew = getBrewById(id)
+  const brew = await getBrewById(id)
 
   if (!brew) {
     notFound()
