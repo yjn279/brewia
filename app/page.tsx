@@ -1,4 +1,4 @@
-import { getBeans, getBrews, getBrewCountByBeanIdMap } from '@/lib/db'
+import { getBeans, getBrews } from '@/lib/db'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
@@ -6,10 +6,9 @@ import { Coffee, Flame, Globe, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
-  const [beans, brews, brewCountByBeanId] = await Promise.all([
+  const [beans, brews] = await Promise.all([
     getBeans(),
     getBrews(),
-    getBrewCountByBeanIdMap(),
   ])
 
   // Calculate stats
@@ -25,9 +24,8 @@ export default async function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-5 w-5 text-primary" />
-            <span className="font-medium tracking-tight">Brewia</span>
+          <div className="flex items-center">
+            <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
           </div>
           <div className="flex items-center gap-2">
             <Link
@@ -79,13 +77,14 @@ export default async function HomePage() {
             Bean Library
           </h2>
           <div className="flex flex-col gap-3">
-            {beans.map((bean) => (
-              <BeanCard
-                key={bean.id}
-                bean={bean}
-                brewCount={brewCountByBeanId.get(bean.id) ?? 0}
-              />
-            ))}
+            {beans.map((bean) => {
+              return (
+                <BeanCard
+                  key={bean.id}
+                  bean={bean}
+                />
+              )
+            })}
           </div>
         </section>
       </main>

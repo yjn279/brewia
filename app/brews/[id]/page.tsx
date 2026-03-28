@@ -4,7 +4,7 @@ import { getBrewById } from '@/lib/db'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
-import { ArrowLeft, Thermometer, Scale, Coffee } from 'lucide-react'
+import { ArrowLeft, Thermometer, Scale, Coffee, Cog } from 'lucide-react'
 
 interface BrewDetailPageProps {
   params: Promise<{ id: string }>
@@ -37,7 +37,11 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <span className="font-medium">Brew Details</span>
           </div>
           <time className="font-mono text-xs text-muted-foreground">
-            {date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            {date.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
           </time>
         </div>
       </header>
@@ -96,13 +100,17 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <span className="font-mono text-xs text-muted-foreground">1:{ratio}</span>
+                <Cog className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.beanGrind}</p>
                 <p className="text-xs text-muted-foreground">Grind (clicks)</p>
               </div>
             </div>
+          </div>
+          <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
+            <span className="text-sm text-muted-foreground">Brew Ratio</span>
+            <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
           </div>
         </section>
 
