@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createBrew } from '@/lib/db'
+import { createBrew, getBrews, getBrewsByBeanId } from '@/lib/db'
 
 const createBrewSchema = z.object({
   beanId: z.string().trim().min(1),
@@ -50,4 +50,17 @@ export async function POST(request: Request) {
   })
 
   return NextResponse.json({ id: brew.id }, { status: 201 })
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const beanId = searchParams.get('beanId')
+
+  if (beanId) {
+    const brews = await getBrewsByBeanId(beanId)
+    return NextResponse.json(brews)
+  }
+
+  const brews = await getBrews()
+  return NextResponse.json(brews)
 }

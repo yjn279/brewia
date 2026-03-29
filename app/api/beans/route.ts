@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { COUNTRIES, ROAST_LEVELS } from '@/lib/types'
-import { createBean } from '@/lib/db'
+import { createBean, getBeans } from '@/lib/db'
 
 const createBeanSchema = z.object({
   name: z.string().trim().min(1),
@@ -44,4 +44,9 @@ export async function POST(request: Request) {
   })
 
   return NextResponse.json({ id: bean.id }, { status: 201 })
+}
+
+export async function GET() {
+  const beans = await getBeans()
+  return NextResponse.json(beans)
 }
