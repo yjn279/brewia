@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c9a6de8b-e630-4038-84fb-89e24e5b62df",
+  "id": "07ed8717-319a-4012-b229-d34ba05109d9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "bean": {
@@ -32,28 +32,28 @@
           "name": "region",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "farm": {
           "name": "farm",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "process": {
           "name": "process",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "variety": {
           "name": "variety",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "roast": {
@@ -67,14 +67,14 @@
           "name": "roaster",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "notes": {
           "name": "notes",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "created": {
@@ -202,7 +202,7 @@
           "name": "bean_grind",
           "type": "real",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "water_weight": {
@@ -216,7 +216,7 @@
           "name": "water_temp",
           "type": "real",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "steps": {
@@ -265,7 +265,7 @@
           "name": "notes",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "created": {
