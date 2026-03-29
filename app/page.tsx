@@ -2,6 +2,14 @@ import { getBeans, getBrews } from '@/lib/db'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { Coffee, Flame, Globe, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -76,16 +84,38 @@ export default async function HomePage() {
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Bean Library
           </h2>
-          <div className="flex flex-col gap-3">
-            {beans.map((bean) => {
-              return (
-                <BeanCard
-                  key={bean.id}
-                  bean={bean}
-                />
-              )
-            })}
-          </div>
+          {beans.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {beans.map((bean) => {
+                return (
+                  <BeanCard
+                    key={bean.id}
+                    bean={bean}
+                  />
+                )
+              })}
+            </div>
+          ) : (
+            <Empty className="rounded-xl border border-dashed bg-card px-4 py-10 shadow-sm">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Coffee className="h-5 w-5" />
+                </EmptyMedia>
+                <EmptyTitle>No beans yet</EmptyTitle>
+                <EmptyDescription>
+                  Your Turso database is connected, but there is no coffee data yet.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link
+                  href="/new?type=bean"
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Add your first bean
+                </Link>
+              </EmptyContent>
+            </Empty>
+          )}
         </section>
       </main>
     </div>
