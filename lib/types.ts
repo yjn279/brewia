@@ -45,13 +45,13 @@ export interface Bean {
   id: string
   name: string
   country: Country
-  region: string
-  farm: string
-  process: string
-  variety: string
+  region: string | null
+  farm: string | null
+  process: string | null
+  variety: string | null
   roast: RoastLevel
-  roaster: string
-  notes: string
+  roaster: string | null
+  notes: string | null
   created: string
   updated: string
 }
@@ -65,16 +65,16 @@ export interface Brew {
   id: string
   beanId: string
   beanWeight: number
-  beanGrind: number
+  beanGrind: number | null
   waterWeight: number
-  waterTemp: number
+  waterTemp: number | null
   steps: BrewStep[]
   aroma: number // 1-5 scale
   acidity: number
   sweetness: number
   body: number
   overall: number
-  notes: string
+  notes: string | null
   created: string
   updated: string
 }
