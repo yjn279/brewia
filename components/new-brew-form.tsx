@@ -32,6 +32,7 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBean, setSelectedBean] = useState(initialBeanId)
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([])
+  const [notes, setNotes] = useState('')
   
   // Brew parameters
   const [beanWeight, setBeanWeight] = useState('15')
@@ -57,12 +58,43 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    
-    // In a real app, this would create the brew in the database
-    router.push('/brews')
+
+    try {
+      if (!selectedBean) {
+        return
+      }
+
+      const response = await fetch('/api/brews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          beanId: selectedBean,
+          beanWeight: parseFloat(beanWeight),
+          beanGrind: grindSize ? parseFloat(grindSize) : null,
+          waterWeight: parseFloat(waterWeight),
+          waterTemp: waterTemp ? parseFloat(waterTemp) : null,
+          aroma: aroma[0],
+          acidity: acidity[0],
+          sweetness: sweetness[0],
+          body: body[0],
+          overall: overall[0],
+          notes,
+          flavorIds: selectedFlavors,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create brew')
+      }
+
+      const { id } = (await response.json()) as { id: string }
+      router.push(`/brews/${id}`)
+      router.refresh()
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Calculate ratio
@@ -223,6 +255,8 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
         <Textarea
           placeholder="How was this brew? Any observations?"
           rows={3}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
         />
       </div>
 
