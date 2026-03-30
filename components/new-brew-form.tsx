@@ -16,8 +16,18 @@ import {
 } from '@/components/ui/select'
 import { beans, flavors } from '@/lib/data'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import type { BrewStep } from '@/lib/types'
 
 interface NewBrewFormProps {
   initialBeanId?: string
@@ -36,6 +46,13 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const [waterWeight, setWaterWeight] = useState('225')
   const [waterTemp, setWaterTemp] = useState('92')
   const [grindSize, setGrindSize] = useState('24')
+  const [brewTime, setBrewTime] = useState('180')
+  const [steps, setSteps] = useState<BrewStep[]>([
+    { time: 0, water: 0 },
+    { time: 30, water: 60 },
+    { time: 90, water: 150 },
+    { time: 180, water: 225 },
+  ])
   
   // Ratings
   const [aroma, setAroma] = useState([4])
@@ -67,6 +84,42 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const ratio = beanWeight && waterWeight 
     ? (parseFloat(waterWeight) / parseFloat(beanWeight)).toFixed(1)
     : '-'
+
+  const totalWater = parseFloat(waterWeight) || 1
+  const totalTime = parseFloat(brewTime) || 1
+
+  const addStepFromGraph = (event: React.PointerEvent<HTMLDivElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
+    const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
+
+    const nextTime = Math.round((x / bounds.width) * totalTime)
+    const nextWater = Math.round(((bounds.height - y) / bounds.height) * totalWater)
+
+    setSteps((prev) =>
+      [...prev, { time: nextTime, water: nextWater }]
+        .sort((a, b) => a.time - b.time)
+        .filter(
+          (step, index, list) =>
+            list.findIndex((target) => target.time === step.time && target.water === step.water) === index
+        )
+    )
+  }
+
+  const updateStep = (index: number, key: keyof BrewStep, value: number) => {
+    setSteps((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], [key]: value }
+      return next.sort((a, b) => a.time - b.time)
+    })
+  }
+
+  const removeStep = (index: number) => {
+    setSteps((prev) => {
+      if (prev.length <= 1) return prev
+      return prev.filter((_, targetIndex) => targetIndex !== index)
+    })
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -146,10 +199,111 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
               required
             />
           </div>
+          <div className="col-span-2 flex flex-col gap-2">
+            <Label htmlFor="brewTime">Total Time (sec)</Label>
+            <Input
+              id="brewTime"
+              type="number"
+              value={brewTime}
+              onChange={(e) => setBrewTime(e.target.value)}
+              min="30"
+              step="5"
+              required
+            />
+          </div>
         </div>
         <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
           <span className="text-sm text-muted-foreground">Brew Ratio</span>
           <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
+        </div>
+      </div>
+
+      {/* Extraction Steps */}
+      <div className="rounded-xl bg-card p-4 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Extraction Steps
+          </h2>
+          <span className="text-xs text-muted-foreground">Tap chart to add</span>
+        </div>
+
+        <div
+          className="mb-4 h-44 cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
+          onPointerDown={addStepFromGraph}
+          aria-label="Tap extraction chart to add a step"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={steps}>
+              <defs>
+                <linearGradient id="stepFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
+              <XAxis
+                dataKey="time"
+                domain={[0, totalTime]}
+                type="number"
+                tickFormatter={(v) => `${v}s`}
+                tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
+              />
+              <YAxis
+                dataKey="water"
+                domain={[0, totalWater]}
+                tickFormatter={(v) => `${v}g`}
+                tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
+                width={34}
+              />
+              <Tooltip
+                formatter={(value: number, name: string) =>
+                  name === 'water' ? [`${value}g`, 'Water'] : [value, name]
+                }
+                labelFormatter={(label) => `${label}s`}
+              />
+              <Area
+                type="monotone"
+                dataKey="water"
+                stroke="var(--chart-2)"
+                strokeWidth={2}
+                fill="url(#stepFill)"
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="space-y-2">
+          {steps.map((step, index) => (
+            <div key={`${step.time}-${step.water}-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+              <Input
+                type="number"
+                min="0"
+                max={totalTime}
+                value={step.time}
+                onChange={(e) => updateStep(index, 'time', Number(e.target.value))}
+                aria-label={`Step ${index + 1} time`}
+              />
+              <Input
+                type="number"
+                min="0"
+                max={totalWater}
+                value={step.water}
+                onChange={(e) => updateStep(index, 'water', Number(e.target.value))}
+                aria-label={`Step ${index + 1} water`}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeStep(index)}
+                disabled={steps.length <= 1}
+                aria-label={`Delete step ${index + 1}`}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 
