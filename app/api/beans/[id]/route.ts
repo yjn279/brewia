@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getBeanById } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 interface BeanRouteProps {
   params: Promise<{ id: string }>
 }

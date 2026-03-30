@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { COUNTRIES, ROAST_LEVELS } from '@/lib/types'
 import { createBean, getBeans } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 const createBeanSchema = z.object({
   name: z.string().trim().min(1),
   roaster: z.string().trim().min(1),

@@ -6,6 +6,8 @@ import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
 import { ArrowLeft, Thermometer, Scale, Coffee, Cog } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 interface BrewDetailPageProps {
   params: Promise<{ id: string }>
 }

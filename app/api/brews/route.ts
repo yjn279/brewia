@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createBrew, getBrews, getBrewsByBeanId } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 const createBrewSchema = z.object({
   beanId: z.string().trim().min(1),
   beanWeight: z.coerce.number().positive(),

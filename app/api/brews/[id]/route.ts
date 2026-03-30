@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getBrewById } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 interface BrewRouteProps {
   params: Promise<{ id: string }>
 }
