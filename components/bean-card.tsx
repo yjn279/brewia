@@ -10,33 +10,29 @@ interface BeanCardProps {
 
 export function BeanCard({ bean, className }: BeanCardProps) {
   const flag = COUNTRY_FLAGS[bean.country]
-  
+
   return (
     <Link
       href={`/beans/${bean.id}`}
       className={cn(
-        'block rounded-xl bg-card p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]',
-        className
+        'group block rounded-2xl border border-black/5 bg-card/80 p-4 shadow-[0_18px_36px_-30px_rgba(38,28,8,0.9)] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-black/15',
+        className,
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-2xl">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-black/5 bg-secondary text-2xl transition-transform group-hover:scale-105">
           {flag}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-medium text-foreground">{bean.name}</h3>
+          <h3 className="truncate text-base font-semibold text-foreground">{bean.name}</h3>
           <p className="text-sm text-muted-foreground">
             {bean.region}, {bean.country}
           </p>
-          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <span>{bean.variety}</span>
-            </span>
-            <span className="text-border">|</span>
-            <span className="flex items-center gap-1">
-              <span>{bean.process}</span>
-            </span>
-            <span className="text-border">|</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            <span>{bean.variety}</span>
+            <span className="text-border">•</span>
+            <span>{bean.process}</span>
+            <span className="text-border">•</span>
             <span>{bean.roast}</span>
           </div>
         </div>
