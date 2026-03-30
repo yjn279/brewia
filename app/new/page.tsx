@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
 import { getBeans, getFlavors } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewPage() {
   const [beans, flavors] = await Promise.all([getBeans(), getFlavors()])
 

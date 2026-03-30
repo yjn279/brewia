@@ -6,6 +6,8 @@ import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
 import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 interface BeanDetailPageProps {
   params: Promise<{ id: string }>
 }

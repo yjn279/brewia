@@ -31,3 +31,24 @@ export async function getBeanById(id: string): Promise<Bean | undefined> {
 
   return row ? mapBeanRow(row) : undefined
 }
+
+interface CreateBeanInput {
+  name: string
+  country: Bean['country']
+  roast: Bean['roast']
+  roaster: string | null
+  region: string | null
+  farm: string | null
+  process: string | null
+  variety: string | null
+  notes: string | null
+}
+
+export async function createBean(input: CreateBeanInput): Promise<Bean> {
+  const [row] = await db
+    .insert(beansTable)
+    .values(input)
+    .returning()
+
+  return mapBeanRow(row)
+}

@@ -13,6 +13,8 @@ import {
 import { Coffee, Flame, Globe, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const [beans, brews] = await Promise.all([
     getBeans(),

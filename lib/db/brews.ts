@@ -3,10 +3,10 @@ import 'server-only'
 import { count, desc, eq } from 'drizzle-orm'
 import { getBeanById } from '@/lib/db/beans'
 import { db } from '@/lib/db/drizzle'
-import { brewsTable } from '@/lib/db/schema'
+import { brewFlavorsTable, brewsTable } from '@/lib/db/schema'
 import { getFlavorMapByBeanId, getFlavorsByBrewId } from '@/lib/db/flavors'
 import { parseSteps } from '@/lib/db/row-utils'
-import type { Brew, BrewWithBean } from '@/lib/types'
+import type { Brew, BrewStep, BrewWithBean } from '@/lib/types'
 
 function mapBrewRow(row: typeof brewsTable.$inferSelect): Brew {
   return {
@@ -84,4 +84,53 @@ export async function getBrewById(id: string): Promise<BrewWithBean | undefined>
     bean,
     flavors,
   }
+}
+
+interface CreateBrewInput {
+  beanId: string
+  beanWeight: number
+  beanGrind: number | null
+  waterWeight: number
+  waterTemp: number | null
+  steps: BrewStep[]
+  aroma: number
+  acidity: number
+  sweetness: number
+  body: number
+  overall: number
+  notes: string | null
+  flavorIds: string[]
+}
+
+export async function createBrew(input: CreateBrewInput): Promise<Brew> {
+  return db.transaction(async (tx) => {
+    const [brewRow] = await tx
+      .insert(brewsTable)
+      .values({
+        beanId: input.beanId,
+        beanWeight: input.beanWeight,
+        beanGrind: input.beanGrind,
+        waterWeight: input.waterWeight,
+        waterTemp: input.waterTemp,
+        steps: JSON.stringify(input.steps),
+        aroma: input.aroma,
+        acidity: input.acidity,
+        sweetness: input.sweetness,
+        body: input.body,
+        overall: input.overall,
+        notes: input.notes,
+      })
+      .returning()
+
+    if (input.flavorIds.length > 0) {
+      await tx.insert(brewFlavorsTable).values(
+        input.flavorIds.map((flavorId) => ({
+          brewId: brewRow.id,
+          flavorId,
+        }))
+      )
+    }
+
+    return mapBrewRow(brewRow)
+  })
 }
