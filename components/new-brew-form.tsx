@@ -45,16 +45,15 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   
   // Brew parameters
   const [beanWeight, setBeanWeight] = useState('15')
-  const [waterWeight, setWaterWeight] = useState('225')
+  const [waterWeight, setWaterWeight] = useState('300')
   const [waterTemp, setWaterTemp] = useState('92')
   const [grindSize, setGrindSize] = useState('24')
-  const [brewTime, setBrewTime] = useState('180')
+  const [brewTime, setBrewTime] = useState('300')
   const [steps, setSteps] = useState<BrewStep[]>([
-    { time: 0, water: 0 },
-    { time: 30, water: 60 },
-    { time: 90, water: 150 },
-    { time: 180, water: 225 },
+    { time: 300, water: 300 },
   ])
+  const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null)
+  const [activeStepIndex, setActiveStepIndex] = useState(0)
   
   // Ratings
   const [aroma, setAroma] = useState([4])
@@ -95,6 +94,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     Math.min(Math.max(value, min), max)
 
   const addStepFromGraph = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (draggingStepIndex !== null) return
     const bounds = event.currentTarget.getBoundingClientRect()
     const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
     const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
@@ -110,14 +110,18 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
       totalWater
     )
 
-    setSteps((prev) =>
-      [...prev, { time: nextTime, water: nextWater }]
+    setSteps((prev) => {
+      const next = [...prev, { time: nextTime, water: nextWater }]
         .sort((a, b) => a.time - b.time)
         .filter(
           (step, index, list) =>
             list.findIndex((target) => target.time === step.time && target.water === step.water) === index
         )
-    )
+      setActiveStepIndex(
+        next.findIndex((target) => target.time === nextTime && target.water === nextWater)
+      )
+      return next
+    })
   }
 
   const updateStep = (index: number, key: keyof BrewStep, value: number) => {
@@ -133,7 +137,36 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const removeStep = (index: number) => {
     setSteps((prev) => {
       if (prev.length <= 1) return prev
-      return prev.filter((_, targetIndex) => targetIndex !== index)
+      const next = prev.filter((_, targetIndex) => targetIndex !== index)
+      setActiveStepIndex(Math.max(0, Math.min(activeStepIndex, next.length - 1)))
+      return next
+    })
+  }
+
+  const updateStepFromPointer = (
+    event: React.PointerEvent<HTMLDivElement>,
+    targetIndex: number
+  ) => {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
+    const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
+    const updatedStep = {
+      time: clamp(
+        snapToInterval((x / bounds.width) * totalTime, STEP_TIME_INTERVAL),
+        0,
+        totalTime
+      ),
+      water: clamp(
+        snapToInterval(((bounds.height - y) / bounds.height) * totalWater, STEP_WATER_INTERVAL),
+        0,
+        totalWater
+      ),
+    }
+
+    setSteps((prev) => {
+      const next = [...prev]
+      next[targetIndex] = updatedStep
+      return next.sort((a, b) => a.time - b.time)
     })
   }
 
@@ -181,27 +214,35 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="waterWeight">Water (g)</Label>
-            <Input
-              id="waterWeight"
-              type="number"
-              value={waterWeight}
-              onChange={(e) => setWaterWeight(e.target.value)}
-              min="1"
-              step="1"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="waterWeight"
+                type="number"
+                value={waterWeight}
+                onChange={(e) => setWaterWeight(e.target.value)}
+                min="1"
+                step="1"
+                required
+                className="pr-8"
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="waterTemp">Temp (°C)</Label>
-            <Input
-              id="waterTemp"
-              type="number"
-              value={waterTemp}
-              onChange={(e) => setWaterTemp(e.target.value)}
-              min="80"
-              max="100"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="waterTemp"
+                type="number"
+                value={waterTemp}
+                onChange={(e) => setWaterTemp(e.target.value)}
+                min="80"
+                max="100"
+                required
+                className="pr-8"
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">°C</span>
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="grindSize">Grind (clicks)</Label>
@@ -217,15 +258,19 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           </div>
           <div className="col-span-2 flex flex-col gap-2">
             <Label htmlFor="brewTime">Total Time (sec)</Label>
-            <Input
-              id="brewTime"
-              type="number"
-              value={brewTime}
-              onChange={(e) => setBrewTime(e.target.value)}
-              min="30"
-              step="5"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="brewTime"
+                type="number"
+                value={brewTime}
+                onChange={(e) => setBrewTime(e.target.value)}
+                min="30"
+                step="5"
+                required
+                className="pr-8"
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
+            </div>
           </div>
         </div>
         <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
@@ -244,8 +289,14 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
         </div>
 
         <div
-          className="mb-4 h-44 cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
+          className="relative mb-4 h-44 cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
           onPointerDown={addStepFromGraph}
+          onPointerMove={(e) => {
+            if (draggingStepIndex === null) return
+            updateStepFromPointer(e, draggingStepIndex)
+          }}
+          onPointerUp={() => setDraggingStepIndex(null)}
+          onPointerLeave={() => setDraggingStepIndex(null)}
           aria-label="Tap extraction chart to add a step"
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -287,29 +338,71 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
               />
             </AreaChart>
           </ResponsiveContainer>
+          <div className="pointer-events-none absolute inset-0">
+            {steps.map((step, index) => {
+              const x = totalTime > 0 ? (step.time / totalTime) * 100 : 0
+              const y = totalWater > 0 ? 100 - (step.water / totalWater) * 100 : 100
+              return (
+                <button
+                  key={`graph-point-${step.time}-${step.water}-${index}`}
+                  type="button"
+                  className={cn(
+                    'pointer-events-auto absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-chart-2 shadow',
+                    activeStepIndex === index ? 'ring-2 ring-primary/50' : ''
+                  )}
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation()
+                    setActiveStepIndex(index)
+                    setDraggingStepIndex(index)
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveStepIndex(index)
+                  }}
+                  aria-label={`Step ${index + 1} point`}
+                />
+              )
+            })}
+          </div>
         </div>
 
         <div className="space-y-2">
+          <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span>Time (s)</span>
+            <span>Water (g)</span>
+            <span className="text-right">Action</span>
+          </div>
           {steps.map((step, index) => (
             <div key={`${step.time}-${step.water}-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-              <Input
-                type="number"
-                min="0"
-                max={totalTime}
-                step={STEP_TIME_INTERVAL}
-                value={step.time}
-                onChange={(e) => updateStep(index, 'time', Number(e.target.value))}
-                aria-label={`Step ${index + 1} time`}
-              />
-              <Input
-                type="number"
-                min="0"
-                max={totalWater}
-                step={STEP_WATER_INTERVAL}
-                value={step.water}
-                onChange={(e) => updateStep(index, 'water', Number(e.target.value))}
-                aria-label={`Step ${index + 1} water`}
-              />
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="0"
+                  max={totalTime}
+                  step={STEP_TIME_INTERVAL}
+                  value={step.time}
+                  onChange={(e) => updateStep(index, 'time', Number(e.target.value))}
+                  onFocus={() => setActiveStepIndex(index)}
+                  className="pr-8"
+                  aria-label={`Step ${index + 1} time`}
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
+              </div>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="0"
+                  max={totalWater}
+                  step={STEP_WATER_INTERVAL}
+                  value={step.water}
+                  onChange={(e) => updateStep(index, 'water', Number(e.target.value))}
+                  onFocus={() => setActiveStepIndex(index)}
+                  className="pr-8"
+                  aria-label={`Step ${index + 1} water`}
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
