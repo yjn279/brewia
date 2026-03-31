@@ -36,6 +36,12 @@ interface NewBrewFormProps {
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 const STEP_TIME_INTERVAL = 5
 const STEP_WATER_INTERVAL = 5
+const CHART_PLOT_PADDING = {
+  top: 10,
+  right: 12,
+  bottom: 28,
+  left: 36,
+}
 
 export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const router = useRouter()
@@ -96,16 +102,24 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const addStepFromGraph = (event: React.PointerEvent<HTMLDivElement>) => {
     if (draggingStepIndex !== null) return
     const bounds = event.currentTarget.getBoundingClientRect()
-    const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
-    const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
+    const plotWidth = bounds.width - CHART_PLOT_PADDING.left - CHART_PLOT_PADDING.right
+    const plotHeight = bounds.height - CHART_PLOT_PADDING.top - CHART_PLOT_PADDING.bottom
+    const x = Math.min(
+      Math.max(event.clientX - bounds.left - CHART_PLOT_PADDING.left, 0),
+      plotWidth
+    )
+    const y = Math.min(
+      Math.max(event.clientY - bounds.top - CHART_PLOT_PADDING.top, 0),
+      plotHeight
+    )
 
     const nextTime = clamp(
-      snapToInterval((x / bounds.width) * totalTime, STEP_TIME_INTERVAL),
+      snapToInterval((x / plotWidth) * totalTime, STEP_TIME_INTERVAL),
       0,
       totalTime
     )
     const nextWater = clamp(
-      snapToInterval(((bounds.height - y) / bounds.height) * totalWater, STEP_WATER_INTERVAL),
+      snapToInterval(((plotHeight - y) / plotHeight) * totalWater, STEP_WATER_INTERVAL),
       0,
       totalWater
     )
@@ -148,16 +162,24 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     targetIndex: number
   ) => {
     const bounds = event.currentTarget.getBoundingClientRect()
-    const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
-    const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
+    const plotWidth = bounds.width - CHART_PLOT_PADDING.left - CHART_PLOT_PADDING.right
+    const plotHeight = bounds.height - CHART_PLOT_PADDING.top - CHART_PLOT_PADDING.bottom
+    const x = Math.min(
+      Math.max(event.clientX - bounds.left - CHART_PLOT_PADDING.left, 0),
+      plotWidth
+    )
+    const y = Math.min(
+      Math.max(event.clientY - bounds.top - CHART_PLOT_PADDING.top, 0),
+      plotHeight
+    )
     const updatedStep = {
       time: clamp(
-        snapToInterval((x / bounds.width) * totalTime, STEP_TIME_INTERVAL),
+        snapToInterval((x / plotWidth) * totalTime, STEP_TIME_INTERVAL),
         0,
         totalTime
       ),
       water: clamp(
-        snapToInterval(((bounds.height - y) / bounds.height) * totalWater, STEP_WATER_INTERVAL),
+        snapToInterval(((plotHeight - y) / plotHeight) * totalWater, STEP_WATER_INTERVAL),
         0,
         totalWater
       ),
@@ -300,7 +322,15 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           aria-label="Tap extraction chart to add a step"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={steps}>
+            <AreaChart
+              data={steps}
+              margin={{
+                top: CHART_PLOT_PADDING.top,
+                right: CHART_PLOT_PADDING.right,
+                bottom: CHART_PLOT_PADDING.bottom,
+                left: CHART_PLOT_PADDING.left,
+              }}
+            >
               <defs>
                 <linearGradient id="stepFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.35} />
@@ -347,10 +377,13 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   key={`graph-point-${step.time}-${step.water}-${index}`}
                   type="button"
                   className={cn(
-                    'pointer-events-auto absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-chart-2 shadow',
-                    activeStepIndex === index ? 'ring-2 ring-primary/50' : ''
+                    'pointer-events-auto absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background bg-chart-2 shadow-sm',
+                    activeStepIndex === index ? 'ring-2 ring-primary/30' : ''
                   )}
-                  style={{ left: `${x}%`, top: `${y}%` }}
+                  style={{
+                    left: `calc(${CHART_PLOT_PADDING.left}px + (${x} * (100% - ${CHART_PLOT_PADDING.left + CHART_PLOT_PADDING.right}px) / 100))`,
+                    top: `calc(${CHART_PLOT_PADDING.top}px + (${y} * (100% - ${CHART_PLOT_PADDING.top + CHART_PLOT_PADDING.bottom}px) / 100))`,
+                  }}
                   onPointerDown={(e) => {
                     e.stopPropagation()
                     setActiveStepIndex(index)
@@ -371,7 +404,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             <span>Time (s)</span>
             <span>Water (g)</span>
-            <span className="text-right">Action</span>
+            <span />
           </div>
           {steps.map((step, index) => (
             <div key={`${step.time}-${step.water}-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
