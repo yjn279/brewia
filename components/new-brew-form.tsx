@@ -34,6 +34,8 @@ interface NewBrewFormProps {
 }
 
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
+const STEP_TIME_INTERVAL = 5
+const STEP_WATER_INTERVAL = 5
 
 export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const router = useRouter()
@@ -87,14 +89,26 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
 
   const totalWater = parseFloat(waterWeight) || 1
   const totalTime = parseFloat(brewTime) || 1
+  const snapToInterval = (value: number, interval: number) =>
+    Math.round(value / interval) * interval
+  const clamp = (value: number, min: number, max: number) =>
+    Math.min(Math.max(value, min), max)
 
   const addStepFromGraph = (event: React.PointerEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect()
     const x = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width)
     const y = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height)
 
-    const nextTime = Math.round((x / bounds.width) * totalTime)
-    const nextWater = Math.round(((bounds.height - y) / bounds.height) * totalWater)
+    const nextTime = clamp(
+      snapToInterval((x / bounds.width) * totalTime, STEP_TIME_INTERVAL),
+      0,
+      totalTime
+    )
+    const nextWater = clamp(
+      snapToInterval(((bounds.height - y) / bounds.height) * totalWater, STEP_WATER_INTERVAL),
+      0,
+      totalWater
+    )
 
     setSteps((prev) =>
       [...prev, { time: nextTime, water: nextWater }]
@@ -109,7 +123,9 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const updateStep = (index: number, key: keyof BrewStep, value: number) => {
     setSteps((prev) => {
       const next = [...prev]
-      next[index] = { ...next[index], [key]: value }
+      const interval = key === 'time' ? STEP_TIME_INTERVAL : STEP_WATER_INTERVAL
+      const max = key === 'time' ? totalTime : totalWater
+      next[index] = { ...next[index], [key]: clamp(snapToInterval(value, interval), 0, max) }
       return next.sort((a, b) => a.time - b.time)
     })
   }
@@ -280,6 +296,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 type="number"
                 min="0"
                 max={totalTime}
+                step={STEP_TIME_INTERVAL}
                 value={step.time}
                 onChange={(e) => updateStep(index, 'time', Number(e.target.value))}
                 aria-label={`Step ${index + 1} time`}
@@ -288,6 +305,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 type="number"
                 min="0"
                 max={totalWater}
+                step={STEP_WATER_INTERVAL}
                 value={step.water}
                 onChange={(e) => updateStep(index, 'water', Number(e.target.value))}
                 aria-label={`Step ${index + 1} water`}
