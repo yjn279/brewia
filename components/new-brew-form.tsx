@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,7 +58,9 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const [steps, setSteps] = useState<BrewStep[]>([
     { time: 300, water: 300 },
   ])
-  const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null)
+  const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>([
+    { time: '300', water: '300' },
+  ])
   
   // Ratings
   const [aroma, setAroma] = useState([4])
@@ -99,7 +101,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     Math.min(Math.max(value, min), max)
 
   const addStepFromGraph = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (draggingStepIndex !== null) return
     const bounds = event.currentTarget.getBoundingClientRect()
     const plotWidth = bounds.width - CHART_PLOT_PADDING.left - CHART_PLOT_PADDING.right
     const plotHeight = bounds.height - CHART_PLOT_PADDING.top - CHART_PLOT_PADDING.bottom
@@ -151,62 +152,35 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     })
   }
 
-  const updateStepFromPointer = (
-    event: React.PointerEvent<HTMLDivElement>,
-    targetIndex: number
-  ) => {
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const plotWidth = bounds.width - CHART_PLOT_PADDING.left - CHART_PLOT_PADDING.right
-    const plotHeight = bounds.height - CHART_PLOT_PADDING.top - CHART_PLOT_PADDING.bottom
-    const x = Math.min(
-      Math.max(event.clientX - bounds.left - CHART_PLOT_PADDING.left, 0),
-      plotWidth
-    )
-    const y = Math.min(
-      Math.max(event.clientY - bounds.top - CHART_PLOT_PADDING.top, 0),
-      plotHeight
-    )
-    const updatedStep = {
-      time: clamp(
-        snapToInterval((x / plotWidth) * totalTime, STEP_TIME_INTERVAL),
-        0,
-        totalTime
-      ),
-      water: clamp(
-        snapToInterval(((plotHeight - y) / plotHeight) * totalWater, STEP_WATER_INTERVAL),
-        0,
-        totalWater
-      ),
-    }
+  useEffect(() => {
+    setStepInputs(steps.map((step) => ({ time: String(step.time), water: String(step.water) })))
+  }, [steps])
 
-    setSteps((prev) => {
+  const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
+    setStepInputs((prev) => {
       const next = [...prev]
-      next[targetIndex] = updatedStep
-      return next.sort((a, b) => a.time - b.time)
+      const current = next[index] ?? { time: '', water: '' }
+      next[index] = { ...current, [key]: value }
+      return next
     })
   }
 
-  const renderChartDot = (props: {
-    cx?: number
-    cy?: number
-    index?: number
-  }) => {
-    if (props.cx == null || props.cy == null || props.index == null) return <g />
-    return (
-      <circle
-        cx={props.cx}
-        cy={props.cy}
-        r={6}
-        fill="var(--chart-2)"
-        stroke="var(--background)"
-        strokeWidth={2}
-        className="cursor-grab active:cursor-grabbing"
-        onPointerDown={(event) => {
-          event.stopPropagation()
-          setDraggingStepIndex(props.index!)
-        }}
-      />
-    )
+  const commitStepInput = (index: number, key: keyof BrewStep) => {
+    const current = stepInputs[index]
+    if (!current) return
+    const parsed = Number(current[key])
+    if (!Number.isFinite(parsed)) {
+      setStepInputs((prev) => {
+        const next = [...prev]
+        next[index] = {
+          time: String(steps[index]?.time ?? 0),
+          water: String(steps[index]?.water ?? 0),
+        }
+        return next
+      })
+      return
+    }
+    updateStep(index, key, parsed)
   }
 
   return (
@@ -330,12 +304,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
         <div
           className="relative mb-4 h-44 cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
           onPointerDown={addStepFromGraph}
-          onPointerMove={(e) => {
-            if (draggingStepIndex === null) return
-            updateStepFromPointer(e, draggingStepIndex)
-          }}
-          onPointerUp={() => setDraggingStepIndex(null)}
-          onPointerLeave={() => setDraggingStepIndex(null)}
           aria-label="Tap extraction chart to add a step"
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -382,7 +350,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 strokeWidth={2}
                 fill="url(#stepFill)"
                 isAnimationActive={false}
-                dot={renderChartDot}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -402,8 +369,9 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   min="0"
                   max={totalTime}
                   step={STEP_TIME_INTERVAL}
-                  value={step.time}
-                  onChange={(e) => updateStep(index, 'time', Number(e.target.value))}
+                  value={stepInputs[index]?.time ?? ''}
+                  onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
+                  onBlur={() => commitStepInput(index, 'time')}
                   className="pr-8"
                   aria-label={`Step ${index + 1} time`}
                 />
@@ -415,8 +383,9 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   min="0"
                   max={totalWater}
                   step={STEP_WATER_INTERVAL}
-                  value={step.water}
-                  onChange={(e) => updateStep(index, 'water', Number(e.target.value))}
+                  value={stepInputs[index]?.water ?? ''}
+                  onChange={(e) => handleStepInputChange(index, 'water', e.target.value)}
+                  onBlur={() => commitStepInput(index, 'water')}
                   className="pr-8"
                   aria-label={`Step ${index + 1} water`}
                 />
