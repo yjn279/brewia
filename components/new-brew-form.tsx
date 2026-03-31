@@ -50,16 +50,14 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([])
   
   // Brew parameters
-  const [beanWeight, setBeanWeight] = useState('15')
-  const [waterWeight, setWaterWeight] = useState('300')
-  const [waterTemp, setWaterTemp] = useState('92')
-  const [grindSize, setGrindSize] = useState('24')
-  const [brewTime, setBrewTime] = useState('300')
-  const [steps, setSteps] = useState<BrewStep[]>([
-    { time: 300, water: 300 },
-  ])
+  const [beanWeight, setBeanWeight] = useState('')
+  const [waterWeight, setWaterWeight] = useState('')
+  const [waterTemp, setWaterTemp] = useState('')
+  const [grindSize, setGrindSize] = useState('')
+  const [brewTime, setBrewTime] = useState('')
+  const [steps, setSteps] = useState<BrewStep[]>([])
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>([
-    { time: '300', water: '300' },
+    { time: '', water: '' },
   ])
   
   // Ratings
@@ -93,8 +91,8 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     ? (parseFloat(waterWeight) / parseFloat(beanWeight)).toFixed(1)
     : '-'
 
-  const totalWater = parseFloat(waterWeight) || 1
-  const totalTime = parseFloat(brewTime) || 1
+  const totalWater = Math.max(parseFloat(waterWeight) || 0, 300)
+  const totalTime = Math.max(parseFloat(brewTime) || 0, 300)
   const snapToInterval = (value: number, interval: number) =>
     Math.round(value / interval) * interval
   const clamp = (value: number, min: number, max: number) =>
@@ -153,6 +151,10 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   }
 
   useEffect(() => {
+    if (steps.length === 0) {
+      setStepInputs([{ time: '', water: '' }])
+      return
+    }
     setStepInputs(steps.map((step) => ({ time: String(step.time), water: String(step.water) })))
   }, [steps])
 
@@ -170,17 +172,31 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     if (!current) return
     const parsed = Number(current[key])
     if (!Number.isFinite(parsed)) {
-      setStepInputs((prev) => {
-        const next = [...prev]
-        next[index] = {
-          time: String(steps[index]?.time ?? 0),
-          water: String(steps[index]?.water ?? 0),
-        }
-        return next
-      })
       return
     }
-    updateStep(index, key, parsed)
+    if (steps[index]) {
+      updateStep(index, key, parsed)
+      return
+    }
+    const draftTime = Number(current.time)
+    const draftWater = Number(current.water)
+    setSteps((prev) =>
+      [
+        ...prev,
+        {
+          time: clamp(
+            snapToInterval(Number.isFinite(draftTime) ? draftTime : 0, STEP_TIME_INTERVAL),
+            0,
+            totalTime
+          ),
+          water: clamp(
+            snapToInterval(Number.isFinite(draftWater) ? draftWater : 0, STEP_WATER_INTERVAL),
+            0,
+            totalWater
+          ),
+        },
+      ].sort((a, b) => a.time - b.time)
+    )
   }
 
   return (
@@ -215,15 +231,16 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="beanWeight">Coffee (g)</Label>
-            <Input
-              id="beanWeight"
-              type="number"
-              value={beanWeight}
-              onChange={(e) => setBeanWeight(e.target.value)}
-              min="1"
-              step="0.1"
-              required
-            />
+              <Input
+                id="beanWeight"
+                type="number"
+                value={beanWeight}
+                onChange={(e) => setBeanWeight(e.target.value)}
+                min="1"
+                step="0.1"
+                placeholder="0"
+                required
+              />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="waterWeight">Water (g)</Label>
@@ -236,6 +253,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 min="1"
                 step="1"
                 required
+                placeholder="0"
                 className="pr-8"
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -252,6 +270,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 min="80"
                 max="100"
                 required
+                placeholder="0"
                 className="pr-8"
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">°C</span>
@@ -280,6 +299,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 min="30"
                 step="5"
                 required
+                placeholder="0"
                 className="pr-8"
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
@@ -361,17 +381,18 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
             <span>Water (g)</span>
             <span />
           </div>
-          {steps.map((step, index) => (
-            <div key={`${step.time}-${step.water}-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+          {stepInputs.map((stepInput, index) => (
+            <div key={`step-input-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
               <div className="relative">
                 <Input
                   type="number"
                   min="0"
                   max={totalTime}
                   step={STEP_TIME_INTERVAL}
-                  value={stepInputs[index]?.time ?? ''}
+                  value={stepInput.time}
                   onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
                   onBlur={() => commitStepInput(index, 'time')}
+                  placeholder="0"
                   className="pr-8"
                   aria-label={`Step ${index + 1} time`}
                 />
@@ -383,9 +404,10 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   min="0"
                   max={totalWater}
                   step={STEP_WATER_INTERVAL}
-                  value={stepInputs[index]?.water ?? ''}
+                  value={stepInput.water}
                   onChange={(e) => handleStepInputChange(index, 'water', e.target.value)}
                   onBlur={() => commitStepInput(index, 'water')}
+                  placeholder="0"
                   className="pr-8"
                   aria-label={`Step ${index + 1} water`}
                 />
@@ -395,8 +417,14 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => removeStep(index)}
-                disabled={steps.length <= 1}
+                onClick={() => {
+                  if (steps[index]) {
+                    removeStep(index)
+                    return
+                  }
+                  setStepInputs([{ time: '', water: '' }])
+                }}
+                disabled={steps.length <= 1 && !steps[index]}
                 aria-label={`Delete step ${index + 1}`}
               >
                 <X className="h-4 w-4" />
