@@ -59,7 +59,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
     { time: 300, water: 300 },
   ])
   const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null)
-  const [activeStepIndex, setActiveStepIndex] = useState(0)
   
   // Ratings
   const [aroma, setAroma] = useState([4])
@@ -131,9 +130,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           (step, index, list) =>
             list.findIndex((target) => target.time === step.time && target.water === step.water) === index
         )
-      setActiveStepIndex(
-        next.findIndex((target) => target.time === nextTime && target.water === nextWater)
-      )
       return next
     })
   }
@@ -151,9 +147,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const removeStep = (index: number) => {
     setSteps((prev) => {
       if (prev.length <= 1) return prev
-      const next = prev.filter((_, targetIndex) => targetIndex !== index)
-      setActiveStepIndex(Math.max(0, Math.min(activeStepIndex, next.length - 1)))
-      return next
+      return prev.filter((_, targetIndex) => targetIndex !== index)
     })
   }
 
@@ -190,6 +184,29 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
       next[targetIndex] = updatedStep
       return next.sort((a, b) => a.time - b.time)
     })
+  }
+
+  const renderChartDot = (props: {
+    cx?: number
+    cy?: number
+    index?: number
+  }) => {
+    if (props.cx == null || props.cy == null || props.index == null) return <g />
+    return (
+      <circle
+        cx={props.cx}
+        cy={props.cy}
+        r={6}
+        fill="var(--chart-2)"
+        stroke="var(--background)"
+        strokeWidth={2}
+        className="cursor-grab active:cursor-grabbing"
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          setDraggingStepIndex(props.index!)
+        }}
+      />
+    )
   }
 
   return (
@@ -365,39 +382,10 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 strokeWidth={2}
                 fill="url(#stepFill)"
                 isAnimationActive={false}
+                dot={renderChartDot}
               />
             </AreaChart>
           </ResponsiveContainer>
-          <div className="pointer-events-none absolute inset-0">
-            {steps.map((step, index) => {
-              const x = totalTime > 0 ? (step.time / totalTime) * 100 : 0
-              const y = totalWater > 0 ? 100 - (step.water / totalWater) * 100 : 100
-              return (
-                <button
-                  key={`graph-point-${step.time}-${step.water}-${index}`}
-                  type="button"
-                  className={cn(
-                    'pointer-events-auto absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background bg-chart-2 shadow-sm',
-                    activeStepIndex === index ? 'ring-2 ring-primary/30' : ''
-                  )}
-                  style={{
-                    left: `calc(${CHART_PLOT_PADDING.left}px + (${x} * (100% - ${CHART_PLOT_PADDING.left + CHART_PLOT_PADDING.right}px) / 100))`,
-                    top: `calc(${CHART_PLOT_PADDING.top}px + (${y} * (100% - ${CHART_PLOT_PADDING.top + CHART_PLOT_PADDING.bottom}px) / 100))`,
-                  }}
-                  onPointerDown={(e) => {
-                    e.stopPropagation()
-                    setActiveStepIndex(index)
-                    setDraggingStepIndex(index)
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveStepIndex(index)
-                  }}
-                  aria-label={`Step ${index + 1} point`}
-                />
-              )
-            })}
-          </div>
         </div>
 
         <div className="space-y-2">
@@ -416,7 +404,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   step={STEP_TIME_INTERVAL}
                   value={step.time}
                   onChange={(e) => updateStep(index, 'time', Number(e.target.value))}
-                  onFocus={() => setActiveStepIndex(index)}
                   className="pr-8"
                   aria-label={`Step ${index + 1} time`}
                 />
@@ -430,7 +417,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   step={STEP_WATER_INTERVAL}
                   value={step.water}
                   onChange={(e) => updateStep(index, 'water', Number(e.target.value))}
-                  onFocus={() => setActiveStepIndex(index)}
                   className="pr-8"
                   aria-label={`Step ${index + 1} water`}
                 />
