@@ -37,7 +37,7 @@ const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 const STEP_TIME_INTERVAL = 5
 const STEP_WATER_INTERVAL = 5
 const CHART_PLOT_PADDING = {
-  top: 20,
+  top: 8,
   right: 0,
   bottom: 0,
   left: 0,
@@ -115,6 +115,14 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
             list.findIndex((target) => target.time === step.time && target.water === step.water) === index
         ),
     [stepInputs, totalTime, totalWater]
+  )
+  const chartSteps = useMemo(
+    () =>
+      [{ time: 0, water: 0 }, ...steps].filter(
+        (step, index, list) =>
+          list.findIndex((target) => target.time === step.time && target.water === step.water) === index
+      ),
+    [steps]
   )
 
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
@@ -261,15 +269,14 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Extraction Steps
           </h2>
-          <span className="text-xs text-muted-foreground">Form input only</span>
         </div>
 
         <div
-          className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20 p-2"
+          className="relative mb-4 h-40 rounded-lg border border-border/60 bg-secondary/20 p-1.5"
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={steps}
+              data={chartSteps}
               margin={{
                 top: CHART_PLOT_PADDING.top,
                 right: CHART_PLOT_PADDING.right,
@@ -318,27 +325,12 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
 
         <div className="space-y-2">
           <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            <span>Time (s)</span>
             <span>Water (g)</span>
+            <span>Time (s)</span>
             <span />
           </div>
           {stepInputs.map((stepInput, index) => (
             <div key={`step-input-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-              <div className="relative">
-                <Input
-                  type="number"
-                  min="0"
-                  max={totalTime}
-                  step={STEP_TIME_INTERVAL}
-                  value={stepInput.time}
-                  onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
-                  onBlur={() => commitStepInput(index, 'time')}
-                  placeholder="0"
-                  className="pr-8"
-                  aria-label={`Step ${index + 1} time`}
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
-              </div>
               <div className="relative">
                 <Input
                   type="number"
@@ -353,6 +345,21 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                   aria-label={`Step ${index + 1} water`}
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+              </div>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="0"
+                  max={totalTime}
+                  step={STEP_TIME_INTERVAL}
+                  value={stepInput.time}
+                  onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
+                  onBlur={() => commitStepInput(index, 'time')}
+                  placeholder="0"
+                  className="pr-8"
+                  aria-label={`Step ${index + 1} time`}
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
               </div>
               <Button
                 type="button"
