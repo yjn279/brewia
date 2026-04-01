@@ -37,8 +37,8 @@ const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 const STEP_TIME_INTERVAL = 5
 const STEP_WATER_INTERVAL = 5
 const CHART_PLOT_PADDING = {
-  top: 10,
-  right: 12,
+  top: 20,
+  right: 36,
   bottom: 28,
   left: 36,
 }
@@ -59,6 +59,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>([
     { time: '', water: '' },
   ])
+  const [pendingStep, setPendingStep] = useState<BrewStep | null>(null)
   
   // Ratings
   const [aroma, setAroma] = useState([4])
@@ -98,7 +99,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max)
 
-  const addStepFromGraph = (event: React.PointerEvent<HTMLDivElement>) => {
+  const getStepFromPointer = (event: React.PointerEvent<HTMLDivElement>): BrewStep => {
     const bounds = event.currentTarget.getBoundingClientRect()
     const plotWidth = bounds.width - CHART_PLOT_PADDING.left - CHART_PLOT_PADDING.right
     const plotHeight = bounds.height - CHART_PLOT_PADDING.top - CHART_PLOT_PADDING.bottom
@@ -121,9 +122,12 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
       0,
       totalWater
     )
+    return { time: nextTime, water: nextWater }
+  }
 
+  const commitNewStep = (nextStep: BrewStep) => {
     setSteps((prev) => {
-      const next = [...prev, { time: nextTime, water: nextWater }]
+      const next = [...prev, nextStep]
         .sort((a, b) => a.time - b.time)
         .filter(
           (step, index, list) =>
@@ -132,6 +136,10 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
       return next
     })
   }
+
+  const chartSteps = pendingStep
+    ? [...steps, pendingStep].sort((a, b) => a.time - b.time)
+    : steps
 
   const updateStep = (index: number, key: keyof BrewStep, value: number) => {
     setSteps((prev) => {
@@ -323,12 +331,28 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
 
         <div
           className="relative mb-4 h-44 cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
-          onPointerDown={addStepFromGraph}
+          onPointerDown={(event) => {
+            setPendingStep(getStepFromPointer(event))
+          }}
+          onPointerMove={(event) => {
+            if (!pendingStep) return
+            setPendingStep(getStepFromPointer(event))
+          }}
+          onPointerUp={() => {
+            if (!pendingStep) return
+            commitNewStep(pendingStep)
+            setPendingStep(null)
+          }}
+          onPointerLeave={() => {
+            if (!pendingStep) return
+            commitNewStep(pendingStep)
+            setPendingStep(null)
+          }}
           aria-label="Tap extraction chart to add a step"
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={steps}
+              data={chartSteps}
               margin={{
                 top: CHART_PLOT_PADDING.top,
                 right: CHART_PLOT_PADDING.right,
