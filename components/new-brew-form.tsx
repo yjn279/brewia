@@ -36,7 +36,7 @@ const STEP_TIME_INTERVAL = 5
 const STEP_WATER_INTERVAL = 5
 const CHART_PLOT_PADDING = {
   top: 20,
-  right: 0,
+  right: 12,
   bottom: 0,
   left: 8,
 }
@@ -82,7 +82,7 @@ function TastePentagon({
   return (
     <svg
       viewBox="0 0 220 220"
-      className="mx-auto h-[220px] w-full max-w-[260px] touch-none"
+      className="mx-auto h-[280px] w-full touch-none"
       onPointerMove={(e) => {
         if (!dragKey) return
         e.preventDefault()
@@ -103,10 +103,21 @@ function TastePentagon({
         const a = angle(i)
         const axisX = center + Math.cos(a) * radius
         const axisY = center + Math.sin(a) * radius
+        const labelX = center + Math.cos(a) * (radius + 18)
+        const labelY = center + Math.sin(a) * (radius + 18)
         const p = toPoint(k, values[k])
         return (
           <g key={k}>
             <line x1={center} y1={center} x2={axisX} y2={axisY} stroke="var(--border)" strokeOpacity={0.5} />
+            <text
+              x={labelX}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="fill-muted-foreground text-[9px] uppercase tracking-wide"
+            >
+              {k}
+            </text>
             <circle
               cx={p.x}
               cy={p.y}
