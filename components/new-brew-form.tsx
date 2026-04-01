@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import { beans, flavors } from '@/lib/data'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, X } from 'lucide-react'
+import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Area,
@@ -38,9 +38,9 @@ const STEP_TIME_INTERVAL = 5
 const STEP_WATER_INTERVAL = 5
 const CHART_PLOT_PADDING = {
   top: 20,
-  right: 36,
-  bottom: 20,
-  left: 20,
+  right: 0,
+  bottom: 0,
+  left: 0,
 }
 
 export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
@@ -55,11 +55,9 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const [waterTemp, setWaterTemp] = useState('')
   const [grindSize, setGrindSize] = useState('')
   const [brewTime, setBrewTime] = useState('')
-  const [steps, setSteps] = useState<BrewStep[]>([])
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>([
     { time: '', water: '' },
   ])
-  const [pendingStep, setPendingStep] = useState<BrewStep | null>(null)
   
   // Ratings
   const [aroma, setAroma] = useState([4])
@@ -99,72 +97,25 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max)
 
-  const getStepFromPointer = (event: React.PointerEvent<HTMLDivElement>): BrewStep => {
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const plotWidth = bounds.width - CHART_PLOT_PADDING.left - CHART_PLOT_PADDING.right
-    const plotHeight = bounds.height - CHART_PLOT_PADDING.top - CHART_PLOT_PADDING.bottom
-    const x = Math.min(
-      Math.max(event.clientX - bounds.left - CHART_PLOT_PADDING.left, 0),
-      plotWidth
-    )
-    const y = Math.min(
-      Math.max(event.clientY - bounds.top - CHART_PLOT_PADDING.top, 0),
-      plotHeight
-    )
-
-    const nextTime = clamp(
-      snapToInterval((x / plotWidth) * totalTime, STEP_TIME_INTERVAL),
-      0,
-      totalTime
-    )
-    const nextWater = clamp(
-      snapToInterval(((plotHeight - y) / plotHeight) * totalWater, STEP_WATER_INTERVAL),
-      0,
-      totalWater
-    )
-    return { time: nextTime, water: nextWater }
-  }
-
-  const commitNewStep = (nextStep: BrewStep) => {
-    setSteps((prev) => {
-      const next = [...prev, nextStep]
+  const steps = useMemo(
+    () =>
+      stepInputs
+        .map((row) => ({
+          time: Number(row.time),
+          water: Number(row.water),
+        }))
+        .filter((row) => Number.isFinite(row.time) && Number.isFinite(row.water))
+        .map((row) => ({
+          time: clamp(snapToInterval(row.time, STEP_TIME_INTERVAL), 0, totalTime),
+          water: clamp(snapToInterval(row.water, STEP_WATER_INTERVAL), 0, totalWater),
+        }))
         .sort((a, b) => a.time - b.time)
         .filter(
           (step, index, list) =>
             list.findIndex((target) => target.time === step.time && target.water === step.water) === index
-        )
-      return next
-    })
-  }
-
-  const chartSteps = pendingStep
-    ? [...steps, pendingStep].sort((a, b) => a.time - b.time)
-    : steps
-
-  const updateStep = (index: number, key: keyof BrewStep, value: number) => {
-    setSteps((prev) => {
-      const next = [...prev]
-      const interval = key === 'time' ? STEP_TIME_INTERVAL : STEP_WATER_INTERVAL
-      const max = key === 'time' ? totalTime : totalWater
-      next[index] = { ...next[index], [key]: clamp(snapToInterval(value, interval), 0, max) }
-      return next.sort((a, b) => a.time - b.time)
-    })
-  }
-
-  const removeStep = (index: number) => {
-    setSteps((prev) => {
-      if (prev.length <= 1) return prev
-      return prev.filter((_, targetIndex) => targetIndex !== index)
-    })
-  }
-
-  useEffect(() => {
-    if (steps.length === 0) {
-      setStepInputs([{ time: '', water: '' }])
-      return
-    }
-    setStepInputs(steps.map((step) => ({ time: String(step.time), water: String(step.water) })))
-  }, [steps])
+        ),
+    [stepInputs, totalTime, totalWater]
+  )
 
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
@@ -176,35 +127,19 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
   }
 
   const commitStepInput = (index: number, key: keyof BrewStep) => {
-    const current = stepInputs[index]
-    if (!current) return
-    const parsed = Number(current[key])
-    if (!Number.isFinite(parsed)) {
-      return
-    }
-    if (steps[index]) {
-      updateStep(index, key, parsed)
-      return
-    }
-    const draftTime = Number(current.time)
-    const draftWater = Number(current.water)
-    setSteps((prev) =>
-      [
-        ...prev,
-        {
-          time: clamp(
-            snapToInterval(Number.isFinite(draftTime) ? draftTime : 0, STEP_TIME_INTERVAL),
-            0,
-            totalTime
-          ),
-          water: clamp(
-            snapToInterval(Number.isFinite(draftWater) ? draftWater : 0, STEP_WATER_INTERVAL),
-            0,
-            totalWater
-          ),
-        },
-      ].sort((a, b) => a.time - b.time)
-    )
+    setStepInputs((prev) => {
+      const next = [...prev]
+      const target = next[index]
+      if (!target) return prev
+      const raw = Number(target[key])
+      if (!Number.isFinite(raw)) return prev
+      const max = key === 'time' ? totalTime : totalWater
+      next[index] = {
+        ...target,
+        [key]: String(clamp(snapToInterval(raw, key === 'time' ? STEP_TIME_INTERVAL : STEP_WATER_INTERVAL), 0, max)),
+      }
+      return next
+    })
   }
 
   return (
@@ -326,35 +261,15 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Extraction Steps
           </h2>
-          <span className="text-xs text-muted-foreground">Tap chart to add</span>
+          <span className="text-xs text-muted-foreground">Form input only</span>
         </div>
 
         <div
-          className="relative mb-4 h-44 touch-none cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
-          onPointerDown={(event) => {
-            event.preventDefault()
-            setPendingStep(getStepFromPointer(event))
-          }}
-          onPointerMove={(event) => {
-            if (!pendingStep) return
-            event.preventDefault()
-            setPendingStep(getStepFromPointer(event))
-          }}
-          onPointerUp={() => {
-            if (!pendingStep) return
-            commitNewStep(pendingStep)
-            setPendingStep(null)
-          }}
-          onPointerLeave={() => {
-            if (!pendingStep) return
-            commitNewStep(pendingStep)
-            setPendingStep(null)
-          }}
-          aria-label="Tap extraction chart to add a step"
+          className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20 p-2"
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={chartSteps}
+              data={steps}
               margin={{
                 top: CHART_PLOT_PADDING.top,
                 right: CHART_PLOT_PADDING.right,
@@ -381,7 +296,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 domain={[0, totalWater]}
                 tickFormatter={(v) => `${v}g`}
                 tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-                width={26}
+                width={24}
               />
               <Tooltip
                 formatter={(value: number, name: string) =>
@@ -444,19 +359,27 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  if (steps[index]) {
-                    removeStep(index)
-                    return
-                  }
-                  setStepInputs([{ time: '', water: '' }])
+                  setStepInputs((prev) => {
+                    if (prev.length <= 1) return prev
+                    return prev.filter((_, targetIndex) => targetIndex !== index)
+                  })
                 }}
-                disabled={steps.length <= 1 && !steps[index]}
+                disabled={stepInputs.length <= 1}
                 aria-label={`Delete step ${index + 1}`}
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ))}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => setStepInputs((prev) => [...prev, { time: '', water: '' }])}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Step
+          </Button>
         </div>
       </div>
 
