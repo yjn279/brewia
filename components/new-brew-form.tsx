@@ -39,8 +39,8 @@ const STEP_WATER_INTERVAL = 5
 const CHART_PLOT_PADDING = {
   top: 20,
   right: 36,
-  bottom: 28,
-  left: 36,
+  bottom: 20,
+  left: 20,
 }
 
 export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
@@ -330,12 +330,14 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
         </div>
 
         <div
-          className="relative mb-4 h-44 cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
+          className="relative mb-4 h-44 touch-none cursor-crosshair rounded-lg border border-border/60 bg-secondary/20 p-2"
           onPointerDown={(event) => {
+            event.preventDefault()
             setPendingStep(getStepFromPointer(event))
           }}
           onPointerMove={(event) => {
             if (!pendingStep) return
+            event.preventDefault()
             setPendingStep(getStepFromPointer(event))
           }}
           onPointerUp={() => {
@@ -379,7 +381,7 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
                 domain={[0, totalWater]}
                 tickFormatter={(v) => `${v}g`}
                 tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-                width={34}
+                width={26}
               />
               <Tooltip
                 formatter={(value: number, name: string) =>
