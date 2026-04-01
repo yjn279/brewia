@@ -116,12 +116,12 @@ function TastePentagon({
               dominantBaseline="central"
               className="fill-muted-foreground text-[9px] uppercase tracking-wide"
             >
-              {k}
+              {k} {values[k]}
             </text>
             <circle
               cx={p.x}
               cy={p.y}
-              r={7}
+              r={4}
               fill="var(--background)"
               stroke="var(--chart-1)"
               strokeWidth={2}
@@ -494,20 +494,6 @@ export function NewBrewForm({ initialBeanId }: NewBrewFormProps) {
             if (key === 'overall') setOverall(value)
           }}
         />
-        <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-          {[
-            ['Aroma', aroma],
-            ['Acidity', acidity],
-            ['Sweetness', sweetness],
-            ['Body', body],
-            ['Overall', overall],
-          ].map(([label, value]) => (
-            <div key={label as string} className="flex items-center justify-between rounded-md bg-secondary px-2 py-1">
-              <span>{label}</span>
-              <span className="font-mono">{value}/5</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Flavor Tags */}
