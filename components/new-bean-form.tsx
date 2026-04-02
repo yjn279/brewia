@@ -23,16 +23,52 @@ export function NewBeanForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [roastIndex, setRoastIndex] = useState([2])
+  const [name, setName] = useState('')
+  const [roaster, setRoaster] = useState('')
+  const [country, setCountry] = useState<(typeof COUNTRIES)[number] | ''>('')
+  const [region, setRegion] = useState('')
+  const [farm, setFarm] = useState('')
+  const [variety, setVariety] = useState('')
+  const [process, setProcess] = useState('')
+  const [notes, setNotes] = useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    
-    // In a real app, this would create the bean in the database
-    router.push('/beans')
+
+    try {
+      if (!country) {
+        return
+      }
+
+      const response = await fetch('/api/beans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          roaster,
+          country,
+          region,
+          farm,
+          variety,
+          process,
+          roast: ROAST_LEVELS[roastIndex[0]],
+          notes,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create bean')
+      }
+
+      const { id } = (await response.json()) as { id: string }
+      router.push(`/beans/${id}`)
+      router.refresh()
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -45,11 +81,23 @@ export function NewBeanForm() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="Yirgacheffe Kochere" required />
+            <Input
+              id="name"
+              placeholder="Yirgacheffe Kochere"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="roaster">Roaster</Label>
-            <Input id="roaster" placeholder="Onibus Coffee" required />
+            <Input
+              id="roaster"
+              placeholder="Onibus Coffee"
+              value={roaster}
+              onChange={(event) => setRoaster(event.target.value)}
+              required
+            />
           </div>
         </div>
       </div>
@@ -62,7 +110,11 @@ export function NewBeanForm() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="country">Country</Label>
-            <Select required>
+            <Select
+              value={country}
+              onValueChange={(value) => setCountry(value as (typeof COUNTRIES)[number])}
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
@@ -80,11 +132,21 @@ export function NewBeanForm() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="region">Region</Label>
-            <Input id="region" placeholder="Yirgacheffe" />
+            <Input
+              id="region"
+              placeholder="Yirgacheffe"
+              value={region}
+              onChange={(event) => setRegion(event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="farm">Farm / Station</Label>
-            <Input id="farm" placeholder="Kochere Washing Station" />
+            <Input
+              id="farm"
+              placeholder="Kochere Washing Station"
+              value={farm}
+              onChange={(event) => setFarm(event.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -97,15 +159,21 @@ export function NewBeanForm() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="variety">Variety</Label>
-            <Input id="variety" placeholder="Heirloom" />
+            <Input
+              id="variety"
+              placeholder="Heirloom"
+              value={variety}
+              onChange={(event) => setVariety(event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="process">Process</Label>
-            <Select>
+            <Select value={process} onValueChange={setProcess}>
               <SelectTrigger>
-                <SelectValue placeholder="Select process" />
+                <SelectValue placeholder="Optional" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__none__">Not specified</SelectItem>
                 {processes.map((process) => (
                   <SelectItem key={process} value={process}>
                     {process}
@@ -143,6 +211,8 @@ export function NewBeanForm() {
         <Textarea
           placeholder="Tasting notes, purchase info, etc."
           rows={3}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
         />
       </div>
 

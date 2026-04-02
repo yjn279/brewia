@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBeanById, getBrewsByBeanId } from '@/lib/data'
+import { getBeanById, getBrewsByBeanId } from '@/lib/db'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
 import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 interface BeanDetailPageProps {
   params: Promise<{ id: string }>
@@ -12,13 +14,13 @@ interface BeanDetailPageProps {
 
 export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
   const { id } = await params
-  const bean = getBeanById(id)
+  const bean = await getBeanById(id)
 
   if (!bean) {
     notFound()
   }
 
-  const brews = getBrewsByBeanId(id)
+  const brews = await getBrewsByBeanId(id)
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (
@@ -91,7 +93,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
                 <span className="text-sm text-foreground">{bean.variety}</span>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
-                <span className="text-sm text-foreground">{bean.process}</span>
+                <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
               </div>
             </div>
           </div>
