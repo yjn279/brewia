@@ -7,7 +7,10 @@ import { getBeans, getFlavors } from '@/lib/db'
 export const dynamic = 'force-dynamic'
 
 export default async function NewPage() {
-  const [beans, flavors] = await Promise.all([getBeans(), getFlavors()])
+  const [beans, flavors] = await Promise.allSettled([getBeans(), getFlavors()])
+
+  const resolvedBeans = beans.status === 'fulfilled' ? beans.value : []
+  const resolvedFlavors = flavors.status === 'fulfilled' ? flavors.value : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +31,7 @@ export default async function NewPage() {
 
       <main className="mx-auto max-w-md px-4 py-6">
         <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-card" />}>
-          <NewEntryTabs beans={beans} flavors={flavors} />
+          <NewEntryTabs beans={resolvedBeans} flavors={resolvedFlavors} />
         </Suspense>
       </main>
     </div>
