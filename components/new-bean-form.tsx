@@ -170,9 +170,10 @@ export function NewBeanForm() {
             <Label htmlFor="process">Process</Label>
             <Select value={process} onValueChange={setProcess}>
               <SelectTrigger>
-                <SelectValue placeholder="Select process" />
+                <SelectValue placeholder="Optional" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__none__">Not specified</SelectItem>
                 {processes.map((process) => (
                   <SelectItem key={process} value={process}>
                     {process}
