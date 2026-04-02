@@ -93,7 +93,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
                 <span className="text-sm text-foreground">{bean.variety}</span>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
-                <span className="text-sm text-foreground">{bean.process}</span>
+                <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
               </div>
             </div>
           </div>
