@@ -116,7 +116,7 @@ function TastePentagon({
               dominantBaseline="central"
               className="fill-muted-foreground text-[9px] uppercase tracking-wide"
             >
-              {k} {values[k]}
+              {k}
             </text>
             <circle
               cx={p.x}
