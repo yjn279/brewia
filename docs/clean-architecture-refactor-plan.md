@@ -161,5 +161,4 @@ lib/
 ## テスト仕様書
 
 - [テスト仕様書（目次）](./testing/README.md)
-- [テスト戦略仕様](./testing/strategy.md)
 - [ユースケース単体テスト仕様](./testing/unit-usecases.md)

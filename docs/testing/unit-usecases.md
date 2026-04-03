@@ -1,88 +1,120 @@
-# ユースケース単体テスト仕様書
+# テスト仕様書（Red フェーズ）
 
-本書は、現在実装済み usecase / shared function のテスト仕様を
-Given / When / Then 形式で定義します。
+本書は、今回追加した **Red テスト**を Given / When / Then 形式で定義します。
 
----
-
-## A. `toNullable`
-
-対象実装: `lib/shared/nullable.ts`
-
-対象テスト: `test/lib/shared/nullable.spec.ts`
-
-### A-1. undefined は null に変換される
-
-- Given: `value = undefined`
-- When: `toNullable(value)` を実行
-- Then: `null` が返る
-
-### A-2. 空文字は null に変換される
-
-- Given: `value = ''`
-- When: `toNullable(value)` を実行
-- Then: `null` が返る
-
-### A-3. 非空文字はそのまま返る
-
-- Given: `value = 'Ethiopia'`
-- When: `toNullable(value)` を実行
-- Then: `'Ethiopia'` が返る
+> 注意: この段階ではテストを満たす実装修正は行いません。
 
 ---
 
-## B. `CreateBeanUseCase`
+## A. `CreateBeanService` 相当の仕様
 
-対象実装: `lib/application/usecases/create-bean.ts`
+対象テスト: `test/lib/application/services/create-bean.service.spec.ts`
 
-対象テスト: `test/lib/application/usecases/create-bean.spec.ts`
+### A-1. 空文字を null にせず空文字のまま渡す
 
-### B-1. 任意文字列の空入力を null 正規化して保存する
+- Given: `region/farm/process/variety/notes` が空文字
+- When: service の `execute()` を実行
+- Then: repository `create` に空文字のまま渡される
 
-- Given:
-  - `region/farm/process/variety/notes` が空文字
-  - repository ダブル (`create`) を用意
-- When: `CreateBeanUseCase.execute()` を実行
-- Then:
-  - repository の `create` が1回呼ばれる
-  - 任意項目が `null` で渡される
+### A-2. undefined も空文字として扱う
 
-補足:
-- 現在の仕様では `roaster` は usecase 入力上必須文字列。
-- route の入力検証（zod）で必須制約を持つ前提と整合。
+- Given: 任意項目が未指定（undefined）
+- When: service の `execute()` を実行
+- Then: repository `create` に空文字として渡される
 
----
+### A-3. roaster の非空文字を保持する
 
-## C. `CreateBrewUseCase`
-
-対象実装: `lib/application/usecases/create-brew.ts`
-
-対象テスト: `test/lib/application/usecases/create-brew.spec.ts`
-
-### C-1. フレーバーID重複排除と notes 正規化
-
-- Given:
-  - `flavorIds = ['citrus', 'berry', 'citrus']`
-  - `notes = ''`
-  - repository ダブル (`create`) を用意
-- When: `CreateBrewUseCase.execute()` を実行
-- Then:
-  - repository の `create` が1回呼ばれる
-  - `flavorIds` は `['citrus', 'berry']` で渡される
-  - `notes` は `null` で渡される
+- Given: `roaster = 'Onibus'`
+- When: service の `execute()` を実行
+- Then: repository `create` に `'Onibus'` が渡される
 
 ---
 
-## D. 今後追加するべきテスト仕様（次フェーズ）
+## B. `CreateBrewService` 相当の仕様
 
-1. `CreateBeanUseCase`
-   - `roaster` 非空文字の保持
-   - 任意項目が undefined の場合の null 正規化
-2. `CreateBrewUseCase`
-   - `notes` が非空文字のとき保持される
-   - `flavorIds` が空配列のときそのまま維持
-3. API Route
-   - 不正リクエストで 400
-   - 正常系で 201
-   - usecase 呼び出し失敗時のエラーハンドリング
+対象テスト: `test/lib/application/services/create-brew.service.spec.ts`
+
+### B-1. notes 空文字を null にせず空文字のまま渡す
+
+- Given: `notes = ''`
+- When: service の `execute()` を実行
+- Then: repository `create` に `notes: ''` が渡される
+
+### B-2. flavorIds が空配列なら空配列のまま渡す
+
+- Given: `flavorIds = []`
+- When: service の `execute()` を実行
+- Then: repository `create` に `flavorIds: []` が渡される
+
+### B-3. notes の非空文字を保持する
+
+- Given: `notes = 'juicy'`
+- When: service の `execute()` を実行
+- Then: repository `create` に `notes: 'juicy'` が渡される
+
+---
+
+## C. `BeansRoute` の仕様
+
+対象テスト: `test/app/api/beans/route.spec.ts`
+
+### C-1. 不正リクエストは 400
+
+- Given: 必須項目不足の POST リクエスト
+- When: `POST` を実行
+- Then: `400` を返す
+
+### C-2. 正常系は 201 + 空文字維持
+
+- Given: 正常な POST リクエスト（任意項目は空文字）
+- When: `POST` を実行
+- Then: `201` を返し、`createBean` に空文字が維持されて渡る
+
+### C-3. 下位層エラーは 500
+
+- Given: `createBean` が例外を投げる
+- When: `POST` を実行
+- Then: `500` を返す
+
+### C-4. GET は 200
+
+- Given: `getBeans` が配列を返す
+- When: `GET` を実行
+- Then: `200` を返す
+
+---
+
+## D. `BrewsRoute` の仕様
+
+対象テスト: `test/app/api/brews/route.spec.ts`
+
+### D-1. 不正リクエストは 400
+
+- Given: 必須項目不足の POST リクエスト
+- When: `POST` を実行
+- Then: `400` を返す
+
+### D-2. 正常系は 201 + notes 空文字維持
+
+- Given: 正常な POST リクエスト（`notes = ''`）
+- When: `POST` を実行
+- Then: `201` を返し、`createBrew` に `notes: ''` が渡る
+
+### D-3. 下位層エラーは 500
+
+- Given: `createBrew` が例外を投げる
+- When: `POST` を実行
+- Then: `500` を返す
+
+### D-4. GET（beanId あり）は getBrewsByBeanId を呼ぶ
+
+- Given: `?beanId=bean-1`
+- When: `GET` を実行
+- Then: `getBrewsByBeanId('bean-1')` が呼ばれる
+
+### D-5. GET（beanId なし）は getBrews を呼ぶ
+
+- Given: クエリなし
+- When: `GET` を実行
+- Then: `getBrews` が呼ばれる
 
