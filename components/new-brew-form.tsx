@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import type { Bean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, X } from 'lucide-react'
+import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Area,

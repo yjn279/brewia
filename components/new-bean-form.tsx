@@ -18,6 +18,7 @@ import { COUNTRIES, COUNTRY_FLAGS, ROAST_LEVELS } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
 
 const processes = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Wet Hulled']
+const NO_PROCESS_VALUE = '__none__'
 
 export function NewBeanForm() {
   const router = useRouter()
@@ -168,12 +169,15 @@ export function NewBeanForm() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="process">Process</Label>
-            <Select value={process} onValueChange={setProcess}>
+            <Select
+              value={process || undefined}
+              onValueChange={(value) => setProcess(value === NO_PROCESS_VALUE ? '' : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Optional" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">Not specified</SelectItem>
+                <SelectItem value={NO_PROCESS_VALUE}>Not specified</SelectItem>
                 {processes.map((process) => (
                   <SelectItem key={process} value={process}>
                     {process}
