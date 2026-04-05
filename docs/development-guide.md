@@ -72,8 +72,6 @@ app/
   flavors/
     service.ts
     repository.ts
-  common/
-    null-string.util.ts
   api/
     beans/route.ts
     beans/[id]/route.ts
@@ -97,7 +95,6 @@ lib/
 - `service.ts`: ユースケース
 - `repository.ts`: DBアクセス
 - `schema.ts`: DTO/Zod
-- `*.util.ts`: 横断ユーティリティ
 
 クラス名は複数形リソース基準:
 - `BeansService`, `BrewsService`, `FlavorsService`
@@ -163,7 +160,7 @@ lib/
 ## 8. 入力バリデーション方針
 
 - すべての Create/Update 系 API は Zod schema を通す
-- 文字列 optional は Service 層で `toNullableString` により `null` 正規化
+- optional な文字列は Schema 層で空文字（`""`）として正規化
 - 重複配列（`flavorIds`）は Service 層で `Set` を使って重複除去
 
 ---

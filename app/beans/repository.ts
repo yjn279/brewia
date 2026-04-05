@@ -9,12 +9,12 @@ export interface BeanMutationInput {
   name: string
   country: Bean['country']
   roast: Bean['roast']
-  roaster: string | null
-  region: string | null
-  farm: string | null
-  process: string | null
-  variety: string | null
-  notes: string | null
+  roaster: string
+  region: string
+  farm: string
+  process: string
+  variety: string
+  notes: string
 }
 
 function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {

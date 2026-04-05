@@ -1,6 +1,5 @@
 import 'server-only'
 
-import { toNullableString } from '@/app/common/null-string.util'
 import { BeansRepository } from '@/app/beans/repository'
 import type { UpsertBeanDto } from '@/app/beans/schema'
 
@@ -20,12 +19,12 @@ export class BeansService {
       name: dto.name,
       roaster: dto.roaster,
       country: dto.country,
-      region: toNullableString(dto.region),
-      farm: toNullableString(dto.farm),
-      variety: toNullableString(dto.variety),
-      process: toNullableString(dto.process),
+      region: dto.region,
+      farm: dto.farm,
+      variety: dto.variety,
+      process: dto.process,
       roast: dto.roast,
-      notes: toNullableString(dto.notes),
+      notes: dto.notes,
     })
   }
 
@@ -34,12 +33,12 @@ export class BeansService {
       name: dto.name,
       roaster: dto.roaster,
       country: dto.country,
-      region: toNullableString(dto.region),
-      farm: toNullableString(dto.farm),
-      variety: toNullableString(dto.variety),
-      process: toNullableString(dto.process),
+      region: dto.region,
+      farm: dto.farm,
+      variety: dto.variety,
+      process: dto.process,
       roast: dto.roast,
-      notes: toNullableString(dto.notes),
+      notes: dto.notes,
     })
   }
 

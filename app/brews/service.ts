@@ -1,6 +1,5 @@
 import 'server-only'
 
-import { toNullableString } from '@/app/common/null-string.util'
 import { BrewsRepository } from '@/app/brews/repository'
 import type { UpsertBrewDto } from '@/app/brews/schema'
 
@@ -36,7 +35,7 @@ export class BrewsService {
       sweetness: dto.sweetness,
       body: dto.body,
       overall: dto.overall,
-      notes: toNullableString(dto.notes),
+      notes: dto.notes,
       flavorIds: [...new Set(dto.flavorIds)],
     })
   }
@@ -54,7 +53,7 @@ export class BrewsService {
       sweetness: dto.sweetness,
       body: dto.body,
       overall: dto.overall,
-      notes: toNullableString(dto.notes),
+      notes: dto.notes,
       flavorIds: [...new Set(dto.flavorIds)],
     })
   }

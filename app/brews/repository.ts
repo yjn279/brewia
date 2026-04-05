@@ -20,7 +20,7 @@ export interface BrewMutationInput {
   sweetness: number
   body: number
   overall: number
-  notes: string | null
+  notes: string
   flavorIds: string[]
 }
 
