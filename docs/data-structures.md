@@ -9,13 +9,13 @@
 | 豆ID | id | string | 豆を一意に識別するID |
 | 豆名 | name | string | コーヒー豆の名称 |
 | 生産国 | country | string | 豆の生産国 |
-| 生産地域 | region | string | 豆の生産地域 |
-| 農園名 | farm | string | 生産農園 |
-| 精製方法 | process | string | ウォッシュト/ナチュラルなど |
-| 品種 | variety | string | コーヒー豆の品種 |
-| 焙煎度 | roast | number | 1-5の焙煎レベル |
-| ロースター | roaster | string | 焙煎した店舗/ブランド名 |
-| メモ | notes | string | 豆に関する自由記述 |
+| 生産地域 | region | string \| null | 豆の生産地域（未入力可） |
+| 農園名 | farm | string \| null | 生産農園（未入力可） |
+| 精製方法 | process | string \| null | ウォッシュト/ナチュラルなど（未入力可） |
+| 品種 | variety | string \| null | コーヒー豆の品種（未入力可） |
+| 焙煎度 | roast | RoastLevel (string) | 焙煎度（Light / Cinnamon / Medium / High / City / Full City / French / Italian） |
+| ロースター | roaster | string \| null | 焙煎した店舗/ブランド名（未入力可） |
+| メモ | notes | string \| null | 豆に関する自由記述（未入力可） |
 | 作成日時 | created | string | レコード作成日時 |
 | 更新日時 | updated | string | レコード更新日時 |
 
@@ -26,16 +26,16 @@
 | 抽出ID | id | string | 抽出ログを一意に識別するID |
 | 豆ID | beanId | string | 紐づく Bean のID |
 | 豆量 | beanWeight | number | 使用した豆の重量（g） |
-| 挽き目 | beanGrind | number | 挽き目の指標値 |
+| 挽き目 | beanGrind | number \| null | 挽き目の指標値（未入力可） |
 | 湯量 | waterWeight | number | 使用した総湯量（g/ml） |
-| 湯温 | waterTemp | number | 抽出時の湯温（℃） |
+| 湯温 | waterTemp | number \| null | 抽出時の湯温（℃、未入力可） |
 | 注湯ステップ | steps | BrewStep[] | 時間と注湯量の配列データ |
 | 香り | aroma | number | 香りの評価（1-5） |
 | 酸味 | acidity | number | 酸味の評価（1-5） |
 | 甘さ | sweetness | number | 甘さの評価（1-5） |
 | ボディ | body | number | コク/質感の評価（1-5） |
 | 総合 | overall | number | 総合評価（1-5） |
-| メモ | notes | string | 抽出に関する自由記述 |
+| メモ | notes | string \| null | 抽出に関する自由記述（未入力可） |
 | 作成日時 | created | string | レコード作成日時 |
 | 更新日時 | updated | string | レコード更新日時 |
 
@@ -103,7 +103,7 @@ erDiagram
         string farm
         string process
         string variety
-        int roast
+        string roast
         string roaster
         text notes
         datetime created

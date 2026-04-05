@@ -29,6 +29,10 @@
 
 - [data-structures.md](./docs/data-structures.md)
 
+## Architecture
+
+- [clean-architecture.md](./docs/clean-architecture.md)
+
 ## Getting Started
 
 ```bash
