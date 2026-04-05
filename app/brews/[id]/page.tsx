@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { brewsService } from '@/app/api/brews/servce'
+import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'

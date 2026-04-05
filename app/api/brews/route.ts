@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { brewsService } from '@/app/api/brews/servce'
-import { upsertBrewSchema } from '@/app/api/brews/schema'
+import { brewsService } from '@/app/brews/service'
+import { upsertBrewSchema } from '@/app/brews/schema'
 
 export const dynamic = 'force-dynamic'
 

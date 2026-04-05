@@ -36,17 +36,17 @@ Brewia は「豆（Bean）」と「抽出（Brew）」を中心に、風味（Fl
 - リクエストの受理、バリデーション、レスポンス整形
 - ビジネスロジックは持たず Service を呼び出す
 
-### 3.2 Service Layer (`app/api/**/servce.ts`)
+### 3.2 Service Layer (`app/**/service.ts`)
 - ユースケース単位のオーケストレーション
 - DTO をドメイン入力へ整形（例: 文字列の null 正規化）
 - Repository への依存のみを持つ
 
-### 3.3 Repository Layer (`app/api/**/repository.ts`)
+### 3.3 Repository Layer (`app/**/repository.ts`)
 - 永続化の責務（Drizzle クエリ、トランザクション）
 - DB テーブル構造とアプリ型のマッピング
 - 関連データ削除や中間テーブル更新など整合性担保
 
-### 3.4 Schema Layer (`app/api/**/schema.ts`)
+### 3.4 Schema Layer (`app/**/schema.ts`)
 - Zod による API 入力 DTO の定義
 - Route で利用し、入力バリデーションを共通化
 
@@ -56,41 +56,36 @@ Brewia は「豆（Bean）」と「抽出（Brew）」を中心に、風味（Fl
 
 ```text
 app/
+  page.tsx
+  new/page.tsx
+  beans/
+    page.tsx
+    [id]/page.tsx
+    service.ts
+    repository.ts
+    schema.ts
+  brews/
+    [id]/page.tsx
+    service.ts
+    repository.ts
+    schema.ts
+  flavors/
+    service.ts
+    repository.ts
+  common/
+    null-string.util.ts
   api/
-    beans/
-      route.ts
-      [id]/route.ts
-    brews/
-      route.ts
-      [id]/route.ts
-    flavors/
-      route.ts
+    beans/route.ts
+    beans/[id]/route.ts
+    brews/route.ts
+    brews/[id]/route.ts
+    flavors/route.ts
 
 lib/
   db/
     schema.ts
     drizzle.ts
-
-app/
-  api/
-    common/
-      null-string.util.ts
-    beans/
-      schema.ts
-      servce.ts
-      repository.ts
-      route.ts
-      [id]/route.ts
-    brews/
-      schema.ts
-      servce.ts
-      repository.ts
-      route.ts
-      [id]/route.ts
-    flavors/
-      servce.ts
-      repository.ts
-      route.ts
+    row-utils.ts
 ```
 
 ---
@@ -99,7 +94,7 @@ app/
 
 `route.ts` と同じく、リソースディレクトリ内でシンプルな固定ファイル名にしています。
 
-- `servce.ts`: ユースケース
+- `service.ts`: ユースケース
 - `repository.ts`: DBアクセス
 - `schema.ts`: DTO/Zod
 - `*.util.ts`: 横断ユーティリティ
@@ -216,9 +211,9 @@ pnpm build
 
 新しいリソース（例: `roasters`）を追加する場合は、以下の順で実装すると一貫性を保てます。
 
-1. `app/api/roasters/schema.ts` を作成
-2. `app/api/roasters/repository.ts` を作成
-3. `app/api/roasters/servce.ts` を作成
+1. `app/roasters/schema.ts` を作成
+2. `app/roasters/repository.ts` を作成
+3. `app/roasters/service.ts` を作成
 4. `app/api/roasters/route.ts`, `app/api/roasters/[id]/route.ts` を追加
 
 ---
@@ -233,4 +228,4 @@ pnpm build
 
 ## 13. 変更履歴に関する補足
 
-本ガイドは、Service/Repository/Schema を `app/api` 配下へコロケーションした構成と、Beans/Brews の編集・削除 API 追加後の状態を前提にしています。将来的に構成が変わった場合は、このドキュメントを優先的に更新してください。
+本ガイドは、Service/Repository/Schema を `app` 配下（ページと並列）へコロケーションした構成と、Beans/Brews の編集・削除 API 追加後の状態を前提にしています。将来的に構成が変わった場合は、このドキュメントを優先的に更新してください。

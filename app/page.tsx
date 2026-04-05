@@ -1,5 +1,5 @@
-import { beansService } from '@/app/api/beans/servce'
-import { brewsService } from '@/app/api/brews/servce'
+import { beansService } from '@/app/beans/service'
+import { brewsService } from '@/app/brews/service'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'

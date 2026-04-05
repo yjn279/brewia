@@ -5,8 +5,8 @@ import type { Brew, BrewStep, BrewWithBean } from '@/lib/types'
 import { db } from '@/lib/db/drizzle'
 import { brewFlavorsTable, brewsTable } from '@/lib/db/schema'
 import { parseSteps } from '@/lib/db/row-utils'
-import { BeansRepository } from '@/app/api/beans/repository'
-import { FlavorsRepository } from '@/app/api/flavors/repository'
+import { BeansRepository } from '@/app/beans/repository'
+import { FlavorsRepository } from '@/app/flavors/repository'
 
 export interface BrewMutationInput {
   beanId: string

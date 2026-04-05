@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { FlavorsRepository } from '@/app/api/flavors/repository'
+import { FlavorsRepository } from '@/app/flavors/repository'
 
 const flavorsRepository = new FlavorsRepository()
 

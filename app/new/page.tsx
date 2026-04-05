@@ -2,8 +2,8 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
-import { beansService } from '@/app/api/beans/servce'
-import { flavorsService } from '@/app/api/flavors/servce'
+import { beansService } from '@/app/beans/service'
+import { flavorsService } from '@/app/flavors/service'
 
 export const dynamic = 'force-dynamic'
 
