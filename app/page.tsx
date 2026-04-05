@@ -48,31 +48,36 @@ export default async function HomePage() {
         {/* Welcome */}
         <section className="mb-6">
           <Greeting />
-          <p className="mt-1 text-muted-foreground">
-            Your coffee journey continues
-          </p>
         </section>
 
         {/* Stats Grid */}
-        <section className="mb-8 grid grid-cols-2 gap-3">
-          <div>
-            <StatsCard
-              label="Total Brews"
-              value={totalBrews}
-              icon={<Flame className="h-3.5 w-3.5" />}
-            />
-          </div>
-          <div>
-            <StatsCard
-              label="Bean Variety"
-              value={totalBeans}
-              icon={<Coffee className="h-3.5 w-3.5" />}
-            />
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Quick Stats
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <StatsCard
+                label="Total Brews"
+                value={totalBrews}
+                icon={<Flame className="h-3.5 w-3.5" />}
+              />
+            </div>
+            <div>
+              <StatsCard
+                label="Bean Variety"
+                value={totalBeans}
+                icon={<Coffee className="h-3.5 w-3.5" />}
+              />
+            </div>
           </div>
         </section>
 
-        {/* Beans */}
+        {/* Bean Library */}
         <section className="mb-6">
+          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Bean Library
+          </h2>
           {beans.length > 0 ? (
             <div className="flex flex-col gap-3">
               {beans.map((bean) => {
