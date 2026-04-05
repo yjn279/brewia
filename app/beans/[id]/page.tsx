@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBeanById, getBrewsByBeanId } from '@/lib/db'
+import { beansService } from '@/app/api/beans/servce'
+import { brewsService } from '@/app/api/brews/servce'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
@@ -14,13 +15,13 @@ interface BeanDetailPageProps {
 
 export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
   const { id } = await params
-  const bean = await getBeanById(id)
+  const bean = await beansService.getBeanById(id)
 
   if (!bean) {
     notFound()
   }
 
-  const brews = await getBrewsByBeanId(id)
+  const brews = await brewsService.getBrewsByBeanId(id)
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (

@@ -1,4 +1,5 @@
-import { getBeans, getBrews } from '@/lib/db'
+import { beansService } from '@/app/api/beans/servce'
+import { brewsService } from '@/app/api/brews/servce'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
@@ -17,8 +18,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const [beans, brews] = await Promise.all([
-    getBeans(),
-    getBrews(),
+    beansService.getBeans(),
+    brewsService.getBrews(),
   ])
 
   // Calculate stats

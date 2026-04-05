@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { beansService } from '@/app/api/beans/beans.service'
-import { upsertBeanSchema } from '@/app/api/beans/beans.schema'
+import { beansService } from '@/app/api/beans/servce'
+import { upsertBeanSchema } from '@/app/api/beans/schema'
 
 export const dynamic = 'force-dynamic'
 

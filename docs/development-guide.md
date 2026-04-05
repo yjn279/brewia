@@ -36,23 +36,19 @@ Brewia は「豆（Bean）」と「抽出（Brew）」を中心に、風味（Fl
 - リクエストの受理、バリデーション、レスポンス整形
 - ビジネスロジックは持たず Service を呼び出す
 
-### 3.2 Service Layer (`app/api/**/**.service.ts`)
+### 3.2 Service Layer (`app/api/**/servce.ts`)
 - ユースケース単位のオーケストレーション
 - DTO をドメイン入力へ整形（例: 文字列の null 正規化）
 - Repository への依存のみを持つ
 
-### 3.3 Repository Layer (`app/api/**/**.repository.ts`)
+### 3.3 Repository Layer (`app/api/**/repository.ts`)
 - 永続化の責務（Drizzle クエリ、トランザクション）
 - DB テーブル構造とアプリ型のマッピング
 - 関連データ削除や中間テーブル更新など整合性担保
 
-### 3.4 Schema Layer (`app/api/**/**.schema.ts`)
+### 3.4 Schema Layer (`app/api/**/schema.ts`)
 - Zod による API 入力 DTO の定義
 - Route で利用し、入力バリデーションを共通化
-
-### 3.5 Compatibility Facade (`lib/db/index.ts`)
-- 既存呼び出し互換のためのエクスポート窓口
-- 内部的には service を呼ぶ
 
 ---
 
@@ -74,27 +70,26 @@ lib/
   db/
     schema.ts
     drizzle.ts
-    index.ts        # 互換ファサード
 
 app/
   api/
     common/
       null-string.util.ts
     beans/
-      beans.schema.ts
-      beans.service.ts
-      beans.repository.ts
+      schema.ts
+      servce.ts
+      repository.ts
       route.ts
       [id]/route.ts
     brews/
-      brews.schema.ts
-      brews.service.ts
-      brews.repository.ts
+      schema.ts
+      servce.ts
+      repository.ts
       route.ts
       [id]/route.ts
     flavors/
-      flavors.service.ts
-      flavors.repository.ts
+      servce.ts
+      repository.ts
       route.ts
 ```
 
@@ -102,11 +97,11 @@ app/
 
 ## 5. 命名規約
 
-Nest.js 風の命名規則に合わせています。
+`route.ts` と同じく、リソースディレクトリ内でシンプルな固定ファイル名にしています。
 
-- `xxx.service.ts`: ユースケース
-- `xxx.repository.ts`: DBアクセス
-- `xxx.schema.ts`: DTO/Zod
+- `servce.ts`: ユースケース
+- `repository.ts`: DBアクセス
+- `schema.ts`: DTO/Zod
 - `*.util.ts`: 横断ユーティリティ
 
 クラス名は複数形リソース基準:
@@ -221,11 +216,10 @@ pnpm build
 
 新しいリソース（例: `roasters`）を追加する場合は、以下の順で実装すると一貫性を保てます。
 
-1. `app/api/roasters/roasters.schema.ts` を作成
-2. `app/api/roasters/roasters.repository.ts` を作成
-3. `app/api/roasters/roasters.service.ts` を作成
+1. `app/api/roasters/schema.ts` を作成
+2. `app/api/roasters/repository.ts` を作成
+3. `app/api/roasters/servce.ts` を作成
 4. `app/api/roasters/route.ts`, `app/api/roasters/[id]/route.ts` を追加
-5. 必要なら `lib/db/index.ts` へ互換エクスポート追加
 
 ---
 

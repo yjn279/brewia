@@ -1,8 +1,8 @@
 import 'server-only'
 
-import { toNullableString } from '@/lib/server/common/null-string.util'
-import { BrewsRepository } from '@/lib/server/brews/brews.repository'
-import type { UpsertBrewDto } from '@/lib/server/brews/brews.schema'
+import { toNullableString } from '@/app/api/common/null-string.util'
+import { BrewsRepository } from '@/app/api/brews/repository'
+import type { UpsertBrewDto } from '@/app/api/brews/schema'
 
 const brewsRepository = new BrewsRepository()
 

@@ -1,8 +1,8 @@
 import 'server-only'
 
 import { toNullableString } from '@/app/api/common/null-string.util'
-import { BeansRepository } from '@/app/api/beans/beans.repository'
-import type { UpsertBeanDto } from '@/app/api/beans/beans.schema'
+import { BeansRepository } from '@/app/api/beans/repository'
+import type { UpsertBeanDto } from '@/app/api/beans/schema'
 
 const beansRepository = new BeansRepository()
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { flavorsService } from '@/app/api/flavors/flavors.service'
+import { flavorsService } from '@/app/api/flavors/servce'
 
 export const dynamic = 'force-dynamic'
 
