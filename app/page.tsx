@@ -11,7 +11,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
-import { Coffee, Flame, Globe, Star, Plus } from 'lucide-react'
+import { Coffee, Flame, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -25,11 +25,6 @@ export default async function HomePage() {
   // Calculate stats
   const totalBrews = brews.length
   const totalBeans = beans.length
-  const uniqueCountries = new Set(beans.map((b) => b.country)).size
-  const avgRating = totalBrews > 0
-    ? (brews.reduce((sum, b) => sum + b.overall, 0) / totalBrews).toFixed(1)
-    : '0.0'
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -50,43 +45,33 @@ export default async function HomePage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 py-6">
-        {/* Welcome */}
-        <section className="mb-6">
-          <Greeting />
-          <p className="mt-1 text-muted-foreground">
-            Your coffee journey continues
-          </p>
+        {/* Welcome + Stats */}
+        <section className="mb-8 flex items-start justify-between gap-3">
+          <div className="min-w-0 pt-1">
+            <Greeting />
+            <p className="mt-1 text-muted-foreground">
+              Your coffee journey continues
+            </p>
+          </div>
+
+          <div className="flex w-full max-w-[180px] flex-col gap-2">
+            <StatsCard
+              label="Total Brews"
+              value={totalBrews}
+              icon={<Flame className="h-3 w-3" />}
+              className="gap-0.5 p-2.5 [&>span]:text-lg [&_span]:tracking-wide"
+            />
+            <StatsCard
+              label="Bean Variety"
+              value={totalBeans}
+              icon={<Coffee className="h-3 w-3" />}
+              className="gap-0.5 p-2.5 [&>span]:text-lg [&_span]:tracking-wide"
+            />
+          </div>
         </section>
 
-        {/* Stats Grid */}
-        <section className="mb-8 grid grid-cols-2 gap-3">
-          <StatsCard
-            label="Total Brews"
-            value={totalBrews}
-            icon={<Flame className="h-3.5 w-3.5" />}
-          />
-          <StatsCard
-            label="Bean Varieties"
-            value={totalBeans}
-            icon={<Coffee className="h-3.5 w-3.5" />}
-          />
-          <StatsCard
-            label="Countries"
-            value={uniqueCountries}
-            icon={<Globe className="h-3.5 w-3.5" />}
-          />
-          <StatsCard
-            label="Avg Rating"
-            value={avgRating}
-            icon={<Star className="h-3.5 w-3.5" />}
-          />
-        </section>
-
-        {/* Bean Library */}
+        {/* Beans */}
         <section className="mb-6">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Bean Library
-          </h2>
           {beans.length > 0 ? (
             <div className="flex flex-col gap-3">
               {beans.map((bean) => {
