@@ -23,6 +23,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
   const flag = COUNTRY_FLAGS[brew.bean.country]
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
+  const extractionSteps = [...brew.steps].sort((a, b) => a.time - b.time)
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,6 +132,38 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         <section className="mb-6">
           <PourChart steps={brew.steps} totalWater={brew.waterWeight} />
         </section>
+
+        {/* Extraction Steps */}
+        {extractionSteps.length > 0 && (
+          <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
+            <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Extraction Steps
+            </h2>
+            <div className="space-y-2">
+              {extractionSteps.map((step, index) => {
+                const previousWater = index > 0 ? extractionSteps[index - 1]?.water ?? 0 : 0
+                const pourWater = step.water - previousWater
+
+                return (
+                  <div
+                    key={`${step.time}-${step.water}-${index}`}
+                    className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg bg-secondary/40 px-3 py-2"
+                  >
+                    <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="font-mono text-foreground">{step.time}s</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="font-mono text-foreground">{step.water}g</span>
+                    </div>
+                    <span className="font-mono text-xs text-primary">
+                      +{pourWater >= 0 ? pourWater : 0}g
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Taste Profile */}
         <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
