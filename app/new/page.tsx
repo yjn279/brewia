@@ -2,12 +2,13 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
-import { getBeans, getFlavors } from '@/lib/db'
+import { beansService } from '@/app/beans/service'
+import { flavorsService } from '@/app/flavors/service'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewPage() {
-  const [beans, flavors] = await Promise.all([getBeans(), getFlavors()])
+  const [beans, flavors] = await Promise.all([beansService.getBeans(), flavorsService.getFlavors()])
 
   return (
     <div className="min-h-screen bg-background">

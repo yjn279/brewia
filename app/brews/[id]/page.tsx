@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBrewById } from '@/lib/db'
+import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
-import { ArrowLeft, Thermometer, Scale, Coffee, Cog } from 'lucide-react'
+import { DeleteResourceButton } from '@/components/delete-resource-button'
+import { ArrowLeft, Thermometer, Scale, Coffee, Cog, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,14 +15,13 @@ interface BrewDetailPageProps {
 
 export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
   const { id } = await params
-  const brew = await getBrewById(id)
+  const brew = await brewsService.getBrewById(id)
 
   if (!brew) {
     notFound()
   }
 
   const flag = COUNTRY_FLAGS[brew.bean.country]
-  const date = new Date(brew.created)
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
 
   return (
@@ -38,13 +38,21 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             </Link>
             <span className="font-medium">Brew Details</span>
           </div>
-          <time className="font-mono text-xs text-muted-foreground">
-            {date.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </time>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/brews/${brew.id}/edit`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+            <DeleteResourceButton
+              endpoint={`/api/brews/${brew.id}`}
+              redirectTo={`/beans/${brew.bean.id}`}
+              confirmMessage="この抽出ログを削除しますか？"
+              showLabel={false}
+              className="h-8 w-8 px-0"
+            />
+          </div>
         </div>
       </header>
 
@@ -115,6 +123,9 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
           </div>
         </section>
+
+
+        
 
         {/* Pour Profile */}
         <section className="mb-6">

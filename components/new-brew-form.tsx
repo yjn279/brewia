@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { Bean, Flavor } from '@/lib/types'
+import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -30,7 +30,9 @@ import {
 import type { BrewStep } from '@/lib/types'
 
 interface NewBrewFormProps {
+  mode?: "create" | "edit"
   initialBeanId?: string
+  initialBrew?: BrewWithBean
   beans: Bean[]
   flavors: Flavor[]
 }
@@ -45,29 +47,31 @@ const CHART_PLOT_PADDING = {
   left: 8,
 }
 
-export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps) {
+export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedBean, setSelectedBean] = useState(initialBeanId)
-  const [selectedFlavors, setSelectedFlavors] = useState<string[]>([])
-  const [notes, setNotes] = useState('')
+  const [selectedBean, setSelectedBean] = useState(initialBrew?.beanId ?? initialBeanId)
+  const [selectedFlavors, setSelectedFlavors] = useState<string[]>(initialBrew?.flavors.map((flavor) => flavor.id) ?? [])
+  const [notes, setNotes] = useState(initialBrew?.notes ?? '')
   
   // Brew parameters
-  const [beanWeight, setBeanWeight] = useState('')
-  const [waterWeight, setWaterWeight] = useState('')
-  const [waterTemp, setWaterTemp] = useState('')
-  const [grindSize, setGrindSize] = useState('')
-  const [brewTime, setBrewTime] = useState('')
-  const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>([
-    { time: '', water: '' },
-  ])
+  const [beanWeight, setBeanWeight] = useState(initialBrew ? String(initialBrew.beanWeight) : '')
+  const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
+  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null ? String(initialBrew.waterTemp) : '')
+  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null ? String(initialBrew.beanGrind) : '')
+  const [brewTime, setBrewTime] = useState(initialBrew && initialBrew.steps.length > 0 ? String(initialBrew.steps[initialBrew.steps.length - 1]?.time ?? '') : '')
+  const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
+    initialBrew && initialBrew.steps.length > 0
+      ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
+      : [{ time: '', water: '' }]
+  )
   
   // Ratings
-  const [aroma, setAroma] = useState([4])
-  const [acidity, setAcidity] = useState([3])
-  const [sweetness, setSweetness] = useState([4])
-  const [body, setBody] = useState([3])
-  const [overall, setOverall] = useState([4])
+  const [aroma, setAroma] = useState([initialBrew?.aroma ?? 4])
+  const [acidity, setAcidity] = useState([initialBrew?.acidity ?? 3])
+  const [sweetness, setSweetness] = useState([initialBrew?.sweetness ?? 4])
+  const [body, setBody] = useState([initialBrew?.body ?? 3])
+  const [overall, setOverall] = useState([initialBrew?.overall ?? 4])
 
   const toggleFlavor = (flavorId: string) => {
     setSelectedFlavors((prev) =>
@@ -86,17 +90,18 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
         return
       }
 
-      const response = await fetch('/api/brews', {
-        method: 'POST',
+      const isEdit = mode === 'edit' && initialBrew
+      const response = await fetch(isEdit ? `/api/brews/${initialBrew.id}` : '/api/brews', {
+        method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           beanId: selectedBean,
           beanWeight: parseFloat(beanWeight),
-          beanGrind: grindSize ? parseFloat(grindSize) : null,
+          beanGrind: grindSize ? parseFloat(grindSize) : '',
           waterWeight: parseFloat(waterWeight),
-          waterTemp: waterTemp ? parseFloat(waterTemp) : null,
+          waterTemp: waterTemp ? parseFloat(waterTemp) : '',
           aroma: aroma[0],
           acidity: acidity[0],
           sweetness: sweetness[0],
@@ -108,7 +113,13 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create brew')
+        throw new Error('Failed to save brew')
+      }
+
+      if (isEdit) {
+        router.push(`/brews/${initialBrew.id}`)
+        router.refresh()
+        return
       }
 
       const { id } = (await response.json()) as { id: string }
@@ -499,7 +510,7 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
             Saving...
           </>
         ) : (
-          'Log Brew'
+          mode === 'edit' ? 'Save Brew' : 'Log Brew'
         )}
       </Button>
     </form>
