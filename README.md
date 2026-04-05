@@ -25,9 +25,10 @@
 - 数値入力のしやすさ（グラム、秒、温度）
 - 将来の永続化層差し替えを考慮した型中心設計
 
-## Data Structures
+## Documentation
 
-- [data-structures.md](./docs/data-structures.md)
+- [Development Guide](./docs/development-guide.md)
+- [Data Structures](./docs/data-structures.md)
 
 ## Getting Started
 
