@@ -4,7 +4,8 @@ import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
-import { ArrowLeft, Thermometer, Scale, Coffee, Cog } from 'lucide-react'
+import { DeleteResourceButton } from '@/components/delete-resource-button'
+import { ArrowLeft, Thermometer, Scale, Coffee, Cog, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -114,6 +115,23 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <span className="text-sm text-muted-foreground">Brew Ratio</span>
             <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
           </div>
+        </section>
+
+
+        <section className="mb-6 grid grid-cols-2 gap-3">
+          <Link
+            href={`/brews/${brew.id}/edit`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit Brew
+          </Link>
+          <DeleteResourceButton
+            endpoint={`/api/brews/${brew.id}`}
+            redirectTo={`/beans/${brew.bean.id}`}
+            confirmMessage="この抽出ログを削除しますか？"
+            className="w-full"
+          />
         </section>
 
         {/* Pour Profile */}

@@ -5,7 +5,8 @@ import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
-import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
+import { DeleteResourceButton } from '@/components/delete-resource-button'
+import { ArrowLeft, Plus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,6 +110,23 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
           </section>
         )}
+
+
+        <section className="mb-6 grid grid-cols-2 gap-3">
+          <Link
+            href={`/beans/${id}/edit`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit Bean
+          </Link>
+          <DeleteResourceButton
+            endpoint={`/api/beans/${id}`}
+            redirectTo="/"
+            confirmMessage="この豆を削除しますか？紐づく抽出も削除されます。"
+            className="w-full"
+          />
+        </section>
 
         {/* Brew History */}
         {brews.length > 0 && (

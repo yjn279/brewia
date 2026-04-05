@@ -14,24 +14,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { COUNTRIES, COUNTRY_FLAGS, ROAST_LEVELS } from '@/lib/types'
+import { COUNTRIES, COUNTRY_FLAGS, ROAST_LEVELS, type Bean } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
 
 const processes = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Wet Hulled']
 const NO_PROCESS_VALUE = '__none__'
 
-export function NewBeanForm() {
+interface NewBeanFormProps {
+  mode?: 'create' | 'edit'
+  initialBean?: Bean
+}
+
+export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [roastIndex, setRoastIndex] = useState([2])
-  const [name, setName] = useState('')
-  const [roaster, setRoaster] = useState('')
-  const [country, setCountry] = useState<(typeof COUNTRIES)[number] | ''>('')
-  const [region, setRegion] = useState('')
-  const [farm, setFarm] = useState('')
-  const [variety, setVariety] = useState('')
-  const [process, setProcess] = useState('')
-  const [notes, setNotes] = useState('')
+  const initialRoastIndex = initialBean ? Math.max(0, ROAST_LEVELS.indexOf(initialBean.roast)) : 2
+  const [roastIndex, setRoastIndex] = useState([initialRoastIndex])
+  const [name, setName] = useState(initialBean?.name ?? '')
+  const [roaster, setRoaster] = useState(initialBean?.roaster ?? '')
+  const [country, setCountry] = useState<(typeof COUNTRIES)[number] | ''>(initialBean?.country ?? '')
+  const [region, setRegion] = useState(initialBean?.region ?? '')
+  const [farm, setFarm] = useState(initialBean?.farm ?? '')
+  const [variety, setVariety] = useState(initialBean?.variety ?? '')
+  const [process, setProcess] = useState(initialBean?.process ?? '')
+  const [notes, setNotes] = useState(initialBean?.notes ?? '')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -42,8 +48,9 @@ export function NewBeanForm() {
         return
       }
 
-      const response = await fetch('/api/beans', {
-        method: 'POST',
+      const isEdit = mode === 'edit' && initialBean
+      const response = await fetch(isEdit ? `/api/beans/${initialBean.id}` : '/api/beans', {
+        method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -61,7 +68,13 @@ export function NewBeanForm() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create bean')
+        throw new Error('Failed to save bean')
+      }
+
+      if (isEdit) {
+        router.push(`/beans/${initialBean.id}`)
+        router.refresh()
+        return
       }
 
       const { id } = (await response.json()) as { id: string }
@@ -74,7 +87,6 @@ export function NewBeanForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      {/* Basic Info */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Bean Info
@@ -82,40 +94,21 @@ export function NewBeanForm() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              placeholder="Yirgacheffe Kochere"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-            />
+            <Input id="name" placeholder="Yirgacheffe Kochere" value={name} onChange={(event) => setName(event.target.value)} required />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="roaster">Roaster</Label>
-            <Input
-              id="roaster"
-              placeholder="Onibus Coffee"
-              value={roaster}
-              onChange={(event) => setRoaster(event.target.value)}
-              required
-            />
+            <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
           </div>
         </div>
       </div>
 
-      {/* Origin */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Origin
-        </h2>
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">Origin</h2>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="country">Country</Label>
-            <Select
-              value={country}
-              onValueChange={(value) => setCountry(value as (typeof COUNTRIES)[number])}
-              required
-            >
+            <Select value={country} onValueChange={(value) => setCountry(value as (typeof COUNTRIES)[number])} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
@@ -133,46 +126,25 @@ export function NewBeanForm() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="region">Region</Label>
-            <Input
-              id="region"
-              placeholder="Yirgacheffe"
-              value={region}
-              onChange={(event) => setRegion(event.target.value)}
-            />
+            <Input id="region" placeholder="Yirgacheffe" value={region} onChange={(event) => setRegion(event.target.value)} />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="farm">Farm / Station</Label>
-            <Input
-              id="farm"
-              placeholder="Kochere Washing Station"
-              value={farm}
-              onChange={(event) => setFarm(event.target.value)}
-            />
+            <Input id="farm" placeholder="Kochere Washing Station" value={farm} onChange={(event) => setFarm(event.target.value)} />
           </div>
         </div>
       </div>
 
-      {/* Characteristics */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Characteristics
-        </h2>
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">Characteristics</h2>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="variety">Variety</Label>
-            <Input
-              id="variety"
-              placeholder="Heirloom"
-              value={variety}
-              onChange={(event) => setVariety(event.target.value)}
-            />
+            <Input id="variety" placeholder="Heirloom" value={variety} onChange={(event) => setVariety(event.target.value)} />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="process">Process</Label>
-            <Select
-              value={process || undefined}
-              onValueChange={(value) => setProcess(value === NO_PROCESS_VALUE ? '' : value)}
-            >
+            <Select value={process || undefined} onValueChange={(value) => setProcess(value === NO_PROCESS_VALUE ? '' : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Optional" />
               </SelectTrigger>
@@ -191,42 +163,24 @@ export function NewBeanForm() {
               <Label>Roast Level</Label>
               <span className="text-sm text-muted-foreground">{ROAST_LEVELS[roastIndex[0]]}</span>
             </div>
-            <Slider
-              value={roastIndex}
-              onValueChange={setRoastIndex}
-              min={0}
-              max={ROAST_LEVELS.length - 1}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{ROAST_LEVELS[0]}</span>
-              <span>{ROAST_LEVELS[ROAST_LEVELS.length - 1]}</span>
-            </div>
+            <Slider value={roastIndex} onValueChange={setRoastIndex} min={0} max={ROAST_LEVELS.length - 1} step={1} className="w-full" />
           </div>
         </div>
       </div>
 
-      {/* Notes */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Notes
-        </h2>
-        <Textarea
-          placeholder="Tasting notes, purchase info, etc."
-          rows={3}
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-        />
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">Notes</h2>
+        <Textarea placeholder="Tasting notes, purchase info, etc." rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
       </div>
 
-      {/* Submit */}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Saving...
           </>
+        ) : mode === 'edit' ? (
+          'Save Bean'
         ) : (
           'Add Bean'
         )}
