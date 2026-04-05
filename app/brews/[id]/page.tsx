@@ -22,7 +22,6 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
   }
 
   const flag = COUNTRY_FLAGS[brew.bean.country]
-  const date = new Date(brew.created)
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
 
   return (
@@ -39,13 +38,21 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             </Link>
             <span className="font-medium">Brew Details</span>
           </div>
-          <time className="font-mono text-xs text-muted-foreground">
-            {date.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </time>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/brews/${brew.id}/edit`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+            <DeleteResourceButton
+              endpoint={`/api/brews/${brew.id}`}
+              redirectTo={`/beans/${brew.bean.id}`}
+              confirmMessage="この抽出ログを削除しますか？"
+              showLabel={false}
+              className="h-8 w-8 px-0"
+            />
+          </div>
         </div>
       </header>
 
@@ -118,21 +125,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         </section>
 
 
-        <section className="mb-6 grid grid-cols-2 gap-3">
-          <Link
-            href={`/brews/${brew.id}/edit`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit Brew
-          </Link>
-          <DeleteResourceButton
-            endpoint={`/api/brews/${brew.id}`}
-            redirectTo={`/beans/${brew.bean.id}`}
-            confirmMessage="この抽出ログを削除しますか？"
-            className="w-full"
-          />
-        </section>
+        
 
         {/* Pour Profile */}
         <section className="mb-6">

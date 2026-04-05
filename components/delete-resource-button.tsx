@@ -10,9 +10,10 @@ interface DeleteResourceButtonProps {
   redirectTo: string
   confirmMessage: string
   className?: string
+  showLabel?: boolean
 }
 
-export function DeleteResourceButton({ endpoint, redirectTo, confirmMessage, className }: DeleteResourceButtonProps) {
+export function DeleteResourceButton({ endpoint, redirectTo, confirmMessage, className, showLabel = true }: DeleteResourceButtonProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -47,7 +48,7 @@ export function DeleteResourceButton({ endpoint, redirectTo, confirmMessage, cla
       className={className}
     >
       {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-      <span className="ml-2">Delete</span>
+      {showLabel && <span className="ml-2">Delete</span>}
     </Button>
   )
 }

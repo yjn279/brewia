@@ -39,12 +39,27 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             </Link>
             <span className="font-medium">Bean Details</span>
           </div>
-          <Link
-            href={`/new?type=brew&bean=${id}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/beans/${id}/edit`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+            <DeleteResourceButton
+              endpoint={`/api/beans/${id}`}
+              redirectTo="/"
+              confirmMessage="この豆を削除しますか？紐づく抽出も削除されます。"
+              showLabel={false}
+              className="h-8 w-8 px-0"
+            />
+            <Link
+              href={`/new?type=brew&bean=${id}`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -112,21 +127,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         )}
 
 
-        <section className="mb-6 grid grid-cols-2 gap-3">
-          <Link
-            href={`/beans/${id}/edit`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit Bean
-          </Link>
-          <DeleteResourceButton
-            endpoint={`/api/beans/${id}`}
-            redirectTo="/"
-            confirmMessage="この豆を削除しますか？紐づく抽出も削除されます。"
-            className="w-full"
-          />
-        </section>
+        
 
         {/* Brew History */}
         {brews.length > 0 && (
