@@ -45,27 +45,28 @@ export default async function HomePage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 py-6">
-        {/* Welcome + Stats */}
-        <section className="mb-8 flex items-start justify-between gap-3">
-          <div className="min-w-0 pt-1">
-            <Greeting />
-            <p className="mt-1 text-muted-foreground">
-              Your coffee journey continues
-            </p>
-          </div>
+        {/* Welcome */}
+        <section className="mb-6">
+          <Greeting />
+          <p className="mt-1 text-muted-foreground">
+            Your coffee journey continues
+          </p>
+        </section>
 
-          <div className="flex w-full max-w-[180px] flex-col gap-2">
+        {/* Stats Grid */}
+        <section className="mb-8 grid grid-cols-2 gap-3">
+          <div>
             <StatsCard
               label="Total Brews"
               value={totalBrews}
-              icon={<Flame className="h-3 w-3" />}
-              className="gap-0.5 p-2.5 [&>span]:text-lg [&_span]:tracking-wide"
+              icon={<Flame className="h-3.5 w-3.5" />}
             />
+          </div>
+          <div>
             <StatsCard
               label="Bean Variety"
               value={totalBeans}
-              icon={<Coffee className="h-3 w-3" />}
-              className="gap-0.5 p-2.5 [&>span]:text-lg [&_span]:tracking-wide"
+              icon={<Coffee className="h-3.5 w-3.5" />}
             />
           </div>
         </section>
