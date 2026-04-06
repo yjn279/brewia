@@ -4,11 +4,27 @@ import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
+import { brewsService } from '@/app/brews/service'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewPage() {
-  const [beans, flavors] = await Promise.all([beansService.getBeans(), flavorsService.getFlavors()])
+interface NewPageProps {
+  searchParams: Promise<{
+    type?: 'bean' | 'brew'
+    bean?: string
+    copyBean?: string
+    copyBrew?: string
+  }>
+}
+
+export default async function NewPage({ searchParams }: NewPageProps) {
+  const params = await searchParams
+  const [beans, flavors, initialBean, initialBrew] = await Promise.all([
+    beansService.getBeans(),
+    flavorsService.getFlavors(),
+    params.copyBean ? beansService.getBeanById(params.copyBean) : Promise.resolve(undefined),
+    params.copyBrew ? brewsService.getBrewById(params.copyBrew) : Promise.resolve(undefined),
+  ])
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,7 +45,7 @@ export default async function NewPage() {
 
       <main className="mx-auto max-w-md px-4 py-6">
         <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-card" />}>
-          <NewEntryTabs beans={beans} flavors={flavors} />
+          <NewEntryTabs beans={beans} flavors={flavors} initialBean={initialBean ?? undefined} initialBrew={initialBrew ?? undefined} />
         </Suspense>
       </main>
     </div>
