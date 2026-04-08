@@ -40,14 +40,14 @@ export function PourChart({ steps, totalWater, children }: PourChartProps) {
             tickFormatter={(v) => `${v}s`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: 'var(--border)' }}
           />
           <YAxis
             domain={[0, totalWater]}
             tickFormatter={(v) => `${v}g`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: 'var(--border)' }}
             width={40}
           />
           <Area

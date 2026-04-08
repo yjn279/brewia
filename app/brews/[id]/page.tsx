@@ -132,7 +132,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         <section className="mb-6">
           <PourChart steps={brew.steps} totalWater={brew.waterWeight}>
             {extractionSteps.length > 0 && (
-              <div className="mt-4 space-y-2 border-t border-border/70 pt-4">
+              <div className="mt-4 space-y-2">
                 {extractionSteps.map((step, index) => {
                   const previousWater = index > 0 ? extractionSteps[index - 1]?.water ?? 0 : 0
                   const pourWater = step.water - previousWater
@@ -140,15 +140,15 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
                   return (
                     <div
                       key={`${step.time}-${step.water}-${index}`}
-                      className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg bg-secondary/40 px-3 py-2"
+                      className="grid grid-cols-[2rem_1fr_auto] items-center gap-3 rounded-lg bg-secondary/40 px-3 py-2"
                     >
-                      <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-mono text-foreground">{step.time}s</span>
+                      <span className="text-center text-xs font-medium text-muted-foreground">#{index + 1}</span>
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
+                        <span className="font-mono text-foreground text-right tabular-nums">{step.time}s</span>
                         <span className="text-muted-foreground">:</span>
-                        <span className="font-mono text-foreground">{step.water}g</span>
+                        <span className="font-mono text-foreground tabular-nums">{step.water}g</span>
                       </div>
-                      <span className="font-mono text-xs text-primary">
+                      <span className="font-mono text-xs text-primary tabular-nums">
                         +{pourWater >= 0 ? pourWater : 0}g
                       </span>
                     </div>
