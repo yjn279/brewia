@@ -10,6 +10,13 @@ export const upsertBrewSchema = z.object({
   waterTemp: z.union([z.coerce.number().min(0).max(100), z.literal('')]).transform((value) => {
     return value === '' ? null : value
   }),
+
+  steps: z.array(
+    z.object({
+      time: z.coerce.number().min(0),
+      water: z.coerce.number().min(0),
+    })
+  ).default([]),
   aroma: z.coerce.number().int().min(1).max(5),
   acidity: z.coerce.number().int().min(1).max(5),
   sweetness: z.coerce.number().int().min(1).max(5),
