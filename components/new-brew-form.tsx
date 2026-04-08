@@ -102,6 +102,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           beanGrind: grindSize ? parseFloat(grindSize) : '',
           waterWeight: parseFloat(waterWeight),
           waterTemp: waterTemp ? parseFloat(waterTemp) : '',
+          steps,
           aroma: aroma[0],
           acidity: acidity[0],
           sweetness: sweetness[0],
