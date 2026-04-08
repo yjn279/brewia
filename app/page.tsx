@@ -53,7 +53,7 @@ export default async function HomePage() {
         {/* Stats Grid */}
         <section className="mb-8">
           <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Quick Stats
+            Your Coffee Journey
           </h2>
           <div className="grid grid-cols-2 gap-3">
             <div>
