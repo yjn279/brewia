@@ -4,6 +4,7 @@ import {
   Area,
   AreaChart,
   Line,
+  ReferenceDot,
   ReferenceLine,
   Tooltip,
   XAxis,
@@ -24,10 +25,10 @@ type ChartPoint = {
   deltaWater?: number
 }
 
-function StepDot(props: { cx?: number; cy?: number; payload?: ChartPoint }) {
-  const { cx, cy, payload } = props
+function StepMarker(props: { cx?: number; cy?: number; stepIndex: number }) {
+  const { cx, cy, stepIndex } = props
 
-  if (cx == null || cy == null || !payload?.stepIndex) {
+  if (cx == null || cy == null) {
     return null
   }
 
@@ -43,7 +44,7 @@ function StepDot(props: { cx?: number; cy?: number; payload?: ChartPoint }) {
         fontWeight={700}
         fill="var(--background)"
       >
-        {payload.stepIndex}
+        {stepIndex}
       </text>
     </g>
   )
@@ -88,7 +89,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
         Pour Profile
       </h4>
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 12, right: 14, bottom: 5, left: 8 }}>
           <defs>
             <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.4} />
@@ -100,10 +101,11 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             type="number"
             domain={[0, 'dataMax']}
             ticks={[0, ...stepTimes]}
+            padding={{ left: 8, right: 8 }}
             tickFormatter={(v) => `${v}s`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: 'var(--border)' }}
           />
           <YAxis
             domain={[0, totalWater]}
@@ -111,7 +113,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             tickFormatter={(v) => `${v}g`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: 'var(--border)' }}
             width={40}
           />
           {stepTimes.map((time) => (
@@ -154,14 +156,28 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             dataKey="water"
             stroke="var(--chart-2)"
             strokeWidth={2}
-            dot={<StepDot />}
-            activeDot={{ r: 10, strokeWidth: 2, stroke: 'var(--chart-2)', fill: 'var(--background)' }}
+            dot={false}
+            activeDot={{ r: 6, strokeWidth: 2, stroke: 'var(--chart-2)', fill: 'var(--background)' }}
           />
+          {chartData
+            .filter((point) => point.stepIndex)
+            .map((point) => (
+              <ReferenceDot
+                key={`step-dot-${point.stepIndex}-${point.time}-${point.water}`}
+                x={point.time}
+                y={point.water}
+                ifOverflow="extendDomain"
+                shape={(shapeProps: { cx?: number; cy?: number }) => (
+                  <StepMarker
+                    cx={shapeProps.cx}
+                    cy={shapeProps.cy}
+                    stepIndex={point.stepIndex as number}
+                  />
+                )}
+              />
+            ))}
         </AreaChart>
       </ResponsiveContainer>
-      <p className="mt-3 text-xs text-muted-foreground">
-        ドット内の番号が抽出ステップ順です（例: #1, #2...）。
-      </p>
     </div>
   )
 }
