@@ -89,7 +89,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
         Pour Profile
       </h4>
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={chartData} margin={{ top: 12, right: 14, bottom: 5, left: 8 }}>
+        <AreaChart data={chartData} margin={{ top: 12, right: 14, bottom: 5, left: 0 }}>
           <defs>
             <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.4} />
@@ -101,7 +101,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             type="number"
             domain={[0, 'dataMax']}
             ticks={[0, ...stepTimes]}
-            padding={{ left: 8, right: 8 }}
+            padding={{ left: 0, right: 8 }}
             tickFormatter={(v) => `${v}s`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
