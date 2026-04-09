@@ -3,8 +3,8 @@
 import {
   Area,
   AreaChart,
-  CartesianGrid,
   Line,
+  ReferenceLine,
   Tooltip,
   XAxis,
   YAxis,
@@ -21,7 +21,6 @@ type ChartPoint = {
   time: number
   water: number
   stepIndex?: number
-  stepLabel?: string
   deltaWater?: number
 }
 
@@ -34,7 +33,7 @@ function StepDot(props: { cx?: number; cy?: number; payload?: ChartPoint }) {
 
   return (
     <g>
-      <circle cx={cx} cy={cy} r={9} fill="var(--background)" stroke="var(--chart-2)" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={10} fill="var(--chart-2)" stroke="var(--background)" strokeWidth={2} />
       <text
         x={cx}
         y={cy + 0.5}
@@ -42,7 +41,7 @@ function StepDot(props: { cx?: number; cy?: number; payload?: ChartPoint }) {
         dominantBaseline="middle"
         fontSize={10}
         fontWeight={700}
-        fill="var(--chart-2)"
+        fill="var(--background)"
       >
         {payload.stepIndex}
       </text>
@@ -55,6 +54,13 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
   const normalizedSteps = sortedSteps.length > 0 && sortedSteps[0]?.time !== 0
     ? [{ time: 0, water: 0 }, ...sortedSteps]
     : sortedSteps
+  const stepTimes = [...new Set(sortedSteps.map((step) => step.time))]
+    .filter((time) => time > 0)
+    .sort((a, b) => a - b)
+  const stepWaters = [...new Set(sortedSteps.map((step) => step.water))]
+    .filter((water) => water > 0)
+    .sort((a, b) => a - b)
+
   const chartData: ChartPoint[] = normalizedSteps.map((step, index, list) => {
     const isStartPoint = index === 0 && step.time === 0 && step.water === 0
 
@@ -72,7 +78,6 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
       time: step.time,
       water: step.water,
       stepIndex,
-      stepLabel: `#${stepIndex}`,
       deltaWater: step.water - previousWater,
     }
   })
@@ -94,6 +99,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             dataKey="time"
             type="number"
             domain={[0, 'dataMax']}
+            ticks={[0, ...stepTimes]}
             tickFormatter={(v) => `${v}s`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
@@ -101,13 +107,29 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
           />
           <YAxis
             domain={[0, totalWater]}
+            ticks={[0, ...stepWaters]}
             tickFormatter={(v) => `${v}g`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             width={40}
           />
-          <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
+          {stepTimes.map((time) => (
+            <ReferenceLine
+              key={`time-${time}`}
+              x={time}
+              stroke="var(--border)"
+              strokeDasharray="4 4"
+            />
+          ))}
+          {stepWaters.map((water) => (
+            <ReferenceLine
+              key={`water-${water}`}
+              y={water}
+              stroke="var(--border)"
+              strokeDasharray="4 4"
+            />
+          ))}
           <Tooltip
             formatter={(value, name, item) => {
               if (name === 'water') {
