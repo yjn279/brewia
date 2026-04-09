@@ -23,7 +23,6 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
   const flag = COUNTRY_FLAGS[brew.bean.country]
   const ratio = (brew.waterWeight / brew.beanWeight).toFixed(1)
-  const extractionSteps = [...brew.steps].sort((a, b) => a.time - b.time)
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,35 +127,9 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
         
 
-        {/* Pour Profile + Steps */}
+        {/* Pour Profile */}
         <section className="mb-6">
-          <PourChart steps={brew.steps} totalWater={brew.waterWeight}>
-            {extractionSteps.length > 0 && (
-              <div className="mt-4 space-y-2">
-                {extractionSteps.map((step, index) => {
-                  const previousWater = index > 0 ? extractionSteps[index - 1]?.water ?? 0 : 0
-                  const pourWater = step.water - previousWater
-
-                  return (
-                    <div
-                      key={`${step.time}-${step.water}-${index}`}
-                      className="flex items-center justify-evenly rounded-lg bg-secondary/40 px-3 py-2"
-                    >
-                      <span className="min-w-10 text-center text-xs font-medium text-muted-foreground">#{index + 1}</span>
-                      <div className="flex min-w-28 items-center justify-center gap-2 text-sm">
-                        <span className="font-mono text-foreground text-right tabular-nums">{step.time}s</span>
-                        <span className="text-muted-foreground">:</span>
-                        <span className="font-mono text-foreground tabular-nums">{step.water}g</span>
-                      </div>
-                      <span className="min-w-12 text-center font-mono text-xs text-primary tabular-nums">
-                        +{pourWater >= 0 ? pourWater : 0}g
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </PourChart>
+          <PourChart steps={brew.steps} totalWater={brew.waterWeight} />
         </section>
 
         {/* Taste Profile */}
