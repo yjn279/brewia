@@ -25,6 +25,31 @@ type ChartPoint = {
   deltaWater?: number
 }
 
+function StepTooltip(props: { active?: boolean; payload?: Array<{ payload: ChartPoint }> }) {
+  const point = props.payload?.[0]?.payload
+
+  if (!props.active || !point) {
+    return null
+  }
+
+  if (!point.stepIndex) {
+    return (
+      <div className="rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm">
+        Start
+      </div>
+    )
+  }
+
+  const delta = Math.max(point.deltaWater ?? 0, 0)
+
+  return (
+    <div className="rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm">
+      <p className="font-medium">{`Step #${point.stepIndex}`}</p>
+      <p className="font-mono">{`${point.time}s：${point.water}g（+${delta}g）`}</p>
+    </div>
+  )
+}
+
 function StepMarker(props: { cx?: number; cy?: number; stepIndex: number }) {
   const { cx, cy, stepIndex } = props
 
@@ -32,11 +57,13 @@ function StepMarker(props: { cx?: number; cy?: number; stepIndex: number }) {
     return null
   }
 
+  const markerX = cx <= 20 ? cx + 12 : cx
+
   return (
     <g>
-      <circle cx={cx} cy={cy} r={10} fill="var(--chart-2)" stroke="var(--background)" strokeWidth={2} />
+      <circle cx={markerX} cy={cy} r={10} fill="var(--chart-2)" stroke="var(--background)" strokeWidth={2} />
       <text
-        x={cx}
+        x={markerX}
         y={cy + 0.5}
         textAnchor="middle"
         dominantBaseline="middle"
@@ -132,19 +159,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
               strokeDasharray="4 4"
             />
           ))}
-          <Tooltip
-            formatter={(value, name, item) => {
-              if (name === 'water') {
-                const point = item.payload as ChartPoint
-                const stepLabel = point.stepIndex ? `Step #${point.stepIndex}` : 'Start'
-                const deltaLabel = typeof point.deltaWater === 'number' ? ` (+${Math.max(point.deltaWater, 0)}g)` : ''
-                return [`${value}g${deltaLabel}`, stepLabel]
-              }
-
-              return [value, name]
-            }}
-            labelFormatter={(label) => `${label}s`}
-          />
+          <Tooltip content={<StepTooltip />} />
           <Area
             type="monotone"
             dataKey="water"
