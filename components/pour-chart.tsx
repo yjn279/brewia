@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import {
   Area,
   AreaChart,
+  CartesianGrid,
   XAxis,
   YAxis,
   ResponsiveContainer,
@@ -40,16 +41,17 @@ export function PourChart({ steps, totalWater, children }: PourChartProps) {
             tickFormatter={(v) => `${v}s`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--border)' }}
+            axisLine={false}
           />
           <YAxis
             domain={[0, totalWater]}
             tickFormatter={(v) => `${v}g`}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--border)' }}
+            axisLine={false}
             width={40}
           />
+          <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
           <Area
             type="monotone"
             dataKey="water"
