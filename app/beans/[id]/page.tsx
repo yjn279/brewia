@@ -6,7 +6,7 @@ import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
-import { ArrowLeft, Plus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
+import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +40,12 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <span className="font-medium">Bean Details</span>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href={`/new?type=bean&copyBean=${id}`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <CopyPlus className="h-4 w-4" />
+            </Link>
             <Link
               href={`/beans/${id}/edit`}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
