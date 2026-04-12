@@ -2,7 +2,7 @@
 
 ## 共通仕様
 
-Brewia の API は Base Path を `/api` とし、`Content-Type: application/json` を前提とする。バリデーションエラーや未検出エラーでは、レスポンスボディに `{ "error": "..." }` 形式の JSON を返却する。
+Brewia の API は Base Path を `/api` とし、`Content-Type: application/json` を前提とする。バリデーションエラーや未検出エラーでは、レスポンスに `{ "error": "..." }` 形式の JSON を返却する。
 
 ## APIフロー
 
@@ -29,13 +29,20 @@ sequenceDiagram
 
 ### GET `/api/beans`
 
-この API は豆一覧を取得する。成功時は 200 を返し、レスポンスボディは配列となる。取得失敗時は 500 を返し、レスポンスボディは `{ "error": "Internal Server Error" }` を返す。
+この API は豆一覧を取得する。成功時は 200 を返し、レスポンスは配列となる。取得失敗時は 500 を返し、レスポンスは `{ "error": "Internal Server Error" }` を返す。
+
+#### レスポンス
+
+| 名称       | 変数名 | 型     | 必須 |
+| ---------- | ------ | ------ | ---- |
+| 豆一覧     | []     | Bean[] | ○    |
+| エラー内容 | error  | string | -    |
 
 ### POST `/api/beans`
 
-この API は豆を作成する。成功時は 201 を返し、レスポンスボディは `{ "id": "<beanId>" }` を返す。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }` を返し、`Content-Type` 不正時は 415 と `{ "error": "Unsupported Media Type" }` を返し、作成失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+この API は豆を作成する。成功時は 201 を返し、レスポンスは `{ "id": "<beanId>" }` を返す。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }` を返し、`Content-Type` 不正時は 415 と `{ "error": "Unsupported Media Type" }` を返し、作成失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### リクエストボディ
+#### リクエスト
 
 | 名称     | 変数名  | 型     | 必須 |
 | -------- | ------- | ------ | ---- |
@@ -49,7 +56,7 @@ sequenceDiagram
 | 焙煎度   | roast   | string | ○    |
 | メモ     | notes   | string | -    |
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称       | 変数名 | 型     | 必須 |
 | ---------- | ------ | ------ | ---- |
@@ -60,7 +67,7 @@ sequenceDiagram
 
 この API は豆詳細を取得する。成功時は 200 を返し、未検出時は 404 と `{ "error": "Bean not found" }` を返す。取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称       | 変数名  | 型          | 必須 |
 | ---------- | ------- | ----------- | ---- |
@@ -80,9 +87,9 @@ sequenceDiagram
 
 ### PUT `/api/beans/:id`
 
-この API は豆情報を全項目更新する。リクエストボディは `POST /api/beans` と同一である。成功時は 200 を返し更新後の Bean を返却する。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、未検出時は 404 と `{ "error": "Bean not found" }`、更新失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+この API は豆情報を全項目更新する。リクエストは `POST /api/beans` と同一である。成功時は 200 を返し更新後の Bean を返却する。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、未検出時は 404 と `{ "error": "Bean not found" }`、更新失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称       | 変数名  | 型          | 必須 |
 | ---------- | ------- | ----------- | ---- |
@@ -114,11 +121,18 @@ sequenceDiagram
 | ---- | ------ | ------ | ---- |
 | 豆ID | beanId | string | -    |
 
+#### レスポンス
+
+| 名称       | 変数名 | 型     | 必須 |
+| ---------- | ------ | ------ | ---- |
+| 抽出一覧   | []     | Brew[] | ○    |
+| エラー内容 | error  | string | -    |
+
 ### POST `/api/brews`
 
 この API は抽出を作成する。成功時は 201 と `{ "id": "<brewId>" }` を返す。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、参照 Bean 不存在時は 404 と `{ "error": "Bean not found" }`、作成失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### リクエストボディ
+#### リクエスト
 
 | 名称             | 変数名      | 型            | 必須 |
 | ---------------- | ----------- | ------------- | ---- |
@@ -136,7 +150,7 @@ sequenceDiagram
 | メモ             | notes       | string        | -    |
 | フレーバーID一覧 | flavorIds   | string[]      | -    |
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称       | 変数名 | 型     | 必須 |
 | ---------- | ------ | ------ | ---- |
@@ -147,7 +161,7 @@ sequenceDiagram
 
 この API は抽出詳細を取得し、`bean` と `flavors` を含む。成功時は 200 を返す。未検出時は 404 と `{ "error": "Brew not found" }` を返し、取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称           | 変数名      | 型          | 必須 |
 | -------------- | ----------- | ----------- | ---- |
@@ -172,9 +186,9 @@ sequenceDiagram
 
 ### PUT `/api/brews/:id`
 
-この API は抽出情報を全項目更新する。リクエストボディは `POST /api/brews` と同一である。成功時は 200 を返し更新後の Brew を返却する。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、未検出時は 404 と `{ "error": "Brew not found" }`、更新失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+この API は抽出情報を全項目更新する。リクエストは `POST /api/brews` と同一である。成功時は 200 を返し更新後の Brew を返却する。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、未検出時は 404 と `{ "error": "Brew not found" }`、更新失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称         | 変数名      | 型          | 必須 |
 | ------------ | ----------- | ----------- | ---- |
@@ -203,7 +217,7 @@ sequenceDiagram
 
 この API はフレーバー一覧を取得する。成功時は 200 を返し、取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
 
-#### レスポンスボディ
+#### レスポンス
 
 | 名称         | 変数名      | 型     | 必須 |
 | ------------ | ----------- | ------ | ---- |
