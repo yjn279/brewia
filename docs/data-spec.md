@@ -13,61 +13,61 @@ erDiagram
 
 ### Bean
 
-| 項目名   | 物理名  | 型             | 必須 | 概要     |
-| -------- | ------- | -------------- | ---- | -------- |
-| ID       | id      | text(UUIDv7)   | ○    | 主キー   |
-| 名称     | name    | text           | ○    | 豆の名称 |
-| 生産国   | country | text(enum)     | ○    | 生産国   |
-| 生産地域 | region  | text           | -    | 生産地域 |
-| 生産農園 | farm    | text           | -    | 生産農園 |
-| 生産処理 | process | text           | -    | 生産処理 |
-| 品種     | variety | text           | -    | 品種     |
-| 焙煎度   | roast   | text(enum)     | ○    | 焙煎度   |
-| 焙煎所   | roaster | text           | -    | 焙煎所   |
-| メモ     | notes   | text           | -    | 自由記述 |
-| 作成日時 | created | text(datetime) | ○    | 作成日時 |
-| 編集日時 | updated | text(datetime) | ○    | 更新日時 |
+| 論理名   | 物理名  | 型               | 必須 | 補足                |
+| -------- | ------- | ---------------- | ---- | ------------------- |
+| ID       | id      | text（UUIDv7）   | ○    | 主キー              |
+| 名称     | name    | text             | ○    | -                   |
+| 生産国   | country | text（enum）     | ○    | COUNTRIES に準拠    |
+| 生産地域 | region  | text             | -    | -                   |
+| 生産農園 | farm    | text             | -    | -                   |
+| 生産処理 | process | text             | -    | -                   |
+| 品種     | variety | text             | -    | -                   |
+| 焙煎度   | roast   | text（enum）     | ○    | ROAST_LEVELS に準拠 |
+| 焙煎所   | roaster | text             | -    | -                   |
+| メモ     | notes   | text             | -    | -                   |
+| 作成日時 | created | text（datetime） | ○    | CURRENT_TIMESTAMP   |
+| 編集日時 | updated | text（datetime） | ○    | CURRENT_TIMESTAMP   |
 
 ### Brew
 
-| 項目名       | 物理名       | 型             | 必須 | 概要              |
-| ------------ | ------------ | -------------- | ---- | ----------------- |
-| ID           | id           | text(UUIDv7)   | ○    | 主キー            |
-| 豆ID         | bean_id      | text(FK)       | ○    | Bean 参照         |
-| 豆量         | bean_weight  | real           | ○    | 豆の重量（g）     |
-| 挽き目       | bean_grind   | real           | -    | クリック数        |
-| 湯量         | water_weight | real           | ○    | 湯の重量（g）     |
-| 湯温         | water_temp   | real           | -    | 湯温（℃）         |
-| 抽出ステップ | steps        | text(JSON)     | ○    | `[{time, water}]` |
-| 香り         | aroma        | integer        | ○    | 1〜5              |
-| 酸味         | acidity      | integer        | ○    | 1〜5              |
-| 甘味         | sweetness    | integer        | ○    | 1〜5              |
-| 質感         | body         | integer        | ○    | 1〜5              |
-| 総合点       | overall      | integer        | ○    | 1〜5              |
-| メモ         | notes        | text           | -    | 自由記述          |
-| 作成日時     | created      | text(datetime) | ○    | 作成日時          |
-| 編集日時     | updated      | text(datetime) | ○    | 更新日時          |
+| 論理名       | 物理名       | 型               | 必須 | 補足              |
+| ------------ | ------------ | ---------------- | ---- | ----------------- |
+| ID           | id           | text（UUIDv7）   | ○    | 主キー            |
+| 豆ID         | bean_id      | text（FK）       | ○    | Bean 参照         |
+| 豆量         | bean_weight  | real             | ○    | g                 |
+| 挽き目       | bean_grind   | real             | -    | クリック数        |
+| 湯量         | water_weight | real             | ○    | g                 |
+| 湯温         | water_temp   | real             | -    | ℃                 |
+| 抽出ステップ | steps        | text（JSON）     | ○    | `[{time, water}]` |
+| 香り         | aroma        | integer          | ○    | 1〜5              |
+| 酸味         | acidity      | integer          | ○    | 1〜5              |
+| 甘味         | sweetness    | integer          | ○    | 1〜5              |
+| 質感         | body         | integer          | ○    | 1〜5              |
+| 総合点       | overall      | integer          | ○    | 1〜5              |
+| メモ         | notes        | text             | -    | -                 |
+| 作成日時     | created      | text（datetime） | ○    | CURRENT_TIMESTAMP |
+| 編集日時     | updated      | text（datetime） | ○    | CURRENT_TIMESTAMP |
 
 ### Flavor
 
-| 項目名       | 物理名      | 型             | 必須 | 概要           |
-| ------------ | ----------- | -------------- | ---- | -------------- |
-| ID           | id          | text(UUIDv7)   | ○    | 主キー         |
-| 名称         | name        | text           | ○    | フレーバー名称 |
-| カテゴリ     | category    | text           | ○    | 大分類         |
-| サブカテゴリ | subcategory | text           | ○    | 小分類         |
-| 作成日時     | created     | text(datetime) | ○    | 作成日時       |
-| 編集日時     | updated     | text(datetime) | ○    | 更新日時       |
+| 論理名       | 物理名      | 型               | 必須 | 補足              |
+| ------------ | ----------- | ---------------- | ---- | ----------------- |
+| ID           | id          | text（UUIDv7）   | ○    | 主キー            |
+| 名称         | name        | text             | ○    | -                 |
+| カテゴリ     | category    | text             | ○    | -                 |
+| サブカテゴリ | subcategory | text             | ○    | -                 |
+| 作成日時     | created     | text（datetime） | ○    | CURRENT_TIMESTAMP |
+| 編集日時     | updated     | text（datetime） | ○    | CURRENT_TIMESTAMP |
 
 ### BrewFlavor
 
-| 項目名       | 物理名    | 型             | 必須 | 概要        |
-| ------------ | --------- | -------------- | ---- | ----------- |
-| ID           | id        | text(UUIDv7)   | ○    | 主キー      |
-| 抽出ID       | brew_id   | text(FK)       | ○    | Brew 参照   |
-| フレーバーID | flavor_id | text(FK)       | ○    | Flavor 参照 |
-| 作成日時     | created   | text(datetime) | ○    | 作成日時    |
-| 編集日時     | updated   | text(datetime) | ○    | 更新日時    |
+| 論理名       | 物理名    | 型               | 必須 | 補足              |
+| ------------ | --------- | ---------------- | ---- | ----------------- |
+| ID           | id        | text（UUIDv7）   | ○    | 主キー            |
+| 抽出ID       | brew_id   | text（FK）       | ○    | Brew 参照         |
+| フレーバーID | flavor_id | text（FK）       | ○    | Flavor 参照       |
+| 作成日時     | created   | text（datetime） | ○    | CURRENT_TIMESTAMP |
+| 編集日時     | updated   | text（datetime） | ○    | CURRENT_TIMESTAMP |
 
 ## 制約要件
 
