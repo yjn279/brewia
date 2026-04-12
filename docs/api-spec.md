@@ -2,11 +2,7 @@
 
 ## 共通仕様
 
-| 項目           | 内容                                                                                             |
-| -------------- | ------------------------------------------------------------------------------------------------ |
-| Base Path      | `/api`                                                                                           |
-| Content-Type   | `application/json`                                                                               |
-| 主なエラー形式 | `{"error":"Invalid request body"}` / `{"error":"Bean not found"}` / `{"error":"Brew not found"}` |
+Brewia の API は Base Path を `/api` とし、`Content-Type: application/json` を前提とする。バリデーションエラーや未検出エラーでは、レスポンスボディに `{ "error": "..." }` 形式の JSON を返却する。
 
 ## APIフロー
 
@@ -31,241 +27,190 @@ sequenceDiagram
 
 ## エンドポイント仕様
 
-### 豆管理API
+### GET `/api/beans`
+
+この API は豆一覧を取得する。成功時は 200 を返し、レスポンスボディは配列となる。取得失敗時は 500 を返し、レスポンスボディは `{ "error": "Internal Server Error" }` を返す。
+
+### POST `/api/beans`
+
+この API は豆を作成する。成功時は 201 を返し、レスポンスボディは `{ "id": "<beanId>" }` を返す。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }` を返し、`Content-Type` 不正時は 415 と `{ "error": "Unsupported Media Type" }` を返し、作成失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### リクエストボディ
+
+| 名称     | 変数名  | 型     | 必須 |
+| -------- | ------- | ------ | ---- |
+| 豆名     | name    | string | ○    |
+| 焙煎所   | roaster | string | ○    |
+| 生産国   | country | string | ○    |
+| 生産地域 | region  | string | -    |
+| 生産農園 | farm    | string | -    |
+| 品種     | variety | string | -    |
+| 生産処理 | process | string | -    |
+| 焙煎度   | roast   | string | ○    |
+| メモ     | notes   | string | -    |
+
+#### レスポンスボディ
 
-#### GET `/api/beans`
-
-- 説明: 豆一覧を取得する。
-
-**レスポンスボディ（200）**
-
-| フィールド | 型       | 説明   |
-| ---------- | -------- | ------ |
-| `[]`       | `Bean[]` | 豆一覧 |
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 500        | 取得処理失敗 | `{"error":"Internal Server Error"}` |
-
-#### POST `/api/beans`
-
-- 説明: 豆を作成する。
-
-**リクエストボディ**
-
-| フィールド | 型     | 必須 | 説明     |
-| ---------- | ------ | ---- | -------- |
-| `name`     | string | ○    | 豆名     |
-| `roaster`  | string | ○    | 焙煎所   |
-| `country`  | string | ○    | 生産国   |
-| `region`   | string | -    | 生産地域 |
-| `farm`     | string | -    | 生産農園 |
-| `variety`  | string | -    | 品種     |
-| `process`  | string | -    | 生産処理 |
-| `roast`    | string | ○    | 焙煎度   |
-| `notes`    | string | -    | メモ     |
-
-**レスポンスボディ**
-
-| ステータス | ボディ              |
-| ---------- | ------------------- |
-| 201        | `{"id":"<beanId>"}` |
-
-**異常系**
-
-| ステータス | 条件                 | レスポンス                           |
-| ---------- | -------------------- | ------------------------------------ |
-| 400        | バリデーションエラー | `{"error":"Invalid request body"}`   |
-| 415        | Content-Type 不正    | `{"error":"Unsupported Media Type"}` |
-| 500        | 作成処理失敗         | `{"error":"Internal Server Error"}`  |
-
-#### GET `/api/beans/:id`
-
-- 説明: 豆詳細を取得する。
-
-**レスポンスボディ（200）**
-
-| フィールド | 型          | 説明     |
-| ---------- | ----------- | -------- |
-| `id`       | string      | 豆ID     |
-| `name`     | string      | 豆名     |
-| `country`  | string      | 生産国   |
-| `region`   | string/null | 生産地域 |
-| `farm`     | string/null | 生産農園 |
-| `process`  | string/null | 生産処理 |
-| `variety`  | string/null | 品種     |
-| `roast`    | string      | 焙煎度   |
-| `roaster`  | string/null | 焙煎所   |
-| `notes`    | string/null | メモ     |
-| `created`  | string      | 作成日時 |
-| `updated`  | string      | 更新日時 |
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 404        | 対象なし     | `{"error":"Bean not found"}`        |
-| 500        | 取得処理失敗 | `{"error":"Internal Server Error"}` |
-
-#### PUT `/api/beans/:id`
-
-- 説明: 豆情報を更新する（全項目更新）。
-- リクエストボディ: `POST /api/beans` と同一。
-
-**レスポンスボディ（200）**
-
-- 更新後の Bean オブジェクトを返却する。
-
-**異常系**
-
-| ステータス | 条件                 | レスポンス                          |
-| ---------- | -------------------- | ----------------------------------- |
-| 400        | バリデーションエラー | `{"error":"Invalid request body"}`  |
-| 404        | 対象なし             | `{"error":"Bean not found"}`        |
-| 500        | 更新処理失敗         | `{"error":"Internal Server Error"}` |
-
-#### DELETE `/api/beans/:id`
-
-- 説明: 豆を削除する（関連 Brew / BrewFlavor を含む）。
-
-**レスポンスボディ**
-
-| ステータス | ボディ |
-| ---------- | ------ |
-| 204        | なし   |
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 404        | 対象なし     | `{"error":"Bean not found"}`        |
-| 500        | 削除処理失敗 | `{"error":"Internal Server Error"}` |
-
-### 抽出管理API
-
-#### GET `/api/brews`
-
-- 説明: 抽出一覧を取得する（`beanId` で絞り込み可能）。
-
-**クエリパラメータ**
-
-| パラメータ | 型     | 必須 | 説明                             |
-| ---------- | ------ | ---- | -------------------------------- |
-| `beanId`   | string | -    | 指定時は対象 Bean の抽出のみ返却 |
-
-**レスポンスボディ（200）**
-
-| フィールド | 型       | 説明     |
-| ---------- | -------- | -------- |
-| `[]`       | `Brew[]` | 抽出一覧 |
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 500        | 取得処理失敗 | `{"error":"Internal Server Error"}` |
-
-#### POST `/api/brews`
-
-- 説明: 抽出を作成する。
-
-**リクエストボディ**
-
-| フィールド    | 型            | 必須 | 説明               |
-| ------------- | ------------- | ---- | ------------------ |
-| `beanId`      | string        | ○    | 豆ID               |
-| `beanWeight`  | number        | ○    | 豆量               |
-| `beanGrind`   | number/string | -    | 挽き目（未入力可） |
-| `waterWeight` | number        | ○    | 湯量               |
-| `waterTemp`   | number/string | -    | 湯温（未入力可）   |
-| `steps`       | array         | -    | 抽出ステップ       |
-| `aroma`       | number        | ○    | 香り（1〜5）       |
-| `acidity`     | number        | ○    | 酸味（1〜5）       |
-| `sweetness`   | number        | ○    | 甘味（1〜5）       |
-| `body`        | number        | ○    | 質感（1〜5）       |
-| `overall`     | number        | ○    | 総合点（1〜5）     |
-| `notes`       | string        | -    | メモ               |
-| `flavorIds`   | string[]      | -    | フレーバーID一覧   |
-
-**レスポンスボディ**
-
-| ステータス | ボディ              |
-| ---------- | ------------------- |
-| 201        | `{"id":"<brewId>"}` |
-
-**異常系**
-
-| ステータス | 条件                 | レスポンス                          |
-| ---------- | -------------------- | ----------------------------------- |
-| 400        | バリデーションエラー | `{"error":"Invalid request body"}`  |
-| 404        | 参照 Bean 不存在     | `{"error":"Bean not found"}`        |
-| 500        | 作成処理失敗         | `{"error":"Internal Server Error"}` |
-
-#### GET `/api/brews/:id`
-
-- 説明: 抽出詳細を取得する（Bean / Flavor 含む）。
-
-**レスポンスボディ（200）**
-
-- `BrewWithBean` を返却（`bean` と `flavors` を含む）。
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 404        | 対象なし     | `{"error":"Brew not found"}`        |
-| 500        | 取得処理失敗 | `{"error":"Internal Server Error"}` |
-
-#### PUT `/api/brews/:id`
-
-- 説明: 抽出情報を更新する（全項目更新）。
-- リクエストボディ: `POST /api/brews` と同一。
-
-**レスポンスボディ（200）**
-
-- 更新後の Brew オブジェクトを返却する。
-
-**異常系**
-
-| ステータス | 条件                 | レスポンス                          |
-| ---------- | -------------------- | ----------------------------------- |
-| 400        | バリデーションエラー | `{"error":"Invalid request body"}`  |
-| 404        | 対象なし             | `{"error":"Brew not found"}`        |
-| 500        | 更新処理失敗         | `{"error":"Internal Server Error"}` |
-
-#### DELETE `/api/brews/:id`
-
-- 説明: 抽出を削除する（関連 BrewFlavor を含む）。
-
-**レスポンスボディ**
-
-| ステータス | ボディ |
-| ---------- | ------ |
-| 204        | なし   |
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 404        | 対象なし     | `{"error":"Brew not found"}`        |
-| 500        | 削除処理失敗 | `{"error":"Internal Server Error"}` |
-
-### フレーバー管理API
-
-#### GET `/api/flavors`
-
-- 説明: フレーバー一覧を取得する。
-
-**レスポンスボディ（200）**
-
-| フィールド | 型         | 説明           |
-| ---------- | ---------- | -------------- |
-| `[]`       | `Flavor[]` | フレーバー一覧 |
-
-**異常系**
-
-| ステータス | 条件         | レスポンス                          |
-| ---------- | ------------ | ----------------------------------- |
-| 500        | 取得処理失敗 | `{"error":"Internal Server Error"}` |
+| 名称       | 変数名 | 型     | 必須 |
+| ---------- | ------ | ------ | ---- |
+| 豆ID       | id     | string | ○    |
+| エラー内容 | error  | string | -    |
+
+### GET `/api/beans/:id`
+
+この API は豆詳細を取得する。成功時は 200 を返し、未検出時は 404 と `{ "error": "Bean not found" }` を返す。取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### レスポンスボディ
+
+| 名称       | 変数名  | 型          | 必須 |
+| ---------- | ------- | ----------- | ---- |
+| 豆ID       | id      | string      | ○    |
+| 豆名       | name    | string      | ○    |
+| 生産国     | country | string      | ○    |
+| 生産地域   | region  | string/null | -    |
+| 生産農園   | farm    | string/null | -    |
+| 生産処理   | process | string/null | -    |
+| 品種       | variety | string/null | -    |
+| 焙煎度     | roast   | string      | ○    |
+| 焙煎所     | roaster | string/null | -    |
+| メモ       | notes   | string/null | -    |
+| 作成日時   | created | string      | ○    |
+| 編集日時   | updated | string      | ○    |
+| エラー内容 | error   | string      | -    |
+
+### PUT `/api/beans/:id`
+
+この API は豆情報を全項目更新する。リクエストボディは `POST /api/beans` と同一である。成功時は 200 を返し更新後の Bean を返却する。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、未検出時は 404 と `{ "error": "Bean not found" }`、更新失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### レスポンスボディ
+
+| 名称       | 変数名  | 型          | 必須 |
+| ---------- | ------- | ----------- | ---- |
+| 豆ID       | id      | string      | ○    |
+| 豆名       | name    | string      | ○    |
+| 生産国     | country | string      | ○    |
+| 生産地域   | region  | string/null | -    |
+| 生産農園   | farm    | string/null | -    |
+| 生産処理   | process | string/null | -    |
+| 品種       | variety | string/null | -    |
+| 焙煎度     | roast   | string      | ○    |
+| 焙煎所     | roaster | string/null | -    |
+| メモ       | notes   | string/null | -    |
+| 作成日時   | created | string      | ○    |
+| 編集日時   | updated | string      | ○    |
+| エラー内容 | error   | string      | -    |
+
+### DELETE `/api/beans/:id`
+
+この API は豆を削除し、関連する Brew と BrewFlavor も削除する。成功時は 204 を返しボディは空となる。未検出時は 404 と `{ "error": "Bean not found" }` を返し、削除失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+### GET `/api/brews`
+
+この API は抽出一覧を取得する。`beanId` を指定した場合は対象 Bean の抽出のみを返す。成功時は 200 を返し、取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### クエリパラメータ
+
+| 名称 | 変数名 | 型     | 必須 |
+| ---- | ------ | ------ | ---- |
+| 豆ID | beanId | string | -    |
+
+### POST `/api/brews`
+
+この API は抽出を作成する。成功時は 201 と `{ "id": "<brewId>" }` を返す。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、参照 Bean 不存在時は 404 と `{ "error": "Bean not found" }`、作成失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### リクエストボディ
+
+| 名称             | 変数名      | 型            | 必須 |
+| ---------------- | ----------- | ------------- | ---- |
+| 豆ID             | beanId      | string        | ○    |
+| 豆量             | beanWeight  | number        | ○    |
+| 挽き目           | beanGrind   | number/string | -    |
+| 湯量             | waterWeight | number        | ○    |
+| 湯温             | waterTemp   | number/string | -    |
+| 抽出ステップ     | steps       | array         | -    |
+| 香り             | aroma       | number        | ○    |
+| 酸味             | acidity     | number        | ○    |
+| 甘味             | sweetness   | number        | ○    |
+| 質感             | body        | number        | ○    |
+| 総合点           | overall     | number        | ○    |
+| メモ             | notes       | string        | -    |
+| フレーバーID一覧 | flavorIds   | string[]      | -    |
+
+#### レスポンスボディ
+
+| 名称       | 変数名 | 型     | 必須 |
+| ---------- | ------ | ------ | ---- |
+| 抽出ID     | id     | string | ○    |
+| エラー内容 | error  | string | -    |
+
+### GET `/api/brews/:id`
+
+この API は抽出詳細を取得し、`bean` と `flavors` を含む。成功時は 200 を返す。未検出時は 404 と `{ "error": "Brew not found" }` を返し、取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### レスポンスボディ
+
+| 名称           | 変数名      | 型          | 必須 |
+| -------------- | ----------- | ----------- | ---- |
+| 抽出ID         | id          | string      | ○    |
+| 豆ID           | beanId      | string      | ○    |
+| 豆量           | beanWeight  | number      | ○    |
+| 挽き目         | beanGrind   | number/null | -    |
+| 湯量           | waterWeight | number      | ○    |
+| 湯温           | waterTemp   | number/null | -    |
+| 抽出ステップ   | steps       | array       | ○    |
+| 香り           | aroma       | number      | ○    |
+| 酸味           | acidity     | number      | ○    |
+| 甘味           | sweetness   | number      | ○    |
+| 質感           | body        | number      | ○    |
+| 総合点         | overall     | number      | ○    |
+| メモ           | notes       | string/null | -    |
+| 豆情報         | bean        | object      | ○    |
+| フレーバー一覧 | flavors     | array       | ○    |
+| 作成日時       | created     | string      | ○    |
+| 編集日時       | updated     | string      | ○    |
+| エラー内容     | error       | string      | -    |
+
+### PUT `/api/brews/:id`
+
+この API は抽出情報を全項目更新する。リクエストボディは `POST /api/brews` と同一である。成功時は 200 を返し更新後の Brew を返却する。バリデーションエラー時は 400 と `{ "error": "Invalid request body" }`、未検出時は 404 と `{ "error": "Brew not found" }`、更新失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### レスポンスボディ
+
+| 名称         | 変数名      | 型          | 必須 |
+| ------------ | ----------- | ----------- | ---- |
+| 抽出ID       | id          | string      | ○    |
+| 豆ID         | beanId      | string      | ○    |
+| 豆量         | beanWeight  | number      | ○    |
+| 挽き目       | beanGrind   | number/null | -    |
+| 湯量         | waterWeight | number      | ○    |
+| 湯温         | waterTemp   | number/null | -    |
+| 抽出ステップ | steps       | array       | ○    |
+| 香り         | aroma       | number      | ○    |
+| 酸味         | acidity     | number      | ○    |
+| 甘味         | sweetness   | number      | ○    |
+| 質感         | body        | number      | ○    |
+| 総合点       | overall     | number      | ○    |
+| メモ         | notes       | string/null | -    |
+| 作成日時     | created     | string      | ○    |
+| 編集日時     | updated     | string      | ○    |
+| エラー内容   | error       | string      | -    |
+
+### DELETE `/api/brews/:id`
+
+この API は抽出を削除し、関連する BrewFlavor も削除する。成功時は 204 を返しボディは空となる。未検出時は 404 と `{ "error": "Brew not found" }` を返し、削除失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+### GET `/api/flavors`
+
+この API はフレーバー一覧を取得する。成功時は 200 を返し、取得失敗時は 500 と `{ "error": "Internal Server Error" }` を返す。
+
+#### レスポンスボディ
+
+| 名称         | 変数名      | 型     | 必須 |
+| ------------ | ----------- | ------ | ---- |
+| フレーバーID | id          | string | ○    |
+| 名称         | name        | string | ○    |
+| カテゴリ     | category    | string | ○    |
+| サブカテゴリ | subcategory | string | ○    |
+| 作成日時     | created     | string | ○    |
+| 編集日時     | updated     | string | ○    |
+| エラー内容   | error       | string | -    |
