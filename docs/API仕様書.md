@@ -1,25 +1,21 @@
 # Brewia API仕様書
 
-## 用語定義
+## 1. 共通仕様
 
-| 和名           | 英名       | 定義                                            |
-| -------------- | ---------- | ----------------------------------------------- |
-| API            | API        | HTTP 経由でリソースを操作するインターフェース。 |
-| リクエスト     | Request    | クライアントから API へ送るデータ。             |
-| レスポンス     | Response   | API からクライアントへ返すデータ。              |
-| バリデーション | Validation | リクエスト値を検証する処理。                    |
+- Base Path: `/api`
+- Content-Type: `application/json`
+- 文字コード: UTF-8
+- 動的描画設定: 一覧/詳細 API は `dynamic = 'force-dynamic'`
 
-## 機能要件
+### 1.1 エラー形式
 
-### 共通仕様
+| HTTP Status | Body                               |
+| ----------- | ---------------------------------- |
+| 400         | `{"error":"Invalid request body"}` |
+| 404(Bean)   | `{"error":"Bean not found"}`       |
+| 404(Brew)   | `{"error":"Brew not found"}`       |
 
-| 項目             | 内容                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| Base Path        | `/api`                                                                                           |
-| Content-Type     | `application/json`                                                                               |
-| エラーレスポンス | `{"error":"Invalid request body"}` / `{"error":"Bean not found"}` / `{"error":"Brew not found"}` |
-
-### APIフロー
+## 2. API フロー
 
 ```mermaid
 sequenceDiagram
@@ -29,81 +25,172 @@ sequenceDiagram
     participant REP as Repository
     participant DB as Turso/SQLite
 
-    UI->>API: HTTP Request (JSON)
-    API->>API: Validation
+    UI->>API: Request(JSON)
+    API->>API: Schema Validation
     API->>SVC: Usecase Call
     SVC->>REP: Execute
-    REP->>DB: Query / Transaction
+    REP->>DB: Query/Transaction
     DB-->>REP: Result
     REP-->>SVC: Domain Data
-    SVC-->>API: Response DTO
-    API-->>UI: HTTP Response
+    SVC-->>API: DTO
+    API-->>UI: Response
 ```
 
-### 豆管理API（Beans）
+## 3. エンドポイント仕様
 
-#### `GET /api/beans`
+### 3.1 Beans
 
-- 豆一覧を取得する。
-- レスポンス: `200 OK`
+#### GET `/api/beans`
 
-#### `POST /api/beans`
+- 概要: Bean 一覧取得
+- Request Body: なし
+- Response: `200 OK`（`Bean[]`）
 
-- 豆を作成する。
-- レスポンス: `201 Created` / `400 Bad Request`
+#### POST `/api/beans`
 
-#### `GET /api/beans/:id`
+- 概要: Bean 作成
+- Request Body:
 
-- 豆詳細を取得する。
-- レスポンス: `200 OK` / `404 Not Found`
+```json
+{
+  "name": "Ethiopia Guji",
+  "roaster": "Kurasu",
+  "country": "Ethiopia",
+  "region": "Guji",
+  "farm": "Bookkisa",
+  "variety": "Heirloom",
+  "process": "Washed",
+  "roast": "Light",
+  "notes": "Floral and citrus"
+}
+```
 
-#### `PUT /api/beans/:id`
+- Response:
+  - `201 Created` `{"id":"<beanId>"}`
+  - `400 Bad Request`
 
-- 豆情報を更新する（全項目更新）。
-- レスポンス: `200 OK` / `400 Bad Request` / `404 Not Found`
+#### GET `/api/beans/:id`
 
-#### `DELETE /api/beans/:id`
+- 概要: Bean 詳細取得
+- Response:
+  - `200 OK`（`Bean`）
+  - `404 Not Found`
 
-- 豆を削除する（関連抽出・抽出フレーバーも削除）。
-- レスポンス: `204 No Content` / `404 Not Found`
+#### PUT `/api/beans/:id`
 
-### 抽出管理API（Brews）
+- 概要: Bean 更新（全項目更新）
+- Request Body: POST と同一
+- Response:
+  - `200 OK`（更新後 `Bean`）
+  - `400 Bad Request`
+  - `404 Not Found`
 
-#### `GET /api/brews`
+#### DELETE `/api/beans/:id`
 
-- 抽出一覧を取得する。
-- クエリ: `beanId`（任意、指定時は対象 Bean の抽出のみ）。
-- レスポンス: `200 OK`
+- 概要: Bean 削除（関連 Brew/BrewFlavor を含む）
+- Response:
+  - `204 No Content`
+  - `404 Not Found`
 
-#### `POST /api/brews`
+### 3.2 Brews
 
-- 抽出を作成する。
-- レスポンス: `201 Created` / `400 Bad Request`
+#### GET `/api/brews`
 
-#### `GET /api/brews/:id`
+- 概要: Brew 一覧取得
+- Query:
+  - `beanId`（任意）
+- Response: `200 OK`（`Brew[]`）
 
-- 抽出詳細を取得する（Bean と Flavor を含む）。
-- レスポンス: `200 OK` / `404 Not Found`
+#### POST `/api/brews`
 
-#### `PUT /api/brews/:id`
+- 概要: Brew 作成
+- Request Body:
 
-- 抽出情報を更新する（全項目更新）。
-- レスポンス: `200 OK` / `400 Bad Request` / `404 Not Found`
+```json
+{
+  "beanId": "<beanId>",
+  "beanWeight": 15,
+  "beanGrind": 22,
+  "waterWeight": 240,
+  "waterTemp": 92,
+  "steps": [
+    { "time": 0, "water": 40 },
+    { "time": 30, "water": 120 },
+    { "time": 60, "water": 180 },
+    { "time": 90, "water": 240 }
+  ],
+  "aroma": 4,
+  "acidity": 4,
+  "sweetness": 3,
+  "body": 3,
+  "overall": 4,
+  "notes": "Juicy and clean",
+  "flavorIds": ["<flavorId1>", "<flavorId2>"]
+}
+```
 
-#### `DELETE /api/brews/:id`
+- Response:
+  - `201 Created` `{"id":"<brewId>"}`
+  - `400 Bad Request`
 
-- 抽出を削除する（関連抽出フレーバーも削除）。
-- レスポンス: `204 No Content` / `404 Not Found`
+#### GET `/api/brews/:id`
 
-### フレーバー管理API（Flavors）
+- 概要: Brew 詳細取得（Bean + Flavors を含む）
+- Response:
+  - `200 OK`（`BrewWithBean`）
+  - `404 Not Found`
 
-#### `GET /api/flavors`
+#### PUT `/api/brews/:id`
 
-- フレーバー一覧を取得する。
-- レスポンス: `200 OK`
+- 概要: Brew 更新（全項目更新）
+- Request Body: POST と同一
+- Response:
+  - `200 OK`（更新後 `BrewWithBean`）
+  - `400 Bad Request`
+  - `404 Not Found`
 
-### バリデーション方針
+#### DELETE `/api/brews/:id`
 
-- 作成・更新 API はスキーマ検証に失敗した場合 `400 Bad Request` を返す。
-- `PUT` は部分更新ではなく全項目更新を前提とする。
-- 一覧・詳細 API は動的描画向け設定を利用する。
+- 概要: Brew 削除（関連 BrewFlavor を含む）
+- Response:
+  - `204 No Content`
+  - `404 Not Found`
+
+### 3.3 Flavors
+
+#### GET `/api/flavors`
+
+- 概要: Flavor 一覧取得
+- Response: `200 OK`（`Flavor[]`）
+
+## 4. バリデーション仕様
+
+### 4.1 Bean
+
+| 項目    | 条件                         |
+| ------- | ---------------------------- |
+| name    | string, trim 後 min length 1 |
+| roaster | string, trim 後 min length 1 |
+| country | 定義済み enum                |
+| roast   | 定義済み enum                |
+
+### 4.2 Brew
+
+| 項目                                 | 条件                                       |
+| ------------------------------------ | ------------------------------------------ |
+| beanId                               | string, trim 後 min length 1               |
+| beanWeight                           | number, positive                           |
+| beanGrind                            | number, positive または空文字（null 変換） |
+| waterWeight                          | number, positive                           |
+| waterTemp                            | 0〜100 または空文字（null 変換）           |
+| steps                                | `{time:number>=0, water:number>=0}` の配列 |
+| aroma/acidity/sweetness/body/overall | int, 1〜5                                  |
+| flavorIds                            | string[]（重複は内部で除去）               |
+
+## 5. テスト観点
+
+- `POST /api/beans` 必須欠落で 400 を返すこと。
+- `GET /api/beans/:id` 不存在 ID で 404 を返すこと。
+- `POST /api/brews` 評価値 6 で 400 を返すこと。
+- `GET /api/brews?beanId=<id>` が指定 Bean のみ返すこと。
+- `DELETE /api/beans/:id` 後に関連 Brew が取得不能（404）となること。
