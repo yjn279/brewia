@@ -110,7 +110,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
                 <Thermometer className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-mono text-lg font-medium">{brew.waterTemp}°C</p>
+                <p className="font-mono text-lg font-medium">{brew.waterTemp == null ? '-' : brew.waterTemp}°C</p>
                 <p className="text-xs text-muted-foreground">Temperature</p>
               </div>
             </div>
@@ -119,7 +119,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
                 <Cog className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-mono text-lg font-medium">{brew.beanGrind}</p>
+                <p className="font-mono text-lg font-medium">{brew.beanGrind == null ? '-' : brew.beanGrind}</p>
                 <p className="text-xs text-muted-foreground">Grind (clicks)</p>
               </div>
             </div>
