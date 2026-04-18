@@ -220,16 +220,16 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="beanWeight">Coffee (g)</Label>
-              <Input
-                id="beanWeight"
-                type="number"
-                value={beanWeight}
-                onChange={(e) => setBeanWeight(e.target.value)}
-                min="1"
-                step="0.1"
-                placeholder="0"
-                required
-              />
+            <Input
+              id="beanWeight"
+              type="number"
+              value={beanWeight}
+              onChange={(e) => setBeanWeight(e.target.value)}
+              min="1"
+              step="any"
+              placeholder="0"
+              required
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="waterWeight">Water (g)</Label>
@@ -240,7 +240,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 value={waterWeight}
                 onChange={(e) => setWaterWeight(e.target.value)}
                 min="1"
-                step="1"
+                step="any"
                 required
                 placeholder="0"
                 className="pr-8"
