@@ -121,4 +121,69 @@ describe('BrewDetailPage', () => {
       totalWater: 103,
     })
   })
+
+  // C1: brew.overall === 0 — TasteRadar is hidden
+  it('C1: given a stored brew with overall === 0, when the detail page renders, then no element with data-testid="taste-radar" is present', async () => {
+    const draftBrew: BrewWithBean = {
+      ...brew,
+      aroma: 0,
+      acidity: 0,
+      sweetness: 0,
+      body: 0,
+      overall: 0,
+      flavors: [],
+    }
+    getBrewByIdMock.mockResolvedValue(draftBrew)
+
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    expect(screen.queryByTestId('taste-radar')).toBeNull()
+  })
+
+  // C2: brew.overall === 0 — overall rating shows "-" not "0"
+  it('C2: given a stored brew with overall === 0, when the page renders, then the overall area shows "-" followed by "/5"', async () => {
+    const draftBrew: BrewWithBean = {
+      ...brew,
+      aroma: 0,
+      acidity: 0,
+      sweetness: 0,
+      body: 0,
+      overall: 0,
+      flavors: [],
+    }
+    getBrewByIdMock.mockResolvedValue(draftBrew)
+
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    // Expect "-" to be present in the rating area, and "/5" to still appear
+    expect(screen.getByText('-')).toBeDefined()
+    expect(screen.getByText('/5')).toBeDefined()
+
+    // "0" should NOT appear as the overall rating value
+    // (text "0" could exist elsewhere so we check the combined pattern)
+    const overallRatingText = screen.queryByText('0/5')
+    expect(overallRatingText).toBeNull()
+  })
+
+  // C3: brew.overall === 4 (happy path) — TasteRadar is rendered and rating shows "4/5"
+  it('C3: given a stored brew with overall === 4, when the page renders, then TasteRadar is rendered once and overall shows "4" and "/5"', async () => {
+    // Default mock already returns the brew with overall: 4
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    expect(screen.getByTestId('taste-radar')).toBeDefined()
+    expect(screen.getByText('4')).toBeDefined()
+    expect(screen.getByText('/5')).toBeDefined()
+  })
 })

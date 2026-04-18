@@ -76,7 +76,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <p className="text-sm text-muted-foreground">{brew.bean.roaster}</p>
           </div>
           <div className="text-right">
-            <span className="font-mono text-2xl font-semibold text-primary">{brew.overall}</span>
+            <span className="font-mono text-2xl font-semibold text-primary">{brew.overall === 0 ? '-' : brew.overall}</span>
             <span className="text-sm text-muted-foreground">/5</span>
           </div>
         </Link>
@@ -139,18 +139,20 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         </section>
 
         {/* Taste Profile */}
-        <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Taste Profile
-          </h2>
-          <TasteRadar
-            aroma={brew.aroma}
-            acidity={brew.acidity}
-            sweetness={brew.sweetness}
-            body={brew.body}
-            overall={brew.overall}
-          />
-        </section>
+        {brew.overall > 0 && (
+          <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
+            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Taste Profile
+            </h2>
+            <TasteRadar
+              aroma={brew.aroma}
+              acidity={brew.acidity}
+              sweetness={brew.sweetness}
+              body={brew.body}
+              overall={brew.overall}
+            />
+          </section>
+        )}
 
         {/* Flavors */}
         {brew.flavors.length > 0 && (

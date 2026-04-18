@@ -18,6 +18,7 @@ import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Switch } from '@/components/ui/switch'
 import {
   Area,
   AreaChart,
@@ -73,6 +74,25 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const [body, setBody] = useState([initialBrew?.body ?? 3])
   const [overall, setOverall] = useState([initialBrew?.overall ?? 4])
 
+  // "Record later" toggle: ON iff in edit mode with overall === 0
+  const [recordLater, setRecordLater] = useState(
+    initialBrew !== undefined ? initialBrew.overall === 0 : false
+  )
+
+  const handleRecordLaterToggle = (checked: boolean) => {
+    // When toggling OFF: if every rating is currently 0, reset to defaults
+    if (!checked) {
+      if (aroma[0] === 0 && acidity[0] === 0 && sweetness[0] === 0 && body[0] === 0 && overall[0] === 0) {
+        setAroma([4])
+        setAcidity([3])
+        setSweetness([4])
+        setBody([3])
+        setOverall([4])
+      }
+    }
+    setRecordLater(checked)
+  }
+
   const toggleFlavor = (flavorId: string) => {
     setSelectedFlavors((prev) =>
       prev.includes(flavorId)
@@ -103,13 +123,13 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           waterWeight: parseFloat(waterWeight),
           waterTemp: waterTemp ? parseFloat(waterTemp) : '',
           steps,
-          aroma: aroma[0],
-          acidity: acidity[0],
-          sweetness: sweetness[0],
-          body: body[0],
-          overall: overall[0],
+          aroma: recordLater ? 0 : aroma[0],
+          acidity: recordLater ? 0 : acidity[0],
+          sweetness: recordLater ? 0 : sweetness[0],
+          body: recordLater ? 0 : body[0],
+          overall: recordLater ? 0 : overall[0],
           notes,
-          flavorIds: selectedFlavors,
+          flavorIds: recordLater ? [] : selectedFlavors,
         }),
       })
 
@@ -430,64 +450,84 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         </div>
       </div>
 
-      {/* Taste Ratings */}
+      {/* Cup */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Taste Profile
-        </h2>
-        <div className="flex flex-col gap-5">
-          {[
-            { label: 'Aroma', value: aroma, setValue: setAroma },
-            { label: 'Acidity', value: acidity, setValue: setAcidity },
-            { label: 'Sweetness', value: sweetness, setValue: setSweetness },
-            { label: 'Body', value: body, setValue: setBody },
-            { label: 'Overall', value: overall, setValue: setOverall },
-          ].map((rating) => (
-            <div key={rating.label} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <Label>{rating.label}</Label>
-                <span className="text-sm text-muted-foreground">
-                  {rating.value[0]} - {ratingLabels[rating.value[0]]}
-                </span>
-              </div>
-              <Slider
-                value={rating.value}
-                onValueChange={rating.setValue}
-                min={1}
-                max={5}
-                step={1}
-              />
-            </div>
-          ))}
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Cup
+          </h2>
+          <Label
+            htmlFor="record-later-toggle"
+            className="cursor-pointer text-sm font-normal text-muted-foreground"
+          >
+            あとで記録
+            <Switch
+              id="record-later-toggle"
+              checked={recordLater}
+              onCheckedChange={handleRecordLaterToggle}
+              aria-label="あとで記録"
+            />
+          </Label>
         </div>
-      </div>
 
-      {/* Flavor Tags */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Flavor Notes
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {flavors.map((flavor) => {
-            const isSelected = selectedFlavors.includes(flavor.id)
-            return (
-              <button
-                key={flavor.id}
-                type="button"
-                onClick={() => toggleFlavor(flavor.id)}
-                className={cn(
-                  'flex items-center gap-1 rounded-full px-3 py-1.5 text-sm transition-all',
-                  isSelected
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                )}
-              >
-                {flavor.name}
-                {isSelected && <X className="h-3 w-3" />}
-              </button>
-            )
-          })}
-        </div>
+        {!recordLater && (
+          <>
+            {/* Taste Profile */}
+            <div className="mb-4 flex flex-col gap-5">
+              {[
+                { label: 'Aroma', value: aroma, setValue: setAroma },
+                { label: 'Acidity', value: acidity, setValue: setAcidity },
+                { label: 'Sweetness', value: sweetness, setValue: setSweetness },
+                { label: 'Body', value: body, setValue: setBody },
+                { label: 'Overall', value: overall, setValue: setOverall },
+              ].map((rating) => (
+                <div key={rating.label} className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label>{rating.label}</Label>
+                    <span className="text-sm text-muted-foreground">
+                      {rating.value[0]} - {ratingLabels[rating.value[0]]}
+                    </span>
+                  </div>
+                  <Slider
+                    value={rating.value}
+                    onValueChange={rating.setValue}
+                    min={1}
+                    max={5}
+                    step={1}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Flavor Notes */}
+            <div>
+              <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                Flavor Notes
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {flavors.map((flavor) => {
+                  const isSelected = selectedFlavors.includes(flavor.id)
+                  return (
+                    <button
+                      key={flavor.id}
+                      type="button"
+                      onClick={() => toggleFlavor(flavor.id)}
+                      className={cn(
+                        'flex items-center gap-1 rounded-full px-3 py-1.5 text-sm transition-all',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      )}
+                    >
+                      {flavor.name}
+                      {isSelected && <X className="h-3 w-3" />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Notes */}
