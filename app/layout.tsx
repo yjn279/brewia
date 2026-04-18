@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, DM_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar'
 import './globals.css'
 
-const dmSans = DM_Sans({ 
+const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
 })
 
-const dmMono = DM_Mono({ 
+const dmMono = DM_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-mono',
@@ -17,6 +18,12 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: 'Brewia | Coffee Flight Journal',
   description: 'Track your coffee journey - beans, brews, and tasting notes from around the world',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Brewia',
+    statusBarStyle: 'black-translucent',
+  },
 }
 
 export const viewport: Viewport = {
@@ -37,6 +44,7 @@ export default function RootLayout({
       <body className={`${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
         {children}
         <Analytics />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   )
