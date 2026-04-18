@@ -3,14 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
 
-const { getBrewByIdMock, notFoundMock, pourChartSpy } = vi.hoisted(() => ({
+const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock } = vi.hoisted(() => ({
   getBrewByIdMock: vi.fn(),
   notFoundMock: vi.fn(),
   pourChartSpy: vi.fn(),
+  pushMock: vi.fn(),
+  refreshMock: vi.fn(),
 }))
 
-vi.mock('@/lib/db', () => ({
-  getBrewById: getBrewByIdMock,
+vi.mock('@/app/brews/service', () => ({
+  brewsService: {
+    getBrewById: getBrewByIdMock,
+  },
 }))
 
 vi.mock('next/link', () => ({
@@ -30,6 +34,10 @@ vi.mock('next/link', () => ({
 
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
+  useRouter: () => ({
+    push: pushMock,
+    refresh: refreshMock,
+  }),
 }))
 
 vi.mock('@/components/pour-chart', () => ({

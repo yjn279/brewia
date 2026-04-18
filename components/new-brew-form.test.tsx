@@ -187,12 +187,24 @@ const flavors: Flavor[] = [
   },
 ]
 
+function fillRequiredBrewFields() {
+  fireEvent.change(screen.getByLabelText('Temp (°C)'), {
+    target: { value: '92' },
+  })
+  fireEvent.change(screen.getByLabelText('Grind (clicks)'), {
+    target: { value: '24' },
+  })
+  fireEvent.change(screen.getByLabelText('Total Time (sec)'), {
+    target: { value: '120' },
+  })
+}
+
 describe('NewBrewForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('given the weight inputs when the form renders then both fields expose arbitrary gram steps', () => {
+  it('given the weight inputs when the form renders then both fields allow decimal gram entries', () => {
     render(<NewBrewForm beans={beans} flavors={flavors} />)
 
     const beanWeightInput = screen.getByLabelText('Coffee (g)')
@@ -223,6 +235,7 @@ describe('NewBrewForm', () => {
     fireEvent.change(screen.getByLabelText('Water (g)'), {
       target: { value: '3' },
     })
+    fillRequiredBrewFields()
     fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
     await waitFor(() => {
@@ -263,6 +276,7 @@ describe('NewBrewForm', () => {
     fireEvent.change(screen.getByLabelText('Water (g)'), {
       target: { value: '225.3' },
     })
+    fillRequiredBrewFields()
     fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
     await waitFor(() => {

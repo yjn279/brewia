@@ -34,7 +34,7 @@ export function BeanCard({ bean, className }: BeanCardProps) {
             </span>
             <span className="text-border">|</span>
             <span className="flex items-center gap-1">
-              <span>{bean.process}</span>
+              <span>{bean.process ?? '—'}</span>
             </span>
             <span className="text-border">|</span>
             <span>{bean.roast}</span>

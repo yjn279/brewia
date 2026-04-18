@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getBeanById, getBrewsByBeanId } from '@/lib/db'
+import { beansService } from '@/app/beans/service'
+import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
-import { ArrowLeft, Plus, MapPin, Factory, Leaf } from 'lucide-react'
+import { DeleteResourceButton } from '@/components/delete-resource-button'
+import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,13 +16,13 @@ interface BeanDetailPageProps {
 
 export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
   const { id } = await params
-  const bean = await getBeanById(id)
+  const bean = await beansService.getBeanById(id)
 
   if (!bean) {
     notFound()
   }
 
-  const brews = await getBrewsByBeanId(id)
+  const brews = await brewsService.getBrewsByBeanId(id)
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (
@@ -37,12 +39,33 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             </Link>
             <span className="font-medium">Bean Details</span>
           </div>
-          <Link
-            href={`/new?type=brew&bean=${id}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/new?type=bean&copyBean=${id}`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <CopyPlus className="h-4 w-4" />
+            </Link>
+            <Link
+              href={`/beans/${id}/edit`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+            <DeleteResourceButton
+              endpoint={`/api/beans/${id}`}
+              redirectTo="/"
+              confirmMessage="この豆を削除しますか？紐づく抽出も削除されます。"
+              showLabel={false}
+              className="h-8 w-8 px-0"
+            />
+            <Link
+              href={`/new?type=brew&bean=${id}`}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -93,7 +116,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
                 <span className="text-sm text-foreground">{bean.variety}</span>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
-                <span className="text-sm text-foreground">{bean.process}</span>
+                <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
               </div>
             </div>
           </div>
@@ -108,6 +131,9 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
           </section>
         )}
+
+
+        
 
         {/* Brew History */}
         {brews.length > 0 && (

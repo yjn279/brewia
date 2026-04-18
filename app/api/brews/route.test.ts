@@ -6,10 +6,12 @@ const { createBrewMock } = vi.hoisted(() => ({
   createBrewMock: vi.fn(),
 }))
 
-vi.mock('@/lib/db', () => ({
-  createBrew: createBrewMock,
-  getBrews: vi.fn(),
-  getBrewsByBeanId: vi.fn(),
+vi.mock('@/app/brews/service', () => ({
+  brewsService: {
+    createBrew: createBrewMock,
+    getBrews: vi.fn(),
+    getBrewsByBeanId: vi.fn(),
+  },
 }))
 
 import { POST } from '@/app/api/brews/route'
