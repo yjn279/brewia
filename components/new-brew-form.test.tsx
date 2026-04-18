@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NewBrewForm } from '@/components/new-brew-form'
-import type { Bean, Flavor } from '@/lib/types'
+import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 
 const { pushMock, refreshMock } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -291,5 +291,316 @@ describe('NewBrewForm', () => {
 
     expect(body.beanWeight).toBe(15.5)
     expect(body.waterWeight).toBe(225.3)
+  })
+
+  // B1: Cup section contains "あとで記録" toggle (OFF by default) and sliders + flavor buttons are visible
+  it('B1: given the create mode form renders, when looking at the Cup section, then a toggle labeled "あとで記録" is present and is OFF by default and sliders and flavor buttons are visible', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // The switch must be present. Production code must add aria-label="あとで記録" to the Switch.
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    expect(toggle).toBeDefined()
+    // Toggle should be unchecked (OFF) by default
+    expect(toggle.getAttribute('data-state')).toBe('unchecked')
+
+    // Sliders are visible (Taste Profile)
+    const sliders = screen.getAllByRole('slider')
+    expect(sliders.length).toBeGreaterThan(0)
+
+    // Flavor Notes buttons are visible
+    expect(screen.getByRole('button', { name: 'Berry' })).toBeDefined()
+  })
+
+  // B2: Toggling "あとで記録" ON hides sliders and flavor buttons but keeps Tasting Notes textarea
+  it('B2: given the create mode form renders, when the user toggles "あとで記録" ON, then sliders and flavor buttons are hidden but Tasting Notes textarea remains visible', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    fireEvent.click(toggle)
+
+    // Sliders should be gone
+    expect(screen.queryAllByRole('slider').length).toBe(0)
+
+    // Flavor buttons should be gone
+    expect(screen.queryByRole('button', { name: 'Berry' })).toBeNull()
+
+    // Tasting Notes textarea must still be present
+    expect(screen.getByPlaceholderText('How was this brew? Any observations?')).toBeDefined()
+  })
+
+  // B3: Submit with toggle ON sends zeroed cup fields and preserves notes
+  it('B3: given the create mode form with toggle ON and recipe fields + notes filled, when submitting, then fetch body has zeroed cup ratings and notes text is preserved', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'brew-3' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Fill recipe fields
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
+      target: { value: 'bean-1' },
+    })
+    fireEvent.change(screen.getByLabelText('Coffee (g)'), { target: { value: '15' } })
+    fireEvent.change(screen.getByLabelText('Water (g)'), { target: { value: '225' } })
+    fillRequiredBrewFields()
+
+    // Fill notes
+    fireEvent.change(screen.getByPlaceholderText('How was this brew? Any observations?'), {
+      target: { value: 'Great draft brew' },
+    })
+
+    // Toggle ON
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    fireEvent.click(toggle)
+
+    // Submit
+    fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as {
+      aroma: number
+      acidity: number
+      sweetness: number
+      body: number
+      overall: number
+      flavorIds: string[]
+      notes: string
+    }
+
+    expect(body.aroma).toBe(0)
+    expect(body.acidity).toBe(0)
+    expect(body.sweetness).toBe(0)
+    expect(body.body).toBe(0)
+    expect(body.overall).toBe(0)
+    expect(body.flavorIds).toEqual([])
+    expect(body.notes).toBe('Great draft brew')
+  })
+
+  // B4: Submit with toggle OFF (default) sends default slider values and notes
+  it('B4: given the create mode form with toggle OFF and fields filled, when submitting, then the body contains default ratings (4,3,4,3,4) and the notes text', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'brew-4' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
+      target: { value: 'bean-1' },
+    })
+    fireEvent.change(screen.getByLabelText('Coffee (g)'), { target: { value: '15' } })
+    fireEvent.change(screen.getByLabelText('Water (g)'), { target: { value: '225' } })
+    fillRequiredBrewFields()
+
+    fireEvent.change(screen.getByPlaceholderText('How was this brew? Any observations?'), {
+      target: { value: 'Lovely cup' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as {
+      aroma: number
+      acidity: number
+      sweetness: number
+      body: number
+      overall: number
+      notes: string
+    }
+
+    expect(body.aroma).toBe(4)
+    expect(body.acidity).toBe(3)
+    expect(body.sweetness).toBe(4)
+    expect(body.body).toBe(3)
+    expect(body.overall).toBe(4)
+    expect(body.notes).toBe('Lovely cup')
+  })
+
+  // B5: Edit mode with initialBrew.overall === 0 initializes toggle ON and hides sliders
+  it('B5: given edit mode with initialBrew.overall === 0, when the form renders, then the "あとで記録" toggle is ON and sliders are not visible', () => {
+    const draftBrew: BrewWithBean = {
+      acidity: 0,
+      aroma: 0,
+      bean: {
+        country: 'Kenya',
+        created: '2026-04-18T00:00:00.000Z',
+        farm: 'Kieni',
+        id: 'bean-1',
+        name: 'Kenya AA',
+        notes: null,
+        process: 'Washed',
+        region: 'Nyeri',
+        roast: 'Light',
+        roaster: 'Glitch',
+        updated: '2026-04-18T00:00:00.000Z',
+        variety: 'SL28',
+      },
+      beanGrind: 24,
+      beanId: 'bean-1',
+      beanWeight: 15,
+      body: 0,
+      created: '2026-04-18T00:00:00.000Z',
+      flavors: [],
+      id: 'brew-draft',
+      notes: '',
+      overall: 0,
+      steps: [],
+      sweetness: 0,
+      updated: '2026-04-18T00:00:00.000Z',
+      waterTemp: 92,
+      waterWeight: 225,
+    }
+
+    render(<NewBrewForm mode="edit" beans={beans} flavors={flavors} initialBrew={draftBrew} />)
+
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    expect(toggle.getAttribute('data-state')).toBe('checked')
+
+    // Sliders should be hidden
+    expect(screen.queryAllByRole('slider').length).toBe(0)
+  })
+
+  // B6: Edit mode with initialBrew.overall === 4 initializes toggle OFF and shows sliders with stored values
+  it('B6: given edit mode with initialBrew.overall === 4, when the form renders, then the toggle is OFF and sliders are visible', () => {
+    const normalBrew: BrewWithBean = {
+      acidity: 3,
+      aroma: 4,
+      bean: {
+        country: 'Kenya',
+        created: '2026-04-18T00:00:00.000Z',
+        farm: 'Kieni',
+        id: 'bean-1',
+        name: 'Kenya AA',
+        notes: null,
+        process: 'Washed',
+        region: 'Nyeri',
+        roast: 'Light',
+        roaster: 'Glitch',
+        updated: '2026-04-18T00:00:00.000Z',
+        variety: 'SL28',
+      },
+      beanGrind: 24,
+      beanId: 'bean-1',
+      beanWeight: 15,
+      body: 3,
+      created: '2026-04-18T00:00:00.000Z',
+      flavors: [],
+      id: 'brew-normal',
+      notes: 'Good',
+      overall: 4,
+      steps: [],
+      sweetness: 4,
+      updated: '2026-04-18T00:00:00.000Z',
+      waterTemp: 92,
+      waterWeight: 225,
+    }
+
+    render(<NewBrewForm mode="edit" beans={beans} flavors={flavors} initialBrew={normalBrew} />)
+
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    expect(toggle.getAttribute('data-state')).toBe('unchecked')
+
+    // Sliders should be visible
+    const sliders = screen.getAllByRole('slider')
+    expect(sliders.length).toBeGreaterThan(0)
+  })
+
+  // B7: Edit mode, initialBrew.overall === 0, user turns toggle OFF and submits — gets default slider values
+  it('B7: given edit mode with initialBrew.overall === 0, when the user turns toggle OFF and submits without touching sliders, then fetch body contains default values aroma=4 acidity=3 sweetness=4 body=3 overall=4', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    // Recipe is complete (steps non-empty so brewTime is pre-populated),
+    // only the cup evaluation is in draft state (all ratings = 0).
+    const draftBrew: BrewWithBean = {
+      acidity: 0,
+      aroma: 0,
+      bean: {
+        country: 'Kenya',
+        created: '2026-04-18T00:00:00.000Z',
+        farm: 'Kieni',
+        id: 'bean-1',
+        name: 'Kenya AA',
+        notes: null,
+        process: 'Washed',
+        region: 'Nyeri',
+        roast: 'Light',
+        roaster: 'Glitch',
+        updated: '2026-04-18T00:00:00.000Z',
+        variety: 'SL28',
+      },
+      beanGrind: 24,
+      beanId: 'bean-1',
+      beanWeight: 15,
+      body: 0,
+      created: '2026-04-18T00:00:00.000Z',
+      flavors: [],
+      id: 'brew-draft',
+      notes: '',
+      overall: 0,
+      steps: [{ time: 120, water: 225 }],
+      sweetness: 0,
+      updated: '2026-04-18T00:00:00.000Z',
+      waterTemp: 92,
+      waterWeight: 225,
+    }
+
+    render(<NewBrewForm mode="edit" beans={beans} flavors={flavors} initialBrew={draftBrew} />)
+
+    // Toggle is ON initially; turn it OFF
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    fireEvent.click(toggle)
+
+    // Submit without touching sliders
+    fireEvent.click(screen.getByRole('button', { name: 'Save Brew' }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as {
+      aroma: number
+      acidity: number
+      sweetness: number
+      body: number
+      overall: number
+    }
+
+    expect(body.aroma).toBe(4)
+    expect(body.acidity).toBe(3)
+    expect(body.sweetness).toBe(4)
+    expect(body.body).toBe(3)
+    expect(body.overall).toBe(4)
+  })
+
+  // B8: Clicking the "あとで記録" label text toggles the switch (click area extension)
+  it('B8: given the create mode form, when the user clicks the "あとで記録" label text, then the switch state toggles', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+    expect(toggle.getAttribute('data-state')).toBe('unchecked')
+
+    // The visible label text should act as a click target for the switch
+    fireEvent.click(screen.getByText('あとで記録'))
+
+    expect(toggle.getAttribute('data-state')).toBe('checked')
+
+    // Clicking again switches it back
+    fireEvent.click(screen.getByText('あとで記録'))
+    expect(toggle.getAttribute('data-state')).toBe('unchecked')
   })
 })

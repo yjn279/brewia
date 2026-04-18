@@ -16,11 +16,11 @@ export const upsertBrewSchema = z.object({
     return value === '' ? null : value
   }),
   steps: z.array(brewStepSchema).default([]),
-  aroma: z.coerce.number().int().min(1).max(5),
-  acidity: z.coerce.number().int().min(1).max(5),
-  sweetness: z.coerce.number().int().min(1).max(5),
-  body: z.coerce.number().int().min(1).max(5),
-  overall: z.coerce.number().int().min(1).max(5),
+  aroma: z.coerce.number().int().min(0).max(5),
+  acidity: z.coerce.number().int().min(0).max(5),
+  sweetness: z.coerce.number().int().min(0).max(5),
+  body: z.coerce.number().int().min(0).max(5),
+  overall: z.coerce.number().int().min(0).max(5),
   notes: z.string().trim().default(''),
   flavorIds: z.array(z.string().trim().min(1)).default([]),
 })

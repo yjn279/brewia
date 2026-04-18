@@ -58,7 +58,7 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
         </div>
         <div className="flex flex-col items-end gap-1 text-right">
           <span className="font-mono text-lg font-medium text-primary">
-            {brew.overall}/5
+            {brew.overall === 0 ? '-' : brew.overall}/5
           </span>
         </div>
       </div>
