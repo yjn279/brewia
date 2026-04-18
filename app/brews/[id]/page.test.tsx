@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
@@ -185,5 +185,74 @@ describe('BrewDetailPage', () => {
     expect(screen.getByTestId('taste-radar')).toBeDefined()
     expect(screen.getByText('4')).toBeDefined()
     expect(screen.getByText('/5')).toBeDefined()
+  })
+
+  // C4: waterTemp null → "-°C" shown, "null°C" NOT shown, Temperature label still visible
+  it('C4: given a brew with waterTemp === null, when the page renders, then "-°C" is shown, "null°C" is not shown, and the Temperature label is still visible', async () => {
+    const brewNullTemp: BrewWithBean = { ...brew, waterTemp: null }
+    getBrewByIdMock.mockResolvedValue(brewNullTemp)
+
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    expect(screen.getByText('-°C')).toBeDefined()
+    expect(screen.queryByText(/null°C/)).toBeNull()
+    expect(screen.getByText('Temperature')).toBeDefined()
+  })
+
+  // C5: beanGrind null → "-" shown in grind tile, "null" not shown, Grind (clicks) label still visible
+  it('C5: given a brew with beanGrind === null, when the page renders, then "-" is shown, "null" is not shown as the grind value, and the Grind (clicks) label is still visible', async () => {
+    const brewNullGrind: BrewWithBean = { ...brew, beanGrind: null }
+    getBrewByIdMock.mockResolvedValue(brewNullGrind)
+
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    const grindLabel = screen.getByText('Grind (clicks)')
+    const grindTile = grindLabel.parentElement
+    if (!grindTile) throw new Error('Grind tile not found')
+    expect(within(grindTile).getByText('-')).toBeDefined()
+    expect(within(grindTile).queryByText('null')).toBeNull()
+  })
+
+  // C6: both waterTemp and beanGrind null → both placeholders shown, neither "null°C" nor "null" appear, both labels still visible
+  it('C6: given a brew with both waterTemp and beanGrind null, when the page renders, then "-°C" and "-" are shown, "null°C" and "null" do not appear, and both labels are still visible', async () => {
+    const brewBothNull: BrewWithBean = { ...brew, waterTemp: null, beanGrind: null }
+    getBrewByIdMock.mockResolvedValue(brewBothNull)
+
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    expect(screen.getByText('-°C')).toBeDefined()
+    expect(screen.queryByText(/null°C/)).toBeNull()
+    expect(screen.getByText('Temperature')).toBeDefined()
+    const grindLabel = screen.getByText('Grind (clicks)')
+    const grindTile = grindLabel.parentElement
+    if (!grindTile) throw new Error('Grind tile not found')
+    expect(within(grindTile).getByText('-')).toBeDefined()
+    expect(within(grindTile).queryByText('null')).toBeNull()
+  })
+
+  // C7: happy path regression — waterTemp and beanGrind both present render exactly, no "-°C" in temperature tile
+  it('C7: given a brew with waterTemp === 92 and beanGrind === 24, when the page renders, then "92°C" and "24" render exactly and "-°C" does not appear', async () => {
+    // Default mock already returns the brew with waterTemp: 92 and beanGrind: 24
+    const page = await BrewDetailPage({
+      params: Promise.resolve({ id: 'brew-1' }),
+    })
+
+    render(page)
+
+    expect(screen.getByText('92°C')).toBeDefined()
+    expect(screen.getByText('24')).toBeDefined()
+    expect(screen.queryByText('-°C')).toBeNull()
   })
 })
