@@ -140,7 +140,7 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
               value={beanWeight}
               onChange={(e) => setBeanWeight(e.target.value)}
               min="1"
-              step="0.1"
+              step="any"
               required
             />
           </div>
@@ -152,7 +152,7 @@ export function NewBrewForm({ initialBeanId, beans, flavors }: NewBrewFormProps)
               value={waterWeight}
               onChange={(e) => setWaterWeight(e.target.value)}
               min="1"
-              step="1"
+              step="any"
               required
             />
           </div>
