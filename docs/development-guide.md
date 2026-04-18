@@ -217,7 +217,6 @@ pnpm build
 
 ## 12. 現在の既知課題
 
-- ESLint v9 の flat config (`eslint.config.*`) がないため `pnpm lint` が失敗する
 - `build` は実行環境により外部フォント解決に失敗する可能性がある
 - 更新 API は現在「全項目更新（PUT）」前提。部分更新（PATCH）は未提供
 
@@ -226,3 +225,62 @@ pnpm build
 ## 13. 変更履歴に関する補足
 
 本ガイドは、Service/Repository/Schema を `app` 配下（ページと並列）へコロケーションした構成と、Beans/Brews の編集・削除 API 追加後の状態を前提にしています。将来的に構成が変わった場合は、このドキュメントを優先的に更新してください。
+
+---
+
+## 14. PWA
+
+### 対応の狙い
+
+- ホーム画面への追加によるアプリとしてのインストール（スタンドアロン表示）
+- 最低限のオフライン対応（ネットワーク不通時にフォールバックページを表示）
+
+### ファイル構成
+
+| ファイル | 役割 |
+|---|---|
+| `app/manifest.ts` | `/manifest.webmanifest` を配信する Next.js file convention |
+| `app/offline/page.tsx` | オフラインフォールバック Server Component |
+| `components/service-worker-registrar.tsx` | `navigator.serviceWorker.register('/sw.js')` を呼ぶ Client Component |
+| `public/sw.js` | 純 JS の Service Worker |
+| `public/icon-192.png`, `public/icon-512.png` | PWA マニフェストアイコン（`public/icon.svg` から生成） |
+| `app/layout.tsx` | `metadata.manifest`, `metadata.appleWebApp`, `<ServiceWorkerRegistrar />` を追加 |
+
+### Service Worker のキャッシュ戦略
+
+- **Cache First**: `/_next/static/` 配下の静的アセット（ハッシュ付きのため常に安全）
+- **Network First**: その他の GET リクエスト
+- **スルー（キャッシュなし）**: `/api/` へのリクエスト
+- **navigate 失敗時**: `/offline` へフォールバック
+
+### `CACHE_NAME` のバンプ運用
+
+`public/sw.js` の fetch 戦略や precache 対象を変更したら、ファイル先頭の
+
+```js
+const CACHE_NAME = 'brewia-shell-vN'
+```
+
+の `N` を必ず上げること。バンプしないと古いキャッシュが残り続け、変更が反映されない。
+
+### アイコン再生成手順（macOS 前提）
+
+SVG から高解像度 PNG を生成する場合は `qlmanage` を使用する。
+
+```bash
+qlmanage -t -s 192 -o /tmp public/icon.svg && mv /tmp/icon.svg.png public/icon-192.png
+qlmanage -t -s 512 -o /tmp public/icon.svg && mv /tmp/icon.svg.png public/icon-512.png
+```
+
+### 開発時の注意
+
+dev server と SW キャッシュが干渉して古い内容が表示される場合は、Chrome DevTools の Application タブ → Service Workers から該当の SW を **Unregister** すると回復する。
+
+### スコープ外
+
+以下は現時点で対応対象外とする。
+
+- プッシュ通知
+- バックグラウンド同期
+- インストールプロンプト UI
+- 動的 API レスポンスの永続キャッシュ
