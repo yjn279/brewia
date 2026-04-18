@@ -159,9 +159,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
             </Select>
           </div>
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <Label>Roast Level</Label>
-            </div>
+            <Label>Roast Level</Label>
             <RoastPalette
               value={ROAST_LEVELS[roastIndex[0]]}
               onChange={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}

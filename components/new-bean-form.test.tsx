@@ -165,8 +165,10 @@ describe('NewBeanForm', () => {
     const comboboxes = screen.getAllByRole('combobox')
     fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
 
-    // Click the French swatch
-    fireEvent.click(screen.getByRole('radio', { name: 'French' }))
+    // Select French roast from the roast dropdown
+    fireEvent.change(screen.getByRole('combobox', { name: 'Select roast level' }), {
+      target: { value: 'French' },
+    })
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
 
