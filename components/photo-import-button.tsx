@@ -47,12 +47,38 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
         body: formData,
       })
 
-      if (response.ok) {
-        const fields = (await response.json()) as ExtractedBeanFields
-        onExtracted(fields)
-      } else {
-        toast.error('自動入力に失敗しました。手動で入力してください')
+      if (!response.ok) {
+        let code: string | undefined
+        try {
+          const err = await response.json()
+          code = err?.code
+        } catch {
+          // body が読めなくても続行
+        }
+
+        const message =
+          code === 'FILE_TOO_LARGE'
+            ? 'ファイルサイズが大きすぎます（サーバー側）'
+            : code === 'INVALID_FILE'
+              ? '画像形式が不正です（JPEG / PNG のみ対応）'
+              : code === 'EXTRACTION_FAILED'
+                ? 'AI 解析に失敗しました。しばらく経ってから再度お試しください'
+                : '自動入力に失敗しました。手動で入力してください'
+        toast.error(message)
+        return
       }
+
+      const fields = (await response.json()) as ExtractedBeanFields
+      const hasAnyValue = Object.values(fields).some(
+        (v) => v !== undefined && v !== null && v !== '',
+      )
+      if (!hasAnyValue) {
+        toast.warning(
+          '写真から情報を読み取れませんでした。別の画像か手動入力をお試しください',
+        )
+        return
+      }
+      onExtracted(fields)
     } catch {
       toast.error('自動入力に失敗しました。手動で入力してください')
     } finally {

@@ -31,7 +31,7 @@ import { PhotoImportButton } from '@/components/photo-import-button'
 import { toast } from 'sonner'
 
 vi.mock('sonner', () => ({
-  toast: { error: vi.fn(), success: vi.fn() },
+  toast: { error: vi.fn(), success: vi.fn(), warning: vi.fn() },
 }))
 
 describe('PhotoImportButton', () => {
@@ -142,18 +142,20 @@ describe('PhotoImportButton', () => {
     const { input } = renderButton(onExtracted)
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('自動入力に失敗しました。手動で入力してください')
+      expect(toast.error).toHaveBeenCalledWith(
+        'AI 解析に失敗しました。しばらく経ってから再度お試しください',
+      )
     })
     expect(onExtracted).not.toHaveBeenCalled()
   })
 
-  it('given POST が 400 を返すとき then toast.error が呼ばれ onExtracted は呼ばれない', async () => {
+  it('given POST が 400 (INVALID_FILE) を返すとき then toast.error が呼ばれ onExtracted は呼ばれない', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(false, 400, { code: 'INVALID_FILE' })))
     const onExtracted = vi.fn()
     const { input } = renderButton(onExtracted)
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('自動入力に失敗しました。手動で入力してください')
+      expect(toast.error).toHaveBeenCalledWith('画像形式が不正です（JPEG / PNG のみ対応）')
     })
     expect(onExtracted).not.toHaveBeenCalled()
   })
@@ -243,6 +245,74 @@ describe('PhotoImportButton', () => {
     await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
     // input.value がリセットされている（空文字）ことを確認
     expect(input.value).toBe('')
+  })
+
+  // ---- 空抽出（200 だが有効フィールドなし）----
+
+  it('given POST が 200 {} を返すとき then toast.warning が呼ばれる', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, {})))
+    const onExtracted = vi.fn()
+    const { input } = renderButton(onExtracted)
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.warning).toHaveBeenCalledWith(
+        '写真から情報を読み取れませんでした。別の画像か手動入力をお試しください',
+      )
+    })
+  })
+
+  it('given POST が 200 {} を返すとき then onExtracted は呼ばれない', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, {})))
+    const onExtracted = vi.fn()
+    const { input } = renderButton(onExtracted)
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.warning).toHaveBeenCalledTimes(1)
+    })
+    expect(onExtracted).not.toHaveBeenCalled()
+  })
+
+  // ---- エラー系: code 別メッセージ ----
+
+  it('given POST が 400 (FILE_TOO_LARGE) を返すとき then 対応するトーストメッセージが表示される', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(makeFetchResponse(false, 400, { code: 'FILE_TOO_LARGE' })),
+    )
+    const onExtracted = vi.fn()
+    const { input } = renderButton(onExtracted)
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('ファイルサイズが大きすぎます（サーバー側）')
+    })
+    expect(onExtracted).not.toHaveBeenCalled()
+  })
+
+  it('given POST が 503 (EXTRACTION_FAILED) を返すとき then AI 解析失敗メッセージが表示される', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(makeFetchResponse(false, 503, { code: 'EXTRACTION_FAILED' })),
+    )
+    const onExtracted = vi.fn()
+    const { input } = renderButton(onExtracted)
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringContaining('AI 解析に失敗しました'),
+      )
+    })
+    expect(onExtracted).not.toHaveBeenCalled()
+  })
+
+  it('given POST が 500 {} (code なし) を返すとき then フォールバックメッセージが表示される', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(false, 500, {})))
+    const { input } = renderButton()
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        '自動入力に失敗しました。手動で入力してください',
+      )
+    })
   })
 
   // ---- リクエスト形式 ----
