@@ -16,9 +16,13 @@ import {
 } from '@/components/ui/select'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
+import { DEFAULT_RATINGS, STEP_TIME_INTERVAL, STEP_WATER_INTERVAL } from '@/lib/constants'
 import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
+import { Surface } from '@/components/ui/surface'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { SectionHeading } from '@/components/section-heading'
 import {
   Area,
   AreaChart,
@@ -38,8 +42,6 @@ interface NewBrewFormProps {
   flavors: Flavor[]
 }
 
-const STEP_TIME_INTERVAL = 5
-const STEP_WATER_INTERVAL = 5
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 const CHART_PLOT_PADDING = {
   top: 20,
@@ -67,11 +69,11 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   )
   
   // Ratings
-  const [aroma, setAroma] = useState([initialBrew?.aroma ?? 4])
-  const [acidity, setAcidity] = useState([initialBrew?.acidity ?? 3])
-  const [sweetness, setSweetness] = useState([initialBrew?.sweetness ?? 4])
-  const [body, setBody] = useState([initialBrew?.body ?? 3])
-  const [overall, setOverall] = useState([initialBrew?.overall ?? 4])
+  const [aroma, setAroma] = useState([initialBrew?.aroma ?? DEFAULT_RATINGS.aroma])
+  const [acidity, setAcidity] = useState([initialBrew?.acidity ?? DEFAULT_RATINGS.acidity])
+  const [sweetness, setSweetness] = useState([initialBrew?.sweetness ?? DEFAULT_RATINGS.sweetness])
+  const [body, setBody] = useState([initialBrew?.body ?? DEFAULT_RATINGS.body])
+  const [overall, setOverall] = useState([initialBrew?.overall ?? DEFAULT_RATINGS.overall])
 
   // "Record later" toggle: ON iff in edit mode with overall === 0
   const [recordLater, setRecordLater] = useState(
@@ -82,11 +84,11 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     // When toggling OFF: if every rating is currently 0, reset to defaults
     if (!checked) {
       if (aroma[0] === 0 && acidity[0] === 0 && sweetness[0] === 0 && body[0] === 0 && overall[0] === 0) {
-        setAroma([4])
-        setAcidity([3])
-        setSweetness([4])
-        setBody([3])
-        setOverall([4])
+        setAroma([DEFAULT_RATINGS.aroma])
+        setAcidity([DEFAULT_RATINGS.acidity])
+        setSweetness([DEFAULT_RATINGS.sweetness])
+        setBody([DEFAULT_RATINGS.body])
+        setOverall([DEFAULT_RATINGS.overall])
       }
     }
     setRecordLater(checked)
@@ -215,35 +217,34 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Bean Selection */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Select Bean
-        </h2>
-        <Select value={selectedBean} onValueChange={setSelectedBean} required>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a bean" />
-          </SelectTrigger>
-          <SelectContent>
-            {beans.map((bean) => (
-              <SelectItem key={bean.id} value={bean.id}>
-                <span className="flex items-center gap-2">
-                  <span>{COUNTRY_FLAGS[bean.country]}</span>
-                  <span>{bean.name}</span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Surface>
+        <SectionHeading>Select Bean</SectionHeading>
+        <Field>
+          <FieldLabel htmlFor="bean-select">Bean</FieldLabel>
+          <Select value={selectedBean} onValueChange={setSelectedBean} required>
+            <SelectTrigger id="bean-select">
+              <SelectValue placeholder="Choose a bean" />
+            </SelectTrigger>
+            <SelectContent>
+              {beans.map((bean) => (
+                <SelectItem key={bean.id} value={bean.id}>
+                  <span className="flex items-center gap-2">
+                    <span>{COUNTRY_FLAGS[bean.country]}</span>
+                    <span>{bean.name}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </Surface>
 
       {/* Brew Parameters */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Parameters
-        </h2>
+      <Surface>
+        <SectionHeading>Parameters</SectionHeading>
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="beanWeight">Coffee</Label>
+          <Field>
+            <FieldLabel htmlFor="beanWeight">Coffee</FieldLabel>
             <div className="relative">
               <Input
                 id="beanWeight"
@@ -259,9 +260,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
               <span id="beanWeight-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="waterWeight">Water</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="waterWeight">Water</FieldLabel>
             <div className="relative">
               <Input
                 id="waterWeight"
@@ -277,9 +278,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
               <span id="waterWeight-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="waterTemp">Temp</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="waterTemp">Temp</FieldLabel>
             <div className="relative">
               <Input
                 id="waterTemp"
@@ -295,9 +296,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
               <span id="waterTemp-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">°C</span>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="grindSize">Grind</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="grindSize">Grind</FieldLabel>
             <div className="relative">
               <Input
                 id="grindSize"
@@ -312,19 +313,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
               <span id="grindSize-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">clicks</span>
             </div>
-          </div>
+          </Field>
         </div>
         <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
           <span className="text-sm text-muted-foreground">Brew Ratio</span>
           <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
         </div>
-      </div>
+      </Surface>
 
       {/* Extraction Steps */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Extraction Steps
-        </h2>
+      <Surface>
+        <SectionHeading>Extraction Steps</SectionHeading>
 
         <div
           className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20"
@@ -444,14 +443,12 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             Add Step
           </Button>
         </div>
-      </div>
+      </Surface>
 
       {/* Cup */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Cup
-          </h2>
+      <Surface>
+        <div className="mb-3 flex items-center justify-between">
+          <SectionHeading className="mb-0">Cup</SectionHeading>
           <Label
             htmlFor="record-later-toggle"
             className="cursor-pointer text-sm font-normal text-muted-foreground"
@@ -477,9 +474,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 { label: 'Body', value: body, setValue: setBody },
                 { label: 'Overall', value: overall, setValue: setOverall },
               ].map((rating) => (
-                <div key={rating.label} className="flex flex-col gap-2">
+                <Field key={rating.label}>
                   <div className="flex items-center justify-between">
-                    <Label>{rating.label}</Label>
+                    <FieldLabel>{rating.label}</FieldLabel>
                     <span className="text-sm text-muted-foreground">
                       {rating.value[0]} - {ratingLabels[rating.value[0]]}
                     </span>
@@ -491,13 +488,13 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                     max={5}
                     step={1}
                   />
-                </div>
+                </Field>
               ))}
             </div>
 
             {/* Flavor Notes */}
             <div>
-              <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              <h3 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
                 Flavor Notes
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -524,20 +521,18 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             </div>
           </>
         )}
-      </div>
+      </Surface>
 
       {/* Notes */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Tasting Notes
-        </h2>
+      <Surface>
+        <SectionHeading>Tasting Notes</SectionHeading>
         <Textarea
           placeholder="How was this brew? Any observations?"
           rows={3}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
         />
-      </div>
+      </Surface>
 
       {/* Submit */}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>

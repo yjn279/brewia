@@ -77,4 +77,41 @@ describe('BrewCard', () => {
 
     expect(screen.getByText('4/5')).toBeDefined()
   })
+
+  // D3: link carries Surface interactive classes
+  it('D3: renders with Surface interactive classes on the link', () => {
+    render(<BrewCard brew={baseBrew} />)
+    const link = screen.getByRole('link')
+    expect(link.classList.contains('rounded-xl')).toBe(true)
+    expect(link.classList.contains('bg-card')).toBe(true)
+    expect(link.classList.contains('active:scale-[0.98]')).toBe(true)
+  })
+
+  // D4: link href points to /brews/:id
+  it('D4: link href is /brews/:id', () => {
+    render(<BrewCard brew={baseBrew} />)
+    const link = screen.getByRole('link')
+    const href = (link as HTMLAnchorElement).getAttribute('href') ?? ''
+    expect(href).toContain('/brews/')
+    expect(href).toContain(baseBrew.id)
+  })
+
+  // D5: renders flavor badges for each flavor (regression guard for FlavorBadge adoption)
+  it('D5: renders flavor badges for each flavor in brew.flavors with rounded-full', () => {
+    const brewWithFlavors: BrewWithBean = {
+      ...baseBrew,
+      flavors: [
+        { id: '1', name: 'Berry', category: 'Fruity', subcategory: 'Berry', created: '2026-04-18T00:00:00.000Z', updated: '2026-04-18T00:00:00.000Z' },
+        { id: '2', name: 'Floral', category: 'Floral', subcategory: 'Floral', created: '2026-04-18T00:00:00.000Z', updated: '2026-04-18T00:00:00.000Z' },
+      ],
+    }
+
+    render(<BrewCard brew={brewWithFlavors} />)
+
+    const berry = screen.getByText('Berry')
+    const floral = screen.getByText('Floral')
+    expect(berry).toBeDefined()
+    expect(floral).toBeDefined()
+    expect(berry.classList.contains('rounded-full')).toBe(true)
+  })
 })

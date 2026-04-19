@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { BrewStep } from '@/lib/types'
+import { Surface } from '@/components/ui/surface'
 
 interface PourChartProps {
   steps: BrewStep[]
@@ -111,7 +112,7 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
   })
 
   return (
-    <div className="rounded-xl bg-card p-4 shadow-sm">
+    <Surface>
       <h4 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
         Pour Profile
       </h4>
@@ -193,6 +194,6 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             ))}
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </Surface>
   )
 }

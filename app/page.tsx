@@ -11,6 +11,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { PageHeader, HeaderAction } from '@/components/page-header'
+import { SectionHeading } from '@/components/section-heading'
+import { Button } from '@/components/ui/button'
 import { Coffee, Flame, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -27,22 +30,16 @@ export default async function HomePage() {
   const totalBeans = beans.length
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
-          <div className="flex items-center">
-            <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/new?type=bean"
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        leading={
+          <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
+        }
+        actions={
+          <HeaderAction href="/new?type=bean" variant="primary" aria-label="Add bean">
+            <Plus className="h-4 w-4" />
+          </HeaderAction>
+        }
+      />
 
       <main className="mx-auto max-w-md px-4 py-6">
         {/* Welcome */}
@@ -52,9 +49,7 @@ export default async function HomePage() {
 
         {/* Stats Grid */}
         <section className="mb-8">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Your Coffee Journey
-          </h2>
+          <SectionHeading>Your Coffee Journey</SectionHeading>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <StatsCard
@@ -75,9 +70,7 @@ export default async function HomePage() {
 
         {/* Bean Library */}
         <section className="mb-6">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Bean Library
-          </h2>
+          <SectionHeading>Bean Library</SectionHeading>
           {beans.length > 0 ? (
             <div className="flex flex-col gap-3">
               {beans.map((bean) => {
@@ -101,12 +94,9 @@ export default async function HomePage() {
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Link
-                  href="/new?type=bean"
-                  className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  Add your first bean
-                </Link>
+                <Button asChild>
+                  <Link href="/new?type=bean">Add your first bean</Link>
+                </Button>
               </EmptyContent>
             </Empty>
           )}

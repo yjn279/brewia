@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { Surface } from '@/components/ui/surface'
 
 interface StatsCardProps {
   label: string
@@ -9,15 +10,12 @@ interface StatsCardProps {
 
 export function StatsCard({ label, value, icon, className }: StatsCardProps) {
   return (
-    <div className={cn(
-      'flex flex-col gap-1 rounded-xl bg-card p-4 shadow-sm',
-      className
-    )}>
+    <Surface className={cn('flex flex-col gap-3', className)}>
       <div className="flex items-center gap-2 text-muted-foreground">
         {icon}
         <span className="text-xs uppercase tracking-wider">{label}</span>
       </div>
       <span className="font-mono text-2xl font-medium text-foreground">{value}</span>
-    </div>
+    </Surface>
   )
 }
