@@ -238,36 +238,6 @@ describe('NewBeanForm — PhotoImportButton 統合', () => {
     })
   })
 
-  it('given onExtracted が roastIndex: 2 (Medium) で呼ばれたとき then スライダーの値が 2 になる', async () => {
-    // Arrange
-    render(<NewBeanForm />)
-
-    // Act
-    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
-    capturedOnExtracted.current!({ roastIndex: 2 })
-
-    // Assert: スライダーの value が 2 (Medium = index 2) になる
-    await waitFor(() => {
-      const slider = screen.getByRole('slider') as HTMLInputElement
-      expect(Number(slider.value)).toBe(2)
-    })
-  })
-
-  it('given onExtracted が roastIndex: 7 (Italian) で呼ばれたとき then スライダーの値が 7 になる', async () => {
-    // Arrange
-    render(<NewBeanForm />)
-
-    // Act
-    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
-    capturedOnExtracted.current!({ roastIndex: 7 })
-
-    // Assert
-    await waitFor(() => {
-      const slider = screen.getByRole('slider') as HTMLInputElement
-      expect(Number(slider.value)).toBe(7)
-    })
-  })
-
   it('given onExtracted が process: "Washed" で呼ばれたとき then Process select が "Washed" を選択した状態になる', async () => {
     // Arrange
     render(<NewBeanForm />)
@@ -328,7 +298,7 @@ describe('NewBeanForm — PhotoImportButton 統合', () => {
     expect(roasterInput.value).toBe('New Roaster From LLM')
   })
 
-  it('given ユーザーが roastIndex を手動調整後に onExtracted が roastIndex を含まないフィールドで呼ばれたとき then スライダーの値は維持される', async () => {
+  it('given ユーザーが Roast スライダーを手動調整後に onExtracted が呼ばれたとき then スライダーの値は維持される（LLM は roast を更新しない）', async () => {
     // Arrange
     render(<NewBeanForm />)
     const slider = screen.getByRole('slider') as HTMLInputElement
@@ -339,7 +309,7 @@ describe('NewBeanForm — PhotoImportButton 統合', () => {
     // 手動で変更（index 5 = Full City）
     fireEvent.change(slider, { target: { value: '5' } })
 
-    // Act: roastIndex なしで onExtracted を呼ぶ
+    // Act: onExtracted を呼ぶ（roast は LLM スコープ外なので影響なし）
     await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
     capturedOnExtracted.current!({ name: 'Some Bean' })
 

@@ -135,20 +135,20 @@ describe('AnthropicLLMClient.extractBeanFromImage — 正常系', () => {
 
   it('given Anthropic SDK が有効な JSON を含むテキストブロックを返すとき then RawBeanExtraction が正しくパースされる', async () => {
     const expectedJson = {
-      name: 'Yirgacheffe Kochere', roaster: 'Onibus Coffee', country: 'Ethiopia', roast: 'Light',
+      name: 'Yirgacheffe Kochere', roaster: 'Onibus Coffee', country: 'Ethiopia',
     }
     messagesCreateMock.mockResolvedValue(
       makeAnthropicResponse([{ type: 'text', text: JSON.stringify(expectedJson) }])
     )
     const result = await client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')
     expect(result.name).toBe('Yirgacheffe Kochere')
-    expect(result.roast).toBe('Light')
+    expect(result.country).toBe('Ethiopia')
   })
 
   it('given Anthropic SDK が全フィールドを含む JSON を返すとき then 全フィールドがパースされる', async () => {
     const fullJson = {
       name: 'Kenya AA', roaster: 'Glitch', country: 'Kenya', region: 'Nyeri',
-      farm: 'Kieni', variety: 'SL28', process: 'Washed', roast: 'Light', notes: 'Berry, Citrus',
+      farm: 'Kieni', variety: 'SL28', process: 'Washed', notes: 'Berry, Citrus',
     }
     messagesCreateMock.mockResolvedValue(
       makeAnthropicResponse([{ type: 'text', text: JSON.stringify(fullJson) }])
@@ -243,14 +243,14 @@ describe('AnthropicLLMClient.extractBeanFromImage — 正常系', () => {
   })
 
   it('given LLM が ``` ... ``` フェンス付き (language 指定なし) で JSON を返すとき then 正しく RawBeanExtraction がパースされる', async () => {
-    const innerJson = { name: 'Kenya AA', roast: 'Light' }
+    const innerJson = { name: 'Kenya AA', process: 'Natural' }
     const fencedText = '```\n' + JSON.stringify(innerJson) + '\n```'
     messagesCreateMock.mockResolvedValue(
       makeAnthropicResponse([{ type: 'text', text: fencedText }])
     )
     const result = await client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')
     expect(result.name).toBe('Kenya AA')
-    expect(result.roast).toBe('Light')
+    expect(result.process).toBe('Natural')
   })
 
   it('given LLM が Markdown フェンスなしで JSON を返すとき then 後方互換で正しくパースされる', async () => {

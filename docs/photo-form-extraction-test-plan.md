@@ -48,18 +48,6 @@
 | process "Wet Hulled" | "Wet Hulled" がそのまま通る | LLMClient stub |
 | process "Wet Process" | undefined（省略） | LLMClient stub |
 | process "washed" (小文字) | undefined（大文字小文字区別あり） | LLMClient stub |
-| roast "Light" | roastIndex: 0 | LLMClient stub |
-| roast "Cinnamon" | roastIndex: 1 | LLMClient stub |
-| roast "Medium" | roastIndex: 2 | LLMClient stub |
-| roast "High" | roastIndex: 3 | LLMClient stub |
-| roast "City" | roastIndex: 4 | LLMClient stub |
-| roast "Full City" | roastIndex: 5 | LLMClient stub |
-| roast "French" | roastIndex: 6 | LLMClient stub |
-| roast "Italian" | roastIndex: 7 | LLMClient stub |
-| roast "light" (小文字) | roastIndex: 0（大文字小文字無視） | LLMClient stub |
-| roast "full city" (小文字) | roastIndex: 5 | LLMClient stub |
-| roast "unknown" | undefined（省略） | LLMClient stub |
-| roast "Dark" | undefined（ROAST_LEVELS 外） | LLMClient stub |
 | name "  Yirgacheffe  " | "Yirgacheffe" にトリム | LLMClient stub |
 | roaster "  Onibus  " | "Onibus" にトリム | LLMClient stub |
 | name "   " (空白のみ) | undefined（省略） | LLMClient stub |
@@ -69,7 +57,9 @@
 | ExtractionParseError スロー | ExtractionParseError が再スローされる | LLMClient stub (describe.skip) |
 | LLMApiError(429) | statusCode: 429 が保持される | LLMClient stub (describe.skip) |
 
-**状態:** service.ts 実装後に Slice 2 の 27 tests が green。errors.ts 実装後に Slice 3 の 3 tests（describe.skip 解除）が追加。
+**注:** roast / roastIndex は PR #59 の色解析推定で別途扱うため、本機能のテストスコープから除外。
+
+**状態:** service.ts 実装後に Slice 2 の 15 tests が green。errors.ts 実装後に Slice 3 の 3 tests（describe.skip 解除）が追加。
 
 ---
 
@@ -156,15 +146,15 @@
 | 初期描画 — PhotoImportButton 表示 | data-testid="photo-import-button" が存在する | PhotoImportButton mock |
 | onExtracted(name, roaster) | フォームの name/roaster input が更新される | PhotoImportButton mock |
 | onExtracted(country: "Ethiopia") | Country select が "Ethiopia" を選択 | PhotoImportButton mock |
-| onExtracted(roastIndex: 2) | スライダーの値が 2 になる | PhotoImportButton mock |
-| onExtracted(roastIndex: 7) | スライダーの値が 7 になる | PhotoImportButton mock |
 | onExtracted(process: "Washed") | Process select が "Washed" を選択 | PhotoImportButton mock |
 | onExtracted(notes) | Textarea の値が更新される | PhotoImportButton mock |
 | name 手動入力後 → onExtracted(name なし) | name は維持される（undefined はスキップ） | PhotoImportButton mock |
-| roastIndex 手動変更後 → onExtracted(roastIndex なし) | スライダー値は維持される | PhotoImportButton mock |
+| Roast スライダー手動変更後 → onExtracted 呼び出し | スライダー値は維持される（LLM は roast を更新しない） | PhotoImportButton mock |
 | edit モード + onExtracted | フィールドが上書きされる | PhotoImportButton mock |
 
-**状態:** new-bean-form.tsx に PhotoImportButton を組み込む実装後に 10 tests が green。現時点では 10 tests が fail（正しい red 状態）。
+**注:** roastIndex による onExtracted テストは除外（PR #59 の色解析推定が担当のため）。
+
+**状態:** new-bean-form.tsx に PhotoImportButton を組み込む実装後に 8 tests が green。
 
 ---
 
@@ -206,7 +196,7 @@ Slice 5 ────────────────────────
 | カテゴリ | 内容 |
 |---|---|
 | 型定義の構造 | RawBeanExtraction・ExtractedBeanFields の全フィールドと optional 性 |
-| 正規化ロジック全体 | country (11 種)・process (5 種)・roast (8 種) のすべての正規値と境界 |
+| 正規化ロジック全体 | country (11 種)・process (5 種) のすべての正規値と境界 |
 | トリム処理 | 前後空白・空白のみ文字列の扱い |
 | MIME バリデーション | jpeg/png のみ通過、gif/pdf が 400 になること |
 | サイズバリデーション | 4.5 MB 超が 400 / 4 MB がクライアント側で拒否される境界値 |
@@ -363,15 +353,10 @@ pnpm dev
 | Slice | テストファイル | テスト数 | 現在の状態 |
 |---|---|---|---|
 | 1 | `lib/llm/types.test.ts` | 9 tests (+ 3 skip) | 9 tests が types.ts 実装後に green |
-| 2 & 3 | `app/beans/extractor/service.test.ts` | 27 tests (+ 3 skip) | 全 skip（service.ts 未実装） |
+| 2 & 3 | `app/beans/extractor/service.test.ts` | 15 tests (+ 3 skip) | roast 正規化テスト削除済み |
 | 4 | `app/api/beans/extract/route.test.ts` | 8 tests (+ 4 skip) | 全 skip（route.ts 未実装） |
-| 5 | `lib/llm/anthropic-client.test.ts` | 12 tests (+ 2 skip) | 全 skip（anthropic-client.ts 未実装） |
-| 6 | `components/photo-import-button.test.tsx` | 15 tests | 全 skip（コンポーネント未実装） |
-| 7 | `components/new-bean-form.test.tsx` | 10 tests | 10 tests が fail（正しい red 状態） |
+| 5 | `lib/llm/anthropic-client.test.ts` | 14 tests (+ 2 skip) | roast フィールドをモックデータから除外済み |
+| 6 | `components/photo-import-button.test.tsx` | 27 tests | roastIndex をテストデータから除外済み |
+| 7 | `components/new-bean-form.test.tsx` | 8 tests | roastIndex setter テスト 2 件削除済み |
 
-**合計:** 81 tests + 12 skip = 93 テストケース
-
-**pnpm test の現在の結果:**
-- 10 tests failed (new-bean-form, PhotoImportButton 未統合)
-- 66 tests passed (既存テスト)
-- 73 tests skipped (新規 describe.skip + 既存 skip)
+**注:** roast / roastIndex の自動入力テストは PR #59 の色解析推定との責務分離のため削除した。

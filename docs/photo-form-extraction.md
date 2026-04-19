@@ -75,8 +75,6 @@ export interface RawBeanExtraction {
   farm?: string
   variety?: string
   process?: string
-  /** LLM は文字列で返す: "Light" | "Light-Medium" | "Medium" | "Medium-Dark" | "Dark" など */
-  roast?: string
   notes?: string
 }
 
@@ -84,6 +82,9 @@ export interface RawBeanExtraction {
  * サービス層での正規化後の結果。
  * 型は Bean フォームの各 state と 1:1 対応する。
  * undefined = 空のまま（フォームへ流し込まない）
+ *
+ * 注: 焙煎度（roast / roastIndex）は PR #59 の色解析推定で別途扱う。
+ * 本機能（LLM 画像抽出）の自動入力スコープには含めない。
  */
 export interface ExtractedBeanFields {
   name?: string
@@ -93,10 +94,8 @@ export interface ExtractedBeanFields {
   region?: string
   farm?: string
   variety?: string
-  /** processes に一致した場合のみセット */
+  /** processes に一致した場合のみせット */
   process?: string
-  /** ROAST_LEVELS のインデックス（0-based）で返す */
-  roastIndex?: number
   notes?: string
 }
 
@@ -149,12 +148,14 @@ export type AllowedMediaType = (typeof ALLOWED_MEDIA_TYPES)[number]
 
 ```typescript
 import { z } from 'zod'
-import { COUNTRIES, ROAST_LEVELS } from '@/lib/types'
+import { COUNTRIES } from '@/lib/types'
 
 /**
  * POST /api/beans/extract のレスポンス DTO
  * undefined フィールドはレスポンス JSON では省略される（toJSON の挙動に依存）
  * フロント側は受け取ったフィールドのみフォームに流し込む
+ *
+ * 注: roastIndex は本スキーマに含めない。PR #59 の色解析推定が担当する。
  */
 export const extractedBeanResponseSchema = z.object({
   name: z.string().optional(),
@@ -164,8 +165,6 @@ export const extractedBeanResponseSchema = z.object({
   farm: z.string().optional(),
   variety: z.string().optional(),
   process: z.string().optional(),
-  /** ROAST_LEVELS のインデックス (0-based) */
-  roastIndex: z.number().int().min(0).max(ROAST_LEVELS.length - 1).optional(),
   notes: z.string().optional(),
 })
 
@@ -178,30 +177,11 @@ export interface ExtractErrorResponse {
 }
 ```
 
-### 3.4 Roast マッピング（`app/beans/extractor/service.ts` 内に定義）
+### 3.4 焙煎度（roast）について
 
-```typescript
-/**
- * LLM が返す焙煎度文字列 → ROAST_LEVELS インデックスへの正規化マップ
- *
- * ROAST_LEVELS = ['Light','Cinnamon','Medium','High','City','Full City','French','Italian']
- *
- * 要件の「Light=1, Light-Medium=2, Medium=3, Medium-Dark=4, Dark=5」は
- * 5 段階表現であり、既存の 8 段階 ROAST_LEVELS と不整合がある（後述「設計上の未決事項」参照）。
- * 本設計では LLM に 8 段階ラベルで答えさせ、完全一致でインデックスを返す方針を採用する。
- * 一致しない場合は roastIndex を省略する。
- */
-const ROAST_STRING_TO_INDEX: Record<string, number> = {
-  'light': 0,
-  'cinnamon': 1,
-  'medium': 2,
-  'high': 3,
-  'city': 4,
-  'full city': 5,
-  'french': 6,
-  'italian': 7,
-}
-```
+焙煎度の自動入力は本機能（LLM 画像抽出）のスコープ外とする。
+
+PR #59 でパッケージ画像の色から CIELAB L* を用いて roast level を推定する機能がすでに実装・マージされており、責務が重複するため本機能では除外した。ユーザーは写真から入力後も Roast スライダーを手動または PR #59 の色解析機能で調整することができる。
 
 ---
 
@@ -227,7 +207,6 @@ const ROAST_STRING_TO_INDEX: Record<string, number> = {
 - `RawBeanExtraction` を `ExtractedBeanFields` に正規化する
   - `country`: `COUNTRIES` に大文字小文字を無視して一致するものを探す、なければ省略
   - `process`: `processes` 配列に完全一致するものを探す、なければ省略
-  - `roast`: `ROAST_STRING_TO_INDEX` でインデックスに変換、一致しなければ省略
   - 文字列フィールド: 前後空白をトリムし、空文字なら省略
 - DB には一切アクセスしない
 
@@ -317,8 +296,8 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps)
     if (fields.farm !== undefined) setFarm(fields.farm)
     if (fields.variety !== undefined) setVariety(fields.variety)
     if (fields.process !== undefined) setProcess(fields.process)
-    if (fields.roastIndex !== undefined) setRoastIndex([fields.roastIndex])
     if (fields.notes !== undefined) setNotes(fields.notes)
+    // roastIndex は LLM スコープ外（PR #59 の色解析推定で別途扱う）
   }}
 />
 ```
@@ -357,7 +336,7 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps)
   │ JSON.parse して RawBeanExtraction を返す
   ↑
 [ExtractorService]
-  │ RawBeanExtraction を ExtractedBeanFields に正規化（country/process/roast のバリデーション）
+  │ RawBeanExtraction を ExtractedBeanFields に正規化（country/process のバリデーション）
   │ ExtractedBeanFields を返す
   ↑
 [Route]
@@ -407,7 +386,6 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps)
   "farm":    "農園名・ウォッシングステーション名（例: Kochere Washing Station）",
   "variety": "品種（例: Heirloom, Gesha）",
   "process": "精製方法。次のいずれかのみ使用: Washed / Natural / Honey / Anaerobic / Wet Hulled",
-  "roast":   "焙煎度。次のいずれかのみ使用: Light / Cinnamon / Medium / High / City / Full City / French / Italian",
   "notes":   "テイスティングノート・フレーバー情報（例: Jasmine, Blueberry, Citrus）"
 }
 ```
@@ -601,7 +579,7 @@ export const maxDuration = 30  // Pro プラン以上で有効
 
 ---
 
-### Slice 2: ExtractorService — country/process/roast の正規化ロジック
+### Slice 2: ExtractorService — country/process の正規化ロジック
 
 **目的:** `ExtractorService` がモック `LLMClient` から受け取った `RawBeanExtraction` を正しく `ExtractedBeanFields` に正規化できることを検証する
 
@@ -612,12 +590,11 @@ export const maxDuration = 30  // Pro プラン以上で有効
 - `country: 'Mexico'`（COUNTRIES 外）→ `country` フィールドが省略される
 - `process: 'Washed'`（一致）→ そのまま返る
 - `process: 'Wet Process'`（不一致）→ 省略される
-- `roast: 'Light'`（一致）→ `roastIndex: 0` が返る
-- `roast: 'dark'`（小文字一致）→ `roastIndex: 7` が返る
-- `roast: 'unknown'`（不一致）→ `roastIndex` が省略される
 - `name: '  Yirgacheffe  '`（前後空白）→ `name: 'Yirgacheffe'` にトリムされる
 - LLM がすべてのフィールドを返した場合 → すべて正規化される
 - LLM が空 `{}` を返した場合 → `{}` が返る（エラーではない）
+
+**注:** 焙煎度（roast / roastIndex）は PR #59 の色解析推定で別途扱うため、本機能のスコープ外。
 
 **依存:** Slice 1
 
@@ -711,9 +688,9 @@ export const maxDuration = 30  // Pro プラン以上で有効
 
 **テスト内容:**
 - `PhotoImportButton` の `onExtracted` が呼ばれた後、フォームの name/roaster/country 等が更新される
-- `roastIndex` が `2`（=`Medium`）の場合、スライダーの表示ラベルが `Medium` になる
 - `country` が `Ethiopia` の場合、Select が `Ethiopia` を選択した状態になる
 - LLM が返さなかったフィールド（`undefined`）は既存の入力値を維持する
+- roast スライダーは LLM の `onExtracted` では更新されない（PR #59 の色解析推定が担当）
 
 **依存:** Slice 6
 
@@ -749,16 +726,11 @@ export const maxDuration = 30  // Pro プラン以上で有効
 
 ## 12. 設計上の未決事項・要確認事項
 
-### [重要] Roast レベルの段階数不整合
+### [解決済み] 焙煎度（roast）の扱いについて
 
-**問題:** 要件では「Roast 数値化: Light=1, Light-Medium=2, Medium=3, Medium-Dark=4, Dark=5」（5 段階）と指定されているが、既存の `lib/types.ts` の `ROAST_LEVELS` は `['Light', 'Cinnamon', 'Medium', 'High', 'City', 'Full City', 'French', 'Italian']`（8 段階）であり、名称も異なる。
+**経緯:** 当初の設計では LLM がパッケージ画像から焙煎度を推定し `roastIndex` として返す予定だったが、PR #59 でパッケージ画像の色から CIELAB L* を用いて roast level を推定する機能がすでに実装・マージされていることが判明した。
 
-**現設計での決定:** LLM には 8 段階ラベルで答えさせ、`ROAST_LEVELS` のインデックス（0-7）で返す方針を採用した。
-
-**要確認:** 要件の 5 段階マッピング（Light/Light-Medium/Medium/Medium-Dark/Dark）は `ROAST_LEVELS` と整合させる必要がある。以下のいずれかを orchestrator が決定してください:
-- (A) 要件の 5 段階を `ROAST_LEVELS` の 8 段階にマッピングするテーブルを作る（例: Light=0, Light-Medium=1, Medium=2, Medium-Dark=5, Dark=7）
-- (B) LLM には 8 段階の `ROAST_LEVELS` 文字列で答えさせる（本設計の採用案）
-- (C) `ROAST_LEVELS` 自体を 5 段階に変更する（影響範囲が大きいため非推奨）
+**決定:** 責務分離のため、本機能（PR #74 — LLM 画像抽出）の自動入力スコープから roast / roastIndex を除外する。焙煎度の推定は PR #59 の色解析機能が担当する。
 
 ### [確認] Vercel プランによる `maxDuration` 制限
 

@@ -99,14 +99,14 @@ describe('PhotoImportButton', () => {
   // ---- 成功系 ----
 
   it('given POST が 200 を返すとき then onExtracted コールバックが抽出フィールドと共に呼ばれる', async () => {
-    const extractedFields = { name: 'Yirgacheffe Kochere', country: 'Ethiopia', roastIndex: 0 }
+    const extractedFields = { name: 'Yirgacheffe Kochere', country: 'Ethiopia' }
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, extractedFields)))
     const onExtracted = vi.fn()
     const { input } = renderButton(onExtracted)
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
     await waitFor(() => { expect(onExtracted).toHaveBeenCalledTimes(1) })
     expect(onExtracted).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Yirgacheffe Kochere', country: 'Ethiopia', roastIndex: 0,
+      name: 'Yirgacheffe Kochere', country: 'Ethiopia',
     }))
   })
 

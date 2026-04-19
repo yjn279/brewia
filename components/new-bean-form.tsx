@@ -96,7 +96,6 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.farm !== undefined) setFarm(fields.farm)
           if (fields.variety !== undefined) setVariety(fields.variety)
           if (fields.process !== undefined) setProcess(fields.process)
-          if (fields.roastIndex !== undefined) setRoastIndex([fields.roastIndex])
           if (fields.notes !== undefined) setNotes(fields.notes)
         }}
       />

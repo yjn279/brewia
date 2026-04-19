@@ -6,21 +6,6 @@ import type { ExtractedBeanFields, LLMClient, RawBeanExtraction } from '@/lib/ll
 import { COUNTRIES, PROCESSES } from '@/lib/types'
 import { InvalidImageError } from './errors'
 
-/**
- * LLM が返す焙煎度文字列 → ROAST_LEVELS インデックスへの正規化マップ
- * ROAST_LEVELS = ['Light','Cinnamon','Medium','High','City','Full City','French','Italian']
- */
-const ROAST_STRING_TO_INDEX: Record<string, number> = {
-  light: 0,
-  cinnamon: 1,
-  medium: 2,
-  high: 3,
-  city: 4,
-  'full city': 5,
-  french: 6,
-  italian: 7,
-}
-
 export class ExtractorService {
   constructor(private readonly llmClient: LLMClient) {}
 
@@ -94,13 +79,6 @@ export class ExtractorService {
       const trimmedProcess = raw.process.trim()
       const matched = PROCESSES.find((p) => p === trimmedProcess)
       if (matched !== undefined) result.process = matched
-    }
-
-    // roast: ROAST_STRING_TO_INDEX で roastIndex に変換（大文字小文字無視）
-    if (raw.roast !== undefined) {
-      const normalizedRoast = raw.roast.trim().toLowerCase()
-      const index = ROAST_STRING_TO_INDEX[normalizedRoast]
-      if (index !== undefined) result.roastIndex = index
     }
 
     return result

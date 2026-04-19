@@ -40,7 +40,6 @@ describe('RawBeanExtraction — 型定義の確認 (requires lib/llm/types.ts)',
       farm: 'Kochere Washing Station',
       variety: 'Heirloom',
       process: 'Washed',
-      roast: 'Light',
       notes: 'Jasmine, Blueberry',
     }
 
@@ -52,7 +51,6 @@ describe('RawBeanExtraction — 型定義の確認 (requires lib/llm/types.ts)',
     expect(raw.farm).toBe('Kochere Washing Station')
     expect(raw.variety).toBe('Heirloom')
     expect(raw.process).toBe('Washed')
-    expect(raw.roast).toBe('Light')
     expect(raw.notes).toBe('Jasmine, Blueberry')
   })
 
@@ -68,7 +66,6 @@ describe('RawBeanExtraction — 型定義の確認 (requires lib/llm/types.ts)',
     expect(raw.farm).toBeUndefined()
     expect(raw.variety).toBeUndefined()
     expect(raw.process).toBeUndefined()
-    expect(raw.roast).toBeUndefined()
     expect(raw.notes).toBeUndefined()
   })
 
@@ -80,7 +77,7 @@ describe('RawBeanExtraction — 型定義の確認 (requires lib/llm/types.ts)',
     expect(raw.name).toBe('Kenya AA')
     expect(raw.country).toBe('Kenya')
     expect(raw.roaster).toBeUndefined()
-    expect(raw.roast).toBeUndefined()
+    expect(raw.notes).toBeUndefined()
   })
 })
 
@@ -97,14 +94,13 @@ describe('ExtractedBeanFields — 型定義の確認 (requires lib/llm/types.ts)
       farm: 'Kochere',
       variety: 'Heirloom',
       process: 'Washed',
-      roastIndex: 0,
       notes: 'Jasmine',
     }
 
     // Assert
-    expect(fields.roastIndex).toBe(0)
     expect(fields.country).toBe('Ethiopia')
     expect(fields.process).toBe('Washed')
+    expect(fields.name).toBe('Yirgacheffe')
   })
 
   it('given an empty object when assigned to ExtractedBeanFields then all fields are optional', () => {
@@ -112,24 +108,8 @@ describe('ExtractedBeanFields — 型定義の確認 (requires lib/llm/types.ts)
     const fields: ExtractedBeanFields = {}
 
     // Assert: all optional
-    expect(fields.roastIndex).toBeUndefined()
     expect(fields.country).toBeUndefined()
-  })
-
-  it('given roastIndex of 7 when assigned to ExtractedBeanFields then the maximum index is accepted', () => {
-    // Arrange: index 7 = 'Italian' in ROAST_LEVELS
-    const fields: ExtractedBeanFields = { roastIndex: 7 }
-
-    // Assert
-    expect(fields.roastIndex).toBe(7)
-  })
-
-  it('given roastIndex of 0 when assigned to ExtractedBeanFields then the minimum index is accepted', () => {
-    // Arrange: index 0 = 'Light' in ROAST_LEVELS
-    const fields: ExtractedBeanFields = { roastIndex: 0 }
-
-    // Assert
-    expect(fields.roastIndex).toBe(0)
+    expect(fields.process).toBeUndefined()
   })
 })
 
@@ -140,7 +120,7 @@ describe('LLMClient interface — 契約の確認 (requires lib/llm/types.ts)', 
     // Arrange: create a minimal implementation conforming to the interface
     const mockExtract = vi.fn().mockResolvedValue({
       name: 'Test Bean',
-      roast: 'Light',
+      country: 'Ethiopia',
     })
 
     const client: LLMClient = {
@@ -156,7 +136,7 @@ describe('LLMClient interface — 契約の確認 (requires lib/llm/types.ts)', 
     // Assert: method was called with correct arguments and returned RawBeanExtraction
     expect(mockExtract).toHaveBeenCalledWith('base64EncodedImageData', 'image/jpeg')
     expect(result.name).toBe('Test Bean')
-    expect(result.roast).toBe('Light')
+    expect(result.country).toBe('Ethiopia')
   })
 
   it('given a client when extractBeanFromImage is called with image/png then it accepts png media type', async () => {

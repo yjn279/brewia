@@ -1,5 +1,5 @@
 /**
- * Slice 2: ExtractorService — country / process / roast 正規化ロジック
+ * Slice 2: ExtractorService — country / process 正規化ロジック
  * Slice 3: ExtractorService — エラー伝播
  *
  * 実装ファイルのパス:
@@ -38,7 +38,7 @@ function makeJpegFile(name = 'test.jpg'): File {
 
 // ---- Slice 2: 正規化ロジック ----
 
-describe('ExtractorService.extractFromImage — 正規化ロジック (skip until service.ts is implemented)', () => {
+describe('ExtractorService.extractFromImage — 正規化ロジック', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -124,95 +124,6 @@ describe('ExtractorService.extractFromImage — 正規化ロジック (skip unti
     })
   })
 
-  describe('roast の正規化', () => {
-    // ROAST_LEVELS = ['Light','Cinnamon','Medium','High','City','Full City','French','Italian']
-    //  index:               0          1         2        3       4         5          6         7
-
-    it('given roast が "Light" のとき then roastIndex: 0 が返る', async () => {
-      const client = makeMockClient({ roast: 'Light' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(0)
-    })
-
-    it('given roast が "Cinnamon" のとき then roastIndex: 1 が返る', async () => {
-      const client = makeMockClient({ roast: 'Cinnamon' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(1)
-    })
-
-    it('given roast が "Medium" のとき then roastIndex: 2 が返る', async () => {
-      const client = makeMockClient({ roast: 'Medium' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(2)
-    })
-
-    it('given roast が "High" のとき then roastIndex: 3 が返る', async () => {
-      const client = makeMockClient({ roast: 'High' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(3)
-    })
-
-    it('given roast が "City" のとき then roastIndex: 4 が返る', async () => {
-      const client = makeMockClient({ roast: 'City' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(4)
-    })
-
-    it('given roast が "Full City" のとき then roastIndex: 5 が返る', async () => {
-      const client = makeMockClient({ roast: 'Full City' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(5)
-    })
-
-    it('given roast が "French" のとき then roastIndex: 6 が返る', async () => {
-      const client = makeMockClient({ roast: 'French' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(6)
-    })
-
-    it('given roast が "Italian" のとき then roastIndex: 7 が返る', async () => {
-      const client = makeMockClient({ roast: 'Italian' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(7)
-    })
-
-    it('given roast が小文字 "light" のとき then roastIndex: 0 が返る（大文字小文字無視）', async () => {
-      const client = makeMockClient({ roast: 'light' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(0)
-    })
-
-    it('given roast が小文字 "full city" のとき then roastIndex: 5 が返る', async () => {
-      const client = makeMockClient({ roast: 'full city' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBe(5)
-    })
-
-    it('given roast が不一致の "unknown" のとき then roastIndex フィールドは省略される', async () => {
-      const client = makeMockClient({ roast: 'unknown' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBeUndefined()
-    })
-
-    it('given roast が "Dark"（ROAST_LEVELS 外）のとき then roastIndex フィールドは省略される', async () => {
-      const client = makeMockClient({ roast: 'Dark' })
-      const service = new ExtractorService(client)
-      const result = await service.extractFromImage(makeJpegFile())
-      expect(result.roastIndex).toBeUndefined()
-    })
-  })
-
   describe('文字列フィールドのトリム', () => {
     it('given name に前後空白 "  Yirgacheffe  " があるとき then "Yirgacheffe" にトリムされる', async () => {
       const client = makeMockClient({ name: '  Yirgacheffe  ' })
@@ -240,7 +151,7 @@ describe('ExtractorService.extractFromImage — 正規化ロジック (skip unti
     it('given LLM が全フィールドを返したとき then すべて正規化される', async () => {
       const raw = {
         name: 'Kenya AA', roaster: 'Glitch', country: 'kenya', region: 'Nyeri',
-        farm: 'Kieni', variety: 'SL28', process: 'Washed', roast: 'Light', notes: 'Berry, Citrus',
+        farm: 'Kieni', variety: 'SL28', process: 'Washed', notes: 'Berry, Citrus',
       }
       const client = makeMockClient(raw)
       const service = new ExtractorService(client)
@@ -248,7 +159,6 @@ describe('ExtractorService.extractFromImage — 正規化ロジック (skip unti
       expect(result.name).toBe('Kenya AA')
       expect(result.country).toBe('Kenya')
       expect(result.process).toBe('Washed')
-      expect(result.roastIndex).toBe(0)
     })
 
     it('given LLM が空オブジェクト {} を返したとき then {} が返る（エラーではない）', async () => {
@@ -258,7 +168,6 @@ describe('ExtractorService.extractFromImage — 正規化ロジック (skip unti
       expect(result).toBeDefined()
       expect(result.name).toBeUndefined()
       expect(result.country).toBeUndefined()
-      expect(result.roastIndex).toBeUndefined()
     })
   })
 })
