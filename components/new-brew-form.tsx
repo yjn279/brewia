@@ -198,6 +198,11 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     lapTimer()
   }
 
+  const handleReset = () => {
+    resetTimer()
+    setStepInputs([{ time: '', water: '' }])
+  }
+
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
       const next = [...prev]
@@ -397,7 +402,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             onStart={startTimer}
             onLap={handleLap}
             onStop={stopTimer}
-            onReset={resetTimer}
+            onReset={handleReset}
           />
         </div>
 

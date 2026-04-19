@@ -175,4 +175,30 @@ describe('BrewTimer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
     expect(onReset).toHaveBeenCalledTimes(1)
   })
+
+  // T_buttons_full_width: each button gets flex-1 so buttons fill the available row width
+  it('T_buttons_full_width: each button in every status has className including "flex-1"', () => {
+    const noop = vi.fn()
+
+    // idle: Start button
+    const { unmount: unmount1 } = render(
+      <BrewTimer status="idle" elapsed={0} onStart={noop} onLap={noop} onStop={noop} onReset={noop} />,
+    )
+    expect(screen.getByRole('button', { name: 'Start' }).className).toContain('flex-1')
+    unmount1()
+
+    // running: Lap and Stop buttons
+    const { unmount: unmount2 } = render(
+      <BrewTimer status="running" elapsed={0} onStart={noop} onLap={noop} onStop={noop} onReset={noop} />,
+    )
+    expect(screen.getByRole('button', { name: 'Lap' }).className).toContain('flex-1')
+    expect(screen.getByRole('button', { name: 'Stop' }).className).toContain('flex-1')
+    unmount2()
+
+    // stopped: Reset button
+    render(
+      <BrewTimer status="stopped" elapsed={0} onStart={noop} onLap={noop} onStop={noop} onReset={noop} />,
+    )
+    expect(screen.getByRole('button', { name: 'Reset' }).className).toContain('flex-1')
+  })
 })

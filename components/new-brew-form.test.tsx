@@ -760,8 +760,8 @@ describe('NewBrewForm', () => {
       expect(timeInput.value).toBe('30')
     })
 
-    // T6: After a lap at 45 s, Stop then Reset clears timer but lap row persists
-    it('T6: given a lap row added at 45 s, when Stop then Reset is clicked, then the row persists, timer returns to idle (00:00.00), and Start button is visible', () => {
+    // T6: After a lap at 45 s, Stop then Reset clears the timer AND the step rows
+    it('T6: given a lap row was added at 45 s, when Stop and Reset are clicked, then the timer returns to idle AND the step rows are cleared back to a single empty row', () => {
       render(<NewBrewForm beans={beans} flavors={flavors} />)
 
       act(() => {
@@ -784,14 +784,108 @@ describe('NewBrewForm', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
       })
 
-      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
-      expect(timeInput.value).toBe('45')
+      // The lap row (Step 2) must be gone
+      expect(screen.queryByLabelText('Step 2 time')).toBeNull()
 
+      // The initial single empty row is restored
+      const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
+      expect(step1Time.value).toBe('')
+      const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+      expect(step1Water.value).toBe('')
+
+      // Timer is back to idle
+      expect(screen.getByRole('button', { name: 'Start' })).toBeDefined()
       expect(screen.queryByRole('button', { name: 'Lap' })).toBeNull()
       expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull()
       expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
-      expect(screen.getByRole('button', { name: 'Start' })).toBeDefined()
       expect(screen.getByRole('timer').textContent).toBe('00:00.00')
+    })
+
+    // T6b: Reset does NOT clear other form fields
+    it('T6b: given other form fields are filled, when Stop and Reset are clicked, then only step rows are cleared and all other fields retain their values', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      // Fill recipe fields + notes
+      fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
+        target: { value: 'bean-1' },
+      })
+      fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
+      fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
+      fillRequiredBrewFields() // sets Temp=92, Grind=24
+      fireEvent.change(screen.getByPlaceholderText('How was this brew? Any observations?'), {
+        target: { value: 'Lovely brew notes' },
+      })
+
+      // Timer sequence: Start → 30 s → Lap → Stop → Reset
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+      })
+      act(() => {
+        vi.advanceTimersByTime(30000)
+      })
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+      })
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+      })
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+      })
+
+      // Other fields must be preserved
+      const beanSelect = screen.getByRole('combobox', { name: 'Bean' }) as HTMLSelectElement
+      expect(beanSelect.value).toBe('bean-1')
+
+      const coffeeInput = screen.getByLabelText('Coffee') as HTMLInputElement
+      expect(coffeeInput.value).toBe('15')
+
+      const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+      expect(waterInput.value).toBe('225')
+
+      const tempInput = screen.getByLabelText('Temp') as HTMLInputElement
+      expect(tempInput.value).toBe('92')
+
+      const grindInput = screen.getByLabelText('Grind') as HTMLInputElement
+      expect(grindInput.value).toBe('24')
+
+      const notesTextarea = screen.getByPlaceholderText('How was this brew? Any observations?') as HTMLTextAreaElement
+      expect(notesTextarea.value).toBe('Lovely brew notes')
+    })
+
+    // T6c: Reset clears manually-edited Step 1 as well (Reset is intentionally destructive at the row level)
+    it('T6c: given Step 1 was manually edited, when Start → Lap → Stop → Reset, then Step 1 is cleared and Step 2 is gone', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      // Manually edit Step 1
+      fireEvent.change(screen.getByLabelText('Step 1 time'), { target: { value: '37' } })
+      fireEvent.change(screen.getByLabelText('Step 1 water'), { target: { value: '40' } })
+
+      // Timer sequence: Start → 25 s → Lap → Stop → Reset
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+      })
+      act(() => {
+        vi.advanceTimersByTime(25000)
+      })
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+      })
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+      })
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+      })
+
+      // Step 1 is cleared back to empty
+      const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
+      expect(step1Time.value).toBe('')
+      const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+      expect(step1Water.value).toBe('')
+
+      // Step 2 (lap row) is gone
+      expect(screen.queryByLabelText('Step 2 time')).toBeNull()
     })
 
     // T_manual_entry_precision: manual time input accepts 1-second precision (STEP_TIME_INTERVAL=1)
