@@ -12,6 +12,8 @@
 | 生産地域 | region | string | 豆の生産地域 |
 | 農園名 | farm | string | 生産農園 |
 | 精製方法 | process | string | ウォッシュト/ナチュラルなど |
+
+> **`PROCESSES` 定数**: `lib/types.ts` に `PROCESSES = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Wet Hulled'] as const` が定義されており、フォームの選択肢および LLM 抽出結果のバリデーションに使用している。
 | 品種 | variety | string | コーヒー豆の品種 |
 | 焙煎度 | roast | number | 1-5の焙煎レベル |
 | ロースター | roaster | string | 焙煎した店舗/ブランド名 |

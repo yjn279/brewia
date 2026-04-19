@@ -1,3 +1,13 @@
+export const PROCESSES = [
+  'Washed',
+  'Natural',
+  'Honey',
+  'Anaerobic',
+  'Wet Hulled',
+] as const
+
+export type Process = (typeof PROCESSES)[number]
+
 export const ROAST_LEVELS = [
   'Light',
   'Cinnamon',

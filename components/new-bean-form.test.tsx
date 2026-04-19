@@ -1,15 +1,30 @@
+/**
+ * NewBeanForm 統合テスト
+ *
+ * テスト対象:
+ *   - @/components/new-bean-form (components/new-bean-form.tsx)
+ *   - @/components/photo-import-button (components/photo-import-button.tsx)
+ *   - @/components/roast-photo-picker (components/roast-photo-picker.tsx)
+ *   - @/components/roast-palette (components/roast-palette.tsx)
+ *
+ * テスト戦略:
+ *   - PhotoImportButton を vi.mock で差し替え、onExtracted を外部から呼べるようにする
+ *   - RoastPhotoPicker を vi.mock で差し替え、onEstimate を外部から呼べるようにする
+ *   - UI コンポーネント（Select）は placeholder を aria-label として使うモックに統一
+ *   - next/navigation の useRouter は既存のパターンと同様にモックする
+ *   - 「LLM が返さなかったフィールド (undefined) は既存の入力値を維持する」ことを確認する
+ */
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { NewBeanForm } from '@/components/new-bean-form'
+import type { ExtractedBeanFields } from '@/lib/llm/types'
 import type { RoastLevel } from '@/lib/types'
+
+// ---- next/navigation モック ----
 
 const { pushMock, refreshMock } = vi.hoisted(() => ({
   pushMock: vi.fn(),
   refreshMock: vi.fn(),
-}))
-
-const { photoPickerState } = vi.hoisted(() => ({
-  photoPickerState: { onEstimate: null as ((level: RoastLevel) => void) | null },
 }))
 
 vi.mock('next/navigation', () => ({
@@ -17,6 +32,12 @@ vi.mock('next/navigation', () => ({
     push: pushMock,
     refresh: refreshMock,
   }),
+}))
+
+// ---- RoastPhotoPicker モック ----
+
+const { photoPickerState } = vi.hoisted(() => ({
+  photoPickerState: { onEstimate: null as ((level: RoastLevel) => void) | null },
 }))
 
 vi.mock('@/components/roast-photo-picker', () => ({
@@ -33,6 +54,35 @@ vi.mock('@/components/roast-photo-picker', () => ({
     )
   },
 }))
+
+// ---- PhotoImportButton モック ----
+// onExtracted を外部から制御できるようにするため、
+// コールバック参照をホイスト変数に保持する。
+
+const { capturedOnExtracted } = vi.hoisted(() => ({
+  capturedOnExtracted: { current: null as ((fields: ExtractedBeanFields) => void) | null },
+}))
+
+vi.mock('@/components/photo-import-button', () => ({
+  PhotoImportButton: ({ onExtracted }: { onExtracted: (fields: ExtractedBeanFields) => void }) => {
+    // テスト内から呼び出せるようにキャプチャする
+    capturedOnExtracted.current = onExtracted
+    return (
+      <button
+        type="button"
+        data-testid="photo-import-button"
+        onClick={() => {
+          // テスト内から直接 capturedOnExtracted.current() を呼ぶことができる
+        }}
+      >
+        写真から入力
+      </button>
+    )
+  },
+}))
+
+// ---- UI コンポーネントモック ----
+// Select: placeholder を aria-label として使う（main 側の方針を優先）
 
 vi.mock('@/components/ui/select', async () => {
   const React = await import('react')
@@ -89,9 +139,6 @@ vi.mock('@/components/ui/select', async () => {
 
     return items
   }
-
-  // Track render order to assign stable aria-labels
-  let renderCount = 0
 
   function Select({
     children,
@@ -164,10 +211,16 @@ vi.mock('@/components/ui/select', async () => {
   }
 })
 
+// NewBeanForm をモック後に import する
+import { NewBeanForm } from '@/components/new-bean-form'
+
+// ---- テストスイート: RoastPalette / RoastPhotoPicker 連携 (main 側) ----
+
 describe('NewBeanForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     photoPickerState.onEstimate = null
+    capturedOnExtracted.current = null
   })
 
   it('T8: given the palette selection changes from Medium to French, when the form is submitted, then fetch is called with roast="French"', async () => {
@@ -263,5 +316,161 @@ describe('NewBeanForm', () => {
     }
     render(<NewBeanForm mode="edit" initialBean={bean} />)
     expect(screen.getByTestId('mock-photo-picker')).toBeDefined()
+  })
+
+  // ---- PhotoImportButton 統合テスト (feat/32 側) ----
+
+  it('given create モードでレンダリングされるとき then "写真から入力" ボタンが表示される', () => {
+    // Arrange & Act
+    render(<NewBeanForm />)
+
+    // Assert: PhotoImportButton モックが描画されている
+    const btn = screen.getByTestId('photo-import-button')
+    expect(btn).toBeDefined()
+  })
+
+  it('given onExtracted が name と roaster を含むフィールドで呼ばれたとき then フォームの name/roaster 入力値が更新される', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    // Act: PhotoImportButton の onExtracted を外部からトリガー
+    await waitFor(() => {
+      expect(capturedOnExtracted.current).not.toBeNull()
+    })
+    capturedOnExtracted.current!({
+      name: 'Yirgacheffe Kochere',
+      roaster: 'Onibus Coffee',
+    })
+
+    // Assert: フォームの入力フィールドが更新されている
+    await waitFor(() => {
+      const nameInput = screen.getByLabelText('Name') as HTMLInputElement
+      expect(nameInput.value).toBe('Yirgacheffe Kochere')
+    })
+    const roasterInput = screen.getByLabelText('Roaster') as HTMLInputElement
+    expect(roasterInput.value).toBe('Onibus Coffee')
+  })
+
+  it('given onExtracted が country: "Ethiopia" で呼ばれたとき then Country select が "Ethiopia" を選択した状態になる', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    // Act
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ country: 'Ethiopia' })
+
+    // Assert: Country select (aria-label="Select country") の値が Ethiopia になっていること
+    await waitFor(() => {
+      const countrySelect = screen.getByRole('combobox', { name: 'Select country' }) as HTMLSelectElement
+      expect(countrySelect.value).toBe('Ethiopia')
+    })
+  })
+
+  it('given onExtracted が process: "Washed" で呼ばれたとき then Process select が "Washed" を選択した状態になる', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    // Act
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ process: 'Washed' })
+
+    // Assert
+    await waitFor(() => {
+      const selects = screen.getAllByRole('combobox') as HTMLSelectElement[]
+      const processSelect = selects.find(
+        (s) => Array.from(s.options).some((o) => o.value === 'Washed')
+      )
+      expect(processSelect).toBeDefined()
+      expect(processSelect?.value).toBe('Washed')
+    })
+  })
+
+  it('given onExtracted が notes で呼ばれたとき then Textarea の値が更新される', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    // Act
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ notes: 'Jasmine, Blueberry, Citrus' })
+
+    // Assert
+    await waitFor(() => {
+      const textarea = screen.getByPlaceholderText(/Tasting notes/) as HTMLTextAreaElement
+      expect(textarea.value).toBe('Jasmine, Blueberry, Citrus')
+    })
+  })
+
+  it('given ユーザーが name を手動入力後に onExtracted が name を含まない（undefined）フィールドで呼ばれたとき then name の入力値は維持される', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+    const nameInput = screen.getByLabelText('Name') as HTMLInputElement
+
+    // 事前に手動入力
+    fireEvent.change(nameInput, { target: { value: 'My Manual Bean Name' } })
+    expect(nameInput.value).toBe('My Manual Bean Name')
+
+    // Act: name を含まないフィールドで onExtracted を呼ぶ
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({
+      roaster: 'New Roaster From LLM',
+      // name は undefined（省略）
+    })
+
+    // Assert: name は変わらない
+    await waitFor(() => {
+      expect(nameInput.value).toBe('My Manual Bean Name')
+    })
+    const roasterInput = screen.getByLabelText('Roaster') as HTMLInputElement
+    expect(roasterInput.value).toBe('New Roaster From LLM')
+  })
+
+  it('given ユーザーが Roast を変更後に onExtracted が呼ばれたとき then Roast の値は維持される（LLM は roast を更新しない）', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    // Roast を French に変更
+    const roastSelect = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
+    fireEvent.change(roastSelect, { target: { value: 'French' } })
+    expect(roastSelect.value).toBe('French')
+
+    // Act: onExtracted を呼ぶ（roast は LLM スコープ外なので影響なし）
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ name: 'Some Bean' })
+
+    // Assert: Roast は French のまま
+    await waitFor(() => {
+      expect(roastSelect.value).toBe('French')
+    })
+  })
+
+  it('given edit モードで initialBean が設定されているとき then onExtracted でフィールドが上書きされる', async () => {
+    // Arrange
+    const initialBean = {
+      id: 'bean-1',
+      name: 'Old Name',
+      roaster: 'Old Roaster',
+      country: 'Kenya' as const,
+      region: 'Nyeri',
+      farm: 'Kieni',
+      variety: 'SL28',
+      process: 'Washed',
+      roast: 'Light' as const,
+      notes: null,
+      created: '2026-04-18T00:00:00.000Z',
+      updated: '2026-04-18T00:00:00.000Z',
+    }
+    render(<NewBeanForm mode="edit" initialBean={initialBean} />)
+
+    // Act
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ name: 'New LLM Name', roaster: 'New LLM Roaster' })
+
+    // Assert: edit モードでも上書きされる
+    await waitFor(() => {
+      const nameInput = screen.getByLabelText('Name') as HTMLInputElement
+      expect(nameInput.value).toBe('New LLM Name')
+    })
+    const roasterInput = screen.getByLabelText('Roaster') as HTMLInputElement
+    expect(roasterInput.value).toBe('New LLM Roaster')
   })
 })

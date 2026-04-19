@@ -15,10 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { COUNTRIES, COUNTRY_FLAGS, ROAST_LEVELS, type Bean } from '@/lib/types'
+import { COUNTRIES, COUNTRY_FLAGS, PROCESSES, ROAST_LEVELS, type Bean, type Country } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
+import { PhotoImportButton } from '@/components/photo-import-button'
 
-const processes = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Wet Hulled']
 const NO_PROCESS_VALUE = '__none__'
 
 interface NewBeanFormProps {
@@ -88,6 +88,18 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <PhotoImportButton
+        onExtracted={(fields) => {
+          if (fields.name !== undefined) setName(fields.name)
+          if (fields.roaster !== undefined) setRoaster(fields.roaster)
+          if (fields.country !== undefined) setCountry(fields.country as Country)
+          if (fields.region !== undefined) setRegion(fields.region)
+          if (fields.farm !== undefined) setFarm(fields.farm)
+          if (fields.variety !== undefined) setVariety(fields.variety)
+          if (fields.process !== undefined) setProcess(fields.process)
+          if (fields.notes !== undefined) setNotes(fields.notes)
+        }}
+      />
       <div className="rounded-xl bg-card p-4 shadow-sm">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           Bean Info
@@ -151,7 +163,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_PROCESS_VALUE}>Not specified</SelectItem>
-                {processes.map((process) => (
+                {PROCESSES.map((process) => (
                   <SelectItem key={process} value={process}>
                     {process}
                   </SelectItem>
