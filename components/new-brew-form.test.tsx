@@ -131,12 +131,14 @@ vi.mock('@/components/ui/slider', async () => {
   const React = await import('react')
 
   function Slider({
+    id,
     max,
     min,
     onValueChange,
     step,
     value,
   }: {
+    id?: string
     max?: number
     min?: number
     onValueChange?: (value: number[]) => void
@@ -146,6 +148,7 @@ vi.mock('@/components/ui/slider', async () => {
     return (
       <input
         aria-label="Rating slider"
+        id={id}
         max={max}
         min={min}
         onChange={(event) => onValueChange?.([Number(event.target.value)])}
@@ -675,5 +678,16 @@ describe('NewBrewForm', () => {
     expect(screen.queryByText('Total Time')).toBeNull()
     expect(document.getElementById('brewTime-unit')).toBeNull()
     expect(document.getElementById('brewTime')).toBeNull()
+  })
+
+  // F2: Rating slider label association
+  it('rating sliders are associated with their FieldLabel via htmlFor', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // The recordLater toggle is OFF by default, so the slider section IS rendered.
+    for (const label of ['Aroma', 'Acidity', 'Sweetness', 'Body', 'Overall']) {
+      const slider = screen.getByLabelText(label)
+      expect(slider).toBeDefined()
+    }
   })
 })

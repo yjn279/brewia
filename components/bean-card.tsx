@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import type { Bean } from '@/lib/types'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 
 interface BeanCardProps {
   bean: Bean
@@ -12,7 +12,7 @@ export function BeanCard({ bean, className }: BeanCardProps) {
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (
-    <Surface asChild interactive className={className}>
+    <Card asChild interactive className={className}>
       <Link href={`/beans/${bean.id}`} className="block">
         <div className="flex items-start gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-2xl">
@@ -37,6 +37,6 @@ export function BeanCard({ bean, className }: BeanCardProps) {
           </div>
         </div>
       </Link>
-    </Surface>
+    </Card>
   )
 }

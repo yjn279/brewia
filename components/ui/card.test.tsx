@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 
-describe('Surface', () => {
+describe('Card', () => {
   it('renders a div with base classes by default', () => {
-    render(<Surface>content</Surface>)
+    render(<Card>content</Card>)
     const el = screen.getByText('content')
     expect(el.tagName).toBe('DIV')
     expect(el.classList.contains('rounded-xl')).toBe(true)
@@ -14,7 +14,7 @@ describe('Surface', () => {
   })
 
   it('interactive={true} adds hover + active classes', () => {
-    render(<Surface interactive>hi</Surface>)
+    render(<Card interactive>hi</Card>)
     const el = screen.getByText('hi')
     expect(el.classList.contains('transition-all')).toBe(true)
     expect(el.classList.contains('hover:shadow-md')).toBe(true)
@@ -22,7 +22,7 @@ describe('Surface', () => {
   })
 
   it('interactive defaults to false — hover and active classes absent', () => {
-    render(<Surface>hi</Surface>)
+    render(<Card>hi</Card>)
     const el = screen.getByText('hi')
     expect(el.classList.contains('hover:shadow-md')).toBe(false)
     expect(el.classList.contains('active:scale-[0.98]')).toBe(false)
@@ -30,9 +30,9 @@ describe('Surface', () => {
 
   it('asChild merges classes onto child element', () => {
     const { container } = render(
-      <Surface asChild interactive>
+      <Card asChild interactive>
         <a href="/foo" data-testid="link-child">text</a>
-      </Surface>
+      </Card>
     )
     const link = screen.getByTestId('link-child')
     expect(link.tagName).toBe('A')
@@ -40,12 +40,12 @@ describe('Surface', () => {
     expect(link.classList.contains('rounded-xl')).toBe(true)
     expect(link.classList.contains('bg-card')).toBe(true)
     expect(link.classList.contains('active:scale-[0.98]')).toBe(true)
-    // Verify no Surface <div> wrapper was inserted — the top-level rendered element is the <a>
+    // Verify no Card <div> wrapper was inserted — the top-level rendered element is the <a>
     expect(container.firstChild).toBe(link)
   })
 
   it('className is merged and can override via tailwind-merge', () => {
-    render(<Surface className="p-6 mb-6">x</Surface>)
+    render(<Card className="p-6 mb-6">x</Card>)
     const el = screen.getByText('x')
     expect(el.classList.contains('mb-6')).toBe(true)
     expect(el.classList.contains('p-6')).toBe(true)
@@ -54,9 +54,9 @@ describe('Surface', () => {
 
   it('asChild with section element', () => {
     render(
-      <Surface asChild className="mb-6">
+      <Card asChild className="mb-6">
         <section data-testid="s">x</section>
-      </Surface>
+      </Card>
     )
     const el = screen.getByTestId('s')
     expect(el.tagName).toBe('SECTION')

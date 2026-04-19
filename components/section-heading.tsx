@@ -4,17 +4,18 @@ import { cn } from '@/lib/utils'
 interface SectionHeadingProps {
   children: ReactNode
   className?: string
+  level?: 'h2' | 'h3' | 'h4'
 }
 
-export function SectionHeading({ children, className }: SectionHeadingProps) {
+export function SectionHeading({ children, className, level: Tag = 'h2' }: SectionHeadingProps) {
   return (
-    <h2
+    <Tag
       className={cn(
         'text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3',
         className
       )}
     >
       {children}
-    </h2>
+    </Tag>
   )
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import type { BrewWithBean } from '@/lib/types'
 import { HISTORY_DATE_FORMAT_OPTIONS } from '@/lib/constants'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
 
 interface BrewCardProps {
@@ -17,7 +17,7 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
   const historyDateLabel = date.toLocaleDateString('en-US', HISTORY_DATE_FORMAT_OPTIONS)
 
   return (
-    <Surface asChild interactive className={className}>
+    <Card asChild interactive className={className}>
       <Link href={`/brews/${brew.id}`} className="block">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -51,6 +51,6 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
           </div>
         </div>
       </Link>
-    </Surface>
+    </Card>
   )
 }

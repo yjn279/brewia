@@ -78,8 +78,8 @@ describe('BrewCard', () => {
     expect(screen.getByText('4/5')).toBeDefined()
   })
 
-  // D3: link carries Surface interactive classes
-  it('D3: renders with Surface interactive classes on the link', () => {
+  // D3: link carries Card interactive classes
+  it('D3: renders with Card interactive classes on the link', () => {
     render(<BrewCard brew={baseBrew} />)
     const link = screen.getByRole('link')
     expect(link.classList.contains('rounded-xl')).toBe(true)

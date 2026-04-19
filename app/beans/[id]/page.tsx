@@ -7,7 +7,7 @@ import { RoastLevel } from '@/components/roast-level'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -74,7 +74,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
 
       <main className="mx-auto max-w-md px-4 py-6">
         {/* Bean Hero */}
-        <Surface asChild className="mb-6">
+        <Card asChild className="mb-6">
           <section>
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
@@ -90,10 +90,10 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               </div>
             </div>
           </section>
-        </Surface>
+        </Card>
 
         {/* Origin Info */}
-        <Surface asChild className="mb-6">
+        <Card asChild className="mb-6">
           <section>
             <SectionHeading>Origin</SectionHeading>
             <div className="flex flex-col gap-3">
@@ -125,16 +125,16 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               </div>
             </div>
           </section>
-        </Surface>
+        </Card>
 
         {/* Notes */}
         {bean.notes && (
-          <Surface asChild className="mb-6">
+          <Card asChild className="mb-6">
             <section>
               <SectionHeading>Notes</SectionHeading>
               <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
             </section>
-          </Surface>
+          </Card>
         )}
 
 

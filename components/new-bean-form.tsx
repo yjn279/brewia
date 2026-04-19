@@ -18,7 +18,7 @@ import { COUNTRIES, COUNTRY_FLAGS, PROCESSES, ROAST_LEVELS, type Bean, type Coun
 import { DEFAULT_ROAST_INDEX } from '@/lib/constants'
 import { Loader2 } from 'lucide-react'
 import { PhotoImportButton } from '@/components/photo-import-button'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
 
@@ -103,7 +103,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.notes !== undefined) setNotes(fields.notes)
         }}
       />
-      <Surface>
+      <Card>
         <SectionHeading>Bean Info</SectionHeading>
         <div className="flex flex-col gap-4">
           <Field>
@@ -115,9 +115,9 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
           </Field>
         </div>
-      </Surface>
+      </Card>
 
-      <Surface>
+      <Card>
         <SectionHeading>Origin</SectionHeading>
         <div className="flex flex-col gap-4">
           <Field>
@@ -147,9 +147,9 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
             <Input id="farm" placeholder="Kochere Washing Station" value={farm} onChange={(event) => setFarm(event.target.value)} />
           </Field>
         </div>
-      </Surface>
+      </Card>
 
-      <Surface>
+      <Card>
         <SectionHeading>Characteristics</SectionHeading>
         <div className="flex flex-col gap-4">
           <Field>
@@ -185,12 +185,12 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
             </div>
           </Field>
         </div>
-      </Surface>
+      </Card>
 
-      <Surface>
+      <Card>
         <SectionHeading>Notes</SectionHeading>
         <Textarea placeholder="Tasting notes, purchase info, etc." rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
-      </Surface>
+      </Card>
 
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (

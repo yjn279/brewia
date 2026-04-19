@@ -20,7 +20,7 @@ import { DEFAULT_RATINGS, STEP_TIME_INTERVAL, STEP_WATER_INTERVAL } from '@/lib/
 import { Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
 import {
@@ -217,7 +217,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Bean Selection */}
-      <Surface>
+      <Card>
         <SectionHeading>Select Bean</SectionHeading>
         <Field>
           <FieldLabel htmlFor="bean-select">Bean</FieldLabel>
@@ -237,10 +237,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             </SelectContent>
           </Select>
         </Field>
-      </Surface>
+      </Card>
 
       {/* Brew Parameters */}
-      <Surface>
+      <Card>
         <SectionHeading>Parameters</SectionHeading>
         <div className="grid grid-cols-2 gap-4">
           <Field>
@@ -319,10 +319,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           <span className="text-sm text-muted-foreground">Brew Ratio</span>
           <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
         </div>
-      </Surface>
+      </Card>
 
       {/* Extraction Steps */}
-      <Surface>
+      <Card>
         <SectionHeading>Extraction Steps</SectionHeading>
 
         <div
@@ -443,10 +443,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             Add Step
           </Button>
         </div>
-      </Surface>
+      </Card>
 
       {/* Cup */}
-      <Surface>
+      <Card>
         <div className="mb-3 flex items-center justify-between">
           <SectionHeading className="mb-0">Cup</SectionHeading>
           <Label
@@ -473,30 +473,32 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 { label: 'Sweetness', value: sweetness, setValue: setSweetness },
                 { label: 'Body', value: body, setValue: setBody },
                 { label: 'Overall', value: overall, setValue: setOverall },
-              ].map((rating) => (
-                <Field key={rating.label}>
-                  <div className="flex items-center justify-between">
-                    <FieldLabel>{rating.label}</FieldLabel>
-                    <span className="text-sm text-muted-foreground">
-                      {rating.value[0]} - {ratingLabels[rating.value[0]]}
-                    </span>
-                  </div>
-                  <Slider
-                    value={rating.value}
-                    onValueChange={rating.setValue}
-                    min={1}
-                    max={5}
-                    step={1}
-                  />
-                </Field>
-              ))}
+              ].map((rating) => {
+                const sliderId = `rating-${rating.label.toLowerCase()}`
+                return (
+                  <Field key={rating.label}>
+                    <div className="flex items-center justify-between">
+                      <FieldLabel htmlFor={sliderId}>{rating.label}</FieldLabel>
+                      <span className="text-sm text-muted-foreground">
+                        {rating.value[0]} - {ratingLabels[rating.value[0]]}
+                      </span>
+                    </div>
+                    <Slider
+                      id={sliderId}
+                      value={rating.value}
+                      onValueChange={rating.setValue}
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                  </Field>
+                )
+              })}
             </div>
 
             {/* Flavor Notes */}
             <div>
-              <h3 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                Flavor Notes
-              </h3>
+              <SectionHeading level="h3">Flavor Notes</SectionHeading>
               <div className="flex flex-wrap gap-2">
                 {flavors.map((flavor) => {
                   const isSelected = selectedFlavors.includes(flavor.id)
@@ -521,10 +523,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             </div>
           </>
         )}
-      </Surface>
+      </Card>
 
       {/* Notes */}
-      <Surface>
+      <Card>
         <SectionHeading>Tasting Notes</SectionHeading>
         <Textarea
           placeholder="How was this brew? Any observations?"
@@ -532,7 +534,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
         />
-      </Surface>
+      </Card>
 
       {/* Submit */}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>

@@ -7,7 +7,7 @@ import { PourChart } from '@/components/pour-chart'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
-import { Surface } from '@/components/ui/surface'
+import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
 import { ArrowLeft, Thermometer, Scale, Coffee, Cog, Pencil, CopyPlus } from 'lucide-react'
 
@@ -68,7 +68,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
       <main className="mx-auto max-w-md px-4 py-6">
         {/* Bean Reference */}
-        <Surface asChild interactive className="mb-6">
+        <Card asChild interactive className="mb-6">
           <Link href={`/beans/${brew.bean.id}`} className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-2xl">
               {flag}
@@ -82,10 +82,10 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               <span className="text-sm text-muted-foreground">/5</span>
             </div>
           </Link>
-        </Surface>
+        </Card>
 
         {/* Brew Parameters */}
-        <Surface asChild className="mb-6">
+        <Card asChild className="mb-6">
           <section>
           <SectionHeading>Parameters</SectionHeading>
           <div className="grid grid-cols-2 gap-4">
@@ -131,7 +131,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
           </div>
           </section>
-        </Surface>
+        </Card>
 
 
         
@@ -143,7 +143,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
         {/* Taste Profile */}
         {brew.overall > 0 && (
-          <Surface asChild className="mb-6">
+          <Card asChild className="mb-6">
             <section>
               <SectionHeading>Taste Profile</SectionHeading>
               <TasteRadar
@@ -154,12 +154,12 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
                 overall={brew.overall}
               />
             </section>
-          </Surface>
+          </Card>
         )}
 
         {/* Flavors */}
         {brew.flavors.length > 0 && (
-          <Surface asChild className="mb-6">
+          <Card asChild className="mb-6">
             <section>
               <SectionHeading>Flavor Notes</SectionHeading>
               <div className="flex flex-wrap gap-2">
@@ -168,17 +168,17 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
                 ))}
               </div>
             </section>
-          </Surface>
+          </Card>
         )}
 
         {/* Notes */}
         {brew.notes && (
-          <Surface asChild>
+          <Card asChild>
             <section>
               <SectionHeading>Tasting Notes</SectionHeading>
               <p className="text-sm leading-relaxed text-foreground">{brew.notes}</p>
             </section>
-          </Surface>
+          </Card>
         )}
       </main>
     </div>

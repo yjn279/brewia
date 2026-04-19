@@ -45,7 +45,7 @@ describe('BeanCard', () => {
     expect((link as HTMLAnchorElement).getAttribute('href')).toBe('/beans/bean-42')
   })
 
-  it('renders with Surface interactive classes', () => {
+  it('renders with Card interactive classes', () => {
     render(<BeanCard bean={baseBean} />)
     const link = screen.getByRole('link')
     expect(link.classList.contains('rounded-xl')).toBe(true)

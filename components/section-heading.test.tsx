@@ -41,4 +41,45 @@ describe('SectionHeading', () => {
     expect(heading.classList.contains('mb-0')).toBe(true)
     expect(heading.classList.contains('mb-3')).toBe(false)
   })
+
+  it('level="h3" renders an h3 element', () => {
+    render(<SectionHeading level="h3">Flavor Notes</SectionHeading>)
+
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Flavor Notes' })
+    ).toBeDefined()
+  })
+
+  it('level="h4" renders an h4 element', () => {
+    render(<SectionHeading level="h4">Flavor Notes</SectionHeading>)
+
+    expect(
+      screen.getByRole('heading', { level: 4, name: 'Flavor Notes' })
+    ).toBeDefined()
+  })
+
+  it('level is optional and defaults to h2', () => {
+    render(<SectionHeading>X</SectionHeading>)
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'X' })
+    ).toBeDefined()
+  })
+
+  it('consolidated class set is applied regardless of level', () => {
+    render(
+      <SectionHeading level="h4" className="custom">
+        Y
+      </SectionHeading>
+    )
+
+    const heading = screen.getByRole('heading', { level: 4, name: 'Y' })
+    expect(heading.classList.contains('text-sm')).toBe(true)
+    expect(heading.classList.contains('font-medium')).toBe(true)
+    expect(heading.classList.contains('uppercase')).toBe(true)
+    expect(heading.classList.contains('tracking-wider')).toBe(true)
+    expect(heading.classList.contains('text-muted-foreground')).toBe(true)
+    expect(heading.classList.contains('mb-3')).toBe(true)
+    expect(heading.classList.contains('custom')).toBe(true)
+  })
 })
