@@ -1,5 +1,9 @@
-/** デフォルトモデル名 */
-export const DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-latest'
+/**
+ * デフォルトモデル名。
+ * Anthropic の `-latest` エイリアスは時期によって無効化される場合があるため、
+ * date-stamped 版を採用することで長期的な安定稼働を確保する。
+ */
+export const DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-20241022'
 
 /**
  * Vercel 環境変数で差し替え可能なモデル名を返す関数。

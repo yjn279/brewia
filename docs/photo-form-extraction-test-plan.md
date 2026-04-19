@@ -114,7 +114,7 @@
 | model の検証 | 文字列として渡される | Anthropic SDK mock |
 | image source の検証 | base64 data/media_type/type が正しい | Anthropic SDK mock |
 | image/png の media_type | image/png が source に含まれる | Anthropic SDK mock |
-| ANTHROPIC_MODEL 未設定 | 'claude-3-5-haiku-latest' が使われる | Anthropic SDK mock |
+| ANTHROPIC_MODEL 未設定 | 'claude-3-5-haiku-20241022' が使われる | Anthropic SDK mock |
 | ANTHROPIC_MODEL 設定あり | 環境変数値がモデル名になる | Anthropic SDK mock |
 
 **状態:** anthropic-client.ts 実装後に 12 tests が green。errors.ts 実装後に describe.skip 解除で 2 tests 追加。
@@ -251,7 +251,7 @@ Slice 5 ────────────────────────
 cp .env.example .env.local
 # .env.local に以下を追記:
 # ANTHROPIC_API_KEY=sk-ant-xxxx
-# ANTHROPIC_MODEL=claude-3-5-haiku-latest  # 省略可（デフォルト値）
+# ANTHROPIC_MODEL=claude-3-5-haiku-20241022  # 省略可（デフォルト値）
 
 # 2. 開発サーバーを起動する
 pnpm dev

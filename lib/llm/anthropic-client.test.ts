@@ -11,7 +11,7 @@
  * 実際の API 呼び出しは一切行わない。
  *
  * 確定事項:
- *   - モデルデフォルト: 'claude-3-5-haiku-latest'（process.env.ANTHROPIC_MODEL で上書き可）
+ *   - モデルデフォルト: 'claude-3-5-haiku-20241022'（process.env.ANTHROPIC_MODEL で上書き可）
  *   - テキストブロックが存在しない場合は空オブジェクト {} を返す
  *   - JSON パース失敗時は ExtractionParseError をスローする
  *   - imageBase64 は data URI なしの純粋な base64 文字列
@@ -108,7 +108,7 @@ function makeAnthropicResponse(
     type: 'message',
     role: 'assistant',
     content: textBlocks,
-    model: 'claude-3-5-haiku-latest',
+    model: 'claude-3-5-haiku-20241022',
     stop_reason: 'end_turn',
     usage: { input_tokens: 100, output_tokens: 50 },
   }
@@ -257,13 +257,13 @@ describe('AnthropicLLMClient.extractBeanFromImage — 正常系', () => {
 
   // ---- デフォルトモデル名の確認 (MIN-2: vi.stubEnv で統一) ----
 
-  it('given ANTHROPIC_MODEL 環境変数が未設定のとき then デフォルトモデル "claude-3-5-haiku-latest" が使われる', async () => {
+  it('given ANTHROPIC_MODEL 環境変数が未設定のとき then デフォルトモデル "claude-3-5-haiku-20241022" が使われる', async () => {
     vi.stubEnv('ANTHROPIC_MODEL', undefined as unknown as string)
     messagesCreateMock.mockResolvedValue(makeAnthropicResponse([{ type: 'text', text: '{}' }]))
     const defaultClient = new AnthropicLLMClient('test-api-key')
     await defaultClient.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')
     const callArg = messagesCreateMock.mock.calls[0][0]
-    expect(callArg.model).toBe('claude-3-5-haiku-latest')
+    expect(callArg.model).toBe('claude-3-5-haiku-20241022')
   })
 
   // ---- 環境変数によるモデル名上書き ----
