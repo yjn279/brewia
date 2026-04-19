@@ -28,6 +28,7 @@ const baseBrew: BrewWithBean = {
     id: 'bean-1',
     name: 'Kenya AA',
     notes: null,
+    price: null,
     process: 'Washed',
     region: 'Nyeri',
     roast: 'Light',

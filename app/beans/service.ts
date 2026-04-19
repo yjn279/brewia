@@ -25,6 +25,7 @@ export class BeansService {
       process: dto.process,
       roast: dto.roast,
       notes: dto.notes,
+      price: dto.price ?? null,
     })
   }
 
@@ -39,6 +40,7 @@ export class BeansService {
       process: dto.process,
       roast: dto.roast,
       notes: dto.notes,
+      price: dto.price ?? null,
     })
   }
 

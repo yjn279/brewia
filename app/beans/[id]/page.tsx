@@ -7,6 +7,7 @@ import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
+import { formatJpy } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -132,8 +133,15 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
           </section>
         )}
 
-
-        
+        {/* Price */}
+        {bean.price != null && (
+          <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
+            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Price
+            </h2>
+            <p className="text-sm font-medium text-foreground">{formatJpy(bean.price)}</p>
+          </section>
+        )}
 
         {/* Brew History */}
         {brews.length > 0 && (

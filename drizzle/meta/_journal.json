@@ -8,6 +8,13 @@
       "when": 1774771142137,
       "tag": "0000_heavy_gladiator",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1776557330607,
+      "tag": "0001_add_bean_price",
+      "breakpoints": true
     }
   ]
 }

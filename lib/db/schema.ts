@@ -13,6 +13,7 @@ export const beansTable = sqliteTable('bean', {
   roast: text('roast').notNull(),
   roaster: text('roaster'),
   notes: text('notes'),
+  price: integer('price'),
   created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
   updated: text('updated').notNull().default(sql`CURRENT_TIMESTAMP`),
 })

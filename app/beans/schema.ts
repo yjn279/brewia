@@ -11,6 +11,7 @@ export const upsertBeanSchema = z.object({
   process: z.string().trim().default(''),
   roast: z.enum(ROAST_LEVELS),
   notes: z.string().trim().default(''),
+  price: z.number().int().min(0).nullable().optional(),
 })
 
 export type UpsertBeanDto = z.infer<typeof upsertBeanSchema>

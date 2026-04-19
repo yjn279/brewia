@@ -15,6 +15,7 @@ export interface BeanMutationInput {
   process: string
   variety: string
   notes: string
+  price: number | null
 }
 
 function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {

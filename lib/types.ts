@@ -52,6 +52,7 @@ export interface Bean {
   roast: RoastLevel
   roaster: string | null
   notes: string | null
+  price: number | null
   created: string
   updated: string
 }

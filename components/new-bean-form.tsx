@@ -17,6 +17,14 @@ import {
 import { COUNTRIES, COUNTRY_FLAGS, ROAST_LEVELS, type Bean } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
 
+function parsePriceInput(raw: string): number | null {
+  const trimmed = raw.trim()
+  if (trimmed === '') return null
+  const n = Number(trimmed)
+  if (!Number.isFinite(n) || n < 0) return null
+  return Math.floor(n)
+}
+
 const processes = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Wet Hulled']
 const NO_PROCESS_VALUE = '__none__'
 
@@ -38,6 +46,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   const [variety, setVariety] = useState(initialBean?.variety ?? '')
   const [process, setProcess] = useState(initialBean?.process ?? '')
   const [notes, setNotes] = useState(initialBean?.notes ?? '')
+  const [price, setPrice] = useState(initialBean?.price != null ? String(initialBean.price) : '')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -64,6 +73,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           process,
           roast: ROAST_LEVELS[roastIndex[0]],
           notes,
+          price: parsePriceInput(price),
         }),
       })
 
@@ -99,6 +109,18 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           <div className="flex flex-col gap-2">
             <Label htmlFor="roaster">Roaster</Label>
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="price">Price (JPY)</Label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="1800"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+            />
           </div>
         </div>
       </div>
