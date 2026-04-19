@@ -188,13 +188,13 @@ const flavors: Flavor[] = [
 ]
 
 function fillRequiredBrewFields() {
-  fireEvent.change(screen.getByLabelText('Temp (°C)'), {
+  fireEvent.change(screen.getByLabelText('Temp'), {
     target: { value: '92' },
   })
-  fireEvent.change(screen.getByLabelText('Grind (clicks)'), {
+  fireEvent.change(screen.getByLabelText('Grind'), {
     target: { value: '24' },
   })
-  fireEvent.change(screen.getByLabelText('Total Time (sec)'), {
+  fireEvent.change(screen.getByLabelText('Total Time'), {
     target: { value: '120' },
   })
 }
@@ -207,8 +207,8 @@ describe('NewBrewForm', () => {
   it('given the weight inputs when the form renders then both fields allow decimal gram entries', () => {
     render(<NewBrewForm beans={beans} flavors={flavors} />)
 
-    const beanWeightInput = screen.getByLabelText('Coffee (g)')
-    const waterWeightInput = screen.getByLabelText('Water (g)')
+    const beanWeightInput = screen.getByLabelText('Coffee')
+    const waterWeightInput = screen.getByLabelText('Water')
 
     expect(beanWeightInput.getAttribute('min')).toBe('1')
     expect(beanWeightInput.getAttribute('step')).toBe('any')
@@ -229,10 +229,10 @@ describe('NewBrewForm', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
       target: { value: 'bean-1' },
     })
-    fireEvent.change(screen.getByLabelText('Coffee (g)'), {
+    fireEvent.change(screen.getByLabelText('Coffee'), {
       target: { value: '1' },
     })
-    fireEvent.change(screen.getByLabelText('Water (g)'), {
+    fireEvent.change(screen.getByLabelText('Water'), {
       target: { value: '3' },
     })
     fillRequiredBrewFields()
@@ -270,10 +270,10 @@ describe('NewBrewForm', () => {
 
     render(<NewBrewForm beans={beans} flavors={flavors} initialBeanId="bean-1" />)
 
-    fireEvent.change(screen.getByLabelText('Coffee (g)'), {
+    fireEvent.change(screen.getByLabelText('Coffee'), {
       target: { value: '15.5' },
     })
-    fireEvent.change(screen.getByLabelText('Water (g)'), {
+    fireEvent.change(screen.getByLabelText('Water'), {
       target: { value: '225.3' },
     })
     fillRequiredBrewFields()
@@ -342,8 +342,8 @@ describe('NewBrewForm', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
       target: { value: 'bean-1' },
     })
-    fireEvent.change(screen.getByLabelText('Coffee (g)'), { target: { value: '15' } })
-    fireEvent.change(screen.getByLabelText('Water (g)'), { target: { value: '225' } })
+    fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
+    fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
     fillRequiredBrewFields()
 
     // Fill notes
@@ -395,8 +395,8 @@ describe('NewBrewForm', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
       target: { value: 'bean-1' },
     })
-    fireEvent.change(screen.getByLabelText('Coffee (g)'), { target: { value: '15' } })
-    fireEvent.change(screen.getByLabelText('Water (g)'), { target: { value: '225' } })
+    fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
+    fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
     fillRequiredBrewFields()
 
     fireEvent.change(screen.getByPlaceholderText('How was this brew? Any observations?'), {
@@ -602,5 +602,72 @@ describe('NewBrewForm', () => {
     // Clicking again switches it back
     fireEvent.click(screen.getByText('あとで記録'))
     expect(toggle.getAttribute('data-state')).toBe('unchecked')
+  })
+
+  // U1: All 5 parameter inputs render an inline unit suffix next to the field
+  it('U1: given the Parameters section renders, when inspecting each input wrapper, then a muted unit suffix is present next to the input', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    const cases: Array<{ label: string; unit: string }> = [
+      { label: 'Coffee', unit: 'g' },
+      { label: 'Water', unit: 'g' },
+      { label: 'Temp', unit: '°C' },
+      { label: 'Grind', unit: 'clicks' },
+      { label: 'Total Time', unit: 's' },
+    ]
+
+    for (const { label, unit } of cases) {
+      const input = screen.getByLabelText(label) as HTMLInputElement
+      const wrapper = input.parentElement
+      expect(wrapper).not.toBeNull()
+      const suffix = Array.from(wrapper!.querySelectorAll('span')).find(
+        (s) => s.textContent === unit,
+      )
+      expect(suffix, `expected suffix "${unit}" next to ${label}`).toBeDefined()
+    }
+  })
+
+  // U2: Labels no longer carry the "(unit)" parenthetical
+  it('U2: given the Parameters section renders, when reading label text, then labels do not include a parenthesised unit', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    for (const label of ['Coffee', 'Water', 'Temp', 'Grind', 'Total Time']) {
+      expect(screen.getByLabelText(label)).toBeDefined()
+    }
+
+    for (const oldLabel of ['Coffee (g)', 'Water (g)', 'Temp (°C)', 'Grind (clicks)', 'Total Time (sec)']) {
+      expect(screen.queryByText(oldLabel)).toBeNull()
+    }
+  })
+
+  // U3: Extraction Steps column headers no longer carry parenthesised units
+  it('U3: given the Extraction Steps section renders, when reading column headers, then they are "Time" and "Water" with no parenthesised units', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    expect(screen.getByText('Time')).toBeDefined()
+    expect(screen.getAllByText('Water').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Time (s)')).toBeNull()
+    expect(screen.queryByText('Water (g)')).toBeNull()
+  })
+
+  // U4: Each parameter input wires aria-describedby to its unit suffix
+  it('U4: given the Parameters section renders, when inspecting aria-describedby on each input, then it references the matching unit suffix span', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    const cases: Array<{ label: string; unit: string; suffixId: string }> = [
+      { label: 'Coffee', unit: 'g', suffixId: 'beanWeight-unit' },
+      { label: 'Water', unit: 'g', suffixId: 'waterWeight-unit' },
+      { label: 'Temp', unit: '°C', suffixId: 'waterTemp-unit' },
+      { label: 'Grind', unit: 'clicks', suffixId: 'grindSize-unit' },
+      { label: 'Total Time', unit: 's', suffixId: 'brewTime-unit' },
+    ]
+
+    for (const { label, unit, suffixId } of cases) {
+      const input = screen.getByLabelText(label) as HTMLInputElement
+      expect(input.getAttribute('aria-describedby')).toBe(suffixId)
+      const suffix = document.getElementById(suffixId)
+      expect(suffix, `expected <span id="${suffixId}"> to exist`).not.toBeNull()
+      expect(suffix!.textContent).toBe(unit)
+    }
   })
 })

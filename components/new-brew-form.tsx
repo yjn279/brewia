@@ -239,20 +239,25 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         </h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="beanWeight">Coffee (g)</Label>
-            <Input
-              id="beanWeight"
-              type="number"
-              value={beanWeight}
-              onChange={(e) => setBeanWeight(e.target.value)}
-              min="1"
-              step="any"
-              placeholder="0"
-              required
-            />
+            <Label htmlFor="beanWeight">Coffee</Label>
+            <div className="relative">
+              <Input
+                id="beanWeight"
+                type="number"
+                value={beanWeight}
+                onChange={(e) => setBeanWeight(e.target.value)}
+                min="1"
+                step="any"
+                placeholder="0"
+                required
+                className="pr-8"
+                aria-describedby="beanWeight-unit"
+              />
+              <span id="beanWeight-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+            </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="waterWeight">Water (g)</Label>
+            <Label htmlFor="waterWeight">Water</Label>
             <div className="relative">
               <Input
                 id="waterWeight"
@@ -264,12 +269,13 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 required
                 placeholder="0"
                 className="pr-8"
+                aria-describedby="waterWeight-unit"
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+              <span id="waterWeight-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="waterTemp">Temp (°C)</Label>
+            <Label htmlFor="waterTemp">Temp</Label>
             <div className="relative">
               <Input
                 id="waterTemp"
@@ -281,24 +287,30 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 required
                 placeholder="0"
                 className="pr-8"
+                aria-describedby="waterTemp-unit"
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">°C</span>
+              <span id="waterTemp-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">°C</span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="grindSize">Grind (clicks)</Label>
-            <Input
-              id="grindSize"
-              type="number"
-              value={grindSize}
-              onChange={(e) => setGrindSize(e.target.value)}
-              min="1"
-              placeholder="clicks"
-              required
-            />
+            <Label htmlFor="grindSize">Grind</Label>
+            <div className="relative">
+              <Input
+                id="grindSize"
+                type="number"
+                value={grindSize}
+                onChange={(e) => setGrindSize(e.target.value)}
+                min="1"
+                placeholder="0"
+                required
+                className="pr-14"
+                aria-describedby="grindSize-unit"
+              />
+              <span id="grindSize-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">clicks</span>
+            </div>
           </div>
           <div className="col-span-2 flex flex-col gap-2">
-            <Label htmlFor="brewTime">Total Time (sec)</Label>
+            <Label htmlFor="brewTime">Total Time</Label>
             <div className="relative">
               <Input
                 id="brewTime"
@@ -310,8 +322,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 required
                 placeholder="0"
                 className="pr-8"
+                aria-describedby="brewTime-unit"
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
+              <span id="brewTime-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
             </div>
           </div>
         </div>
@@ -382,8 +395,8 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
         <div className="space-y-2">
           <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            <span>Time (s)</span>
-            <span>Water (g)</span>
+            <span>Time</span>
+            <span>Water</span>
             <span />
           </div>
           {stepInputs.map((stepInput, index) => (
