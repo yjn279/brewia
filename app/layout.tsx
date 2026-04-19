@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, DM_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from '@/components/ui/sonner'
 import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar'
 import './globals.css'
 
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${dmSans.variable} ${dmMono.variable} font-sans antialiased`}>
         {children}
+        <Toaster />
         <Analytics />
         <ServiceWorkerRegistrar />
       </body>
