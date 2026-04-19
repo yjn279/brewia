@@ -12,7 +12,7 @@ interface RoastPaletteProps {
 export function RoastPalette({ value, onChange }: RoastPaletteProps) {
   return (
     <Select value={value} onValueChange={(v) => onChange(v as RoastLevel)}>
-      <SelectTrigger aria-label="Roast Level">
+      <SelectTrigger aria-label="Roast Level" className="w-full">
         <SelectValue placeholder="Select roast level" />
       </SelectTrigger>
       <SelectContent>
