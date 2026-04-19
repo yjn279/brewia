@@ -42,7 +42,7 @@ export function RoastPhotoPicker({ onEstimate }: RoastPhotoPickerProps) {
 
       if (level === null) {
         setStatus('error')
-        setErrorMessage('Could not estimate roast level (out of range)')
+        setErrorMessage('Out of range')
         return
       }
 
@@ -52,7 +52,7 @@ export function RoastPhotoPicker({ onEstimate }: RoastPhotoPickerProps) {
     } catch {
       if (gen !== generationRef.current) return
       setStatus('error')
-      setErrorMessage('Could not estimate roast level')
+      setErrorMessage("Couldn't detect")
     } finally {
       if (inputRef.current) {
         inputRef.current.value = ''
@@ -79,22 +79,20 @@ export function RoastPhotoPicker({ onEstimate }: RoastPhotoPickerProps) {
       >
         <label htmlFor="photo-input" className="cursor-pointer">
           <Camera />
-          Estimate from photo
+          From photo
         </label>
       </Button>
 
       {status === 'processing' && (
         <div role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="animate-spin" />
-          Estimating roast...
+          Detecting...
         </div>
       )}
 
       {status === 'done' && preview && (
         <div role="region" aria-live="polite" aria-label="Estimated roast" className="text-sm text-muted-foreground">
-          <span>L*: {preview.L.toFixed(1)}</span>
-          {' '}
-          <span>{preview.level}</span>
+          L* {preview.L.toFixed(1)} · {preview.level}
         </div>
       )}
 

@@ -161,13 +161,15 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           </div>
           <div className="flex flex-col gap-3">
             <Label>Roast Level</Label>
-            <RoastPhotoPicker
-              onEstimate={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
-            />
-            <RoastPalette
-              value={ROAST_LEVELS[roastIndex[0]]}
-              onChange={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <RoastPalette
+                value={ROAST_LEVELS[roastIndex[0]]}
+                onChange={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
+              />
+              <RoastPhotoPicker
+                onEstimate={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
+              />
+            </div>
           </div>
         </div>
       </div>
