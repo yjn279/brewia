@@ -292,11 +292,11 @@ interface PhotoImportButtonProps {
 export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps)
 ```
 
-- `<input type="file" accept="image/jpeg,image/png" capture="environment">` を hidden で持ち、ボタンクリックで `.click()` を呼ぶ
+- `<input type="file" accept="image/jpeg,image/png">` を hidden で持ち、ボタンクリックで `.click()` を呼ぶ
 - ファイル選択後: `FileReader` で base64 変換 → `FormData` に詰めて `POST /api/beans/extract` → 成功時に `onExtracted` を呼ぶ
 - 解析中は `Loader2` スピナーをボタン内に表示してボタンを無効化（`isLoading` state）
 - エラー時: `sonner` の `toast.error('自動入力に失敗しました。手動で入力してください')` を呼ぶ
-- `capture="environment"` によりモバイルではリアカメラを優先するが、ギャラリー選択も可能
+- `capture` 属性は付与しない。モバイルでは OS のネイティブ picker で「カメラで撮影 / フォトライブラリ / ファイル」を選択可能。PC ではファイル選択ダイアログが開く
 
 **`new-bean-form.tsx` への変更点（最小限）:**
 

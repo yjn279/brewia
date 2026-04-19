@@ -78,6 +78,11 @@ describe('PhotoImportButton', () => {
     expect(input.accept).toContain('image/png')
   })
 
+  it('given ボタンがレンダリングされたとき then input に capture 属性が設定されていない（アップロードもカメラ撮影も OS ネイティブ picker で選べるようにするため）', () => {
+    const { input } = renderButton()
+    expect(input.hasAttribute('capture')).toBe(false)
+  })
+
   // ---- ローディング状態 ----
 
   it('given ファイルが選択されたとき then ボタンが無効化されスピナーが表示される', async () => {

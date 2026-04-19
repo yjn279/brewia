@@ -70,7 +70,6 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png"
-        capture="environment"
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
