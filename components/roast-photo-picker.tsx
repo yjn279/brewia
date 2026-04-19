@@ -75,6 +75,7 @@ export function RoastPhotoPicker({ onEstimate }: RoastPhotoPickerProps) {
         type="button"
         variant="outline"
         asChild
+        className="w-full"
       >
         <label htmlFor="photo-input" className="cursor-pointer">
           <Camera />
