@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { RoastPalette } from '@/components/roast-palette'
+import { RoastPhotoPicker } from '@/components/roast-photo-picker'
 import {
   Select,
   SelectContent,
@@ -160,6 +161,9 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           </div>
           <div className="flex flex-col gap-3">
             <Label>Roast Level</Label>
+            <RoastPhotoPicker
+              onEstimate={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
+            />
             <RoastPalette
               value={ROAST_LEVELS[roastIndex[0]]}
               onChange={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
