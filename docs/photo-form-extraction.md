@@ -123,7 +123,7 @@ export interface LLMClient {
  * Anthropic の `-latest` エイリアスは時期によって無効化される場合があるため、
  * date-stamped 版を採用することで長期的な安定稼働を確保する。
  */
-export const DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-20241022'
+export const DEFAULT_ANTHROPIC_MODEL = 'claude-haiku-4-5'
 
 /**
  * Vercel 環境変数で差し替え可能なモデル名を返す関数。
@@ -381,7 +381,7 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps)
 
 ### モデル名方針
 
-本プロジェクトでは Anthropic の `-latest` エイリアス（例: `claude-3-5-haiku-latest`）を使用しない。`-latest` エイリアスは予告なく deprecated または削除される場合があるため、date-stamped モデル名（例: `claude-3-5-haiku-20241022`）を `lib/llm/constants.ts` の `DEFAULT_ANTHROPIC_MODEL` として採用する。モデルをアップグレードする際は定数を直接変更するか、`ANTHROPIC_MODEL` 環境変数で上書きすること。
+エイリアス `claude-haiku-4-5` をデフォルトに採用する。Claude 4.5 系列は当面現行のため、バージョン固定の追加コストなくアップデートを受け取れる利点がある（`-latest` とは異なり、エイリアスは系列内の最新 date-stamped 版を指す）。将来エイリアスが deprecate された場合は date-stamped 版（`claude-haiku-4-5-20251001`）に切り替える。変更は `lib/llm/constants.ts` の `DEFAULT_ANTHROPIC_MODEL` を直接書き換えるか、`ANTHROPIC_MODEL` 環境変数で上書きすること。
 
 ### System Prompt（役割定義）
 
@@ -723,7 +723,7 @@ export const maxDuration = 30  // Pro プラン以上で有効
 | Anthropic API のレスポンスタイムが Vercel Hobby の 10 秒制限を超える | 503 が返りユーザー体験が悪化 | Pro プランへのアップグレード または `maxDuration: 30` 設定（Pro 以上で有効） |
 | Claude が JSON 以外のテキストを返す | `JSON.parse` 失敗 → `ExtractionParseError` | プロンプトで「JSON のみ返す」を強調。失敗時はトースト表示でグレースフルデグラデーション |
 | 画像が読み取れない（手ブレ・低解像度・非英語パッケージ等）| 抽出フィールドが空 | 設計上許容済み。全フィールドが空の場合もエラーではなく空 JSON `{}` を返し、フォームは変化しない |
-| Anthropic 側モデル名の変更 | `ANTHROPIC_MODEL` 環境変数で追従できる | date-stamped モデル名（例: `claude-3-5-haiku-20241022`）を採用し、`-latest` エイリアスの deprecate を回避する。環境変数を常にデプロイ時に確認するオペレーション体制を整える |
+| Anthropic 側モデル名の変更 | `ANTHROPIC_MODEL` 環境変数で追従できる | エイリアス `claude-haiku-4-5` を採用し、deprecate 時は date-stamped 版（`claude-haiku-4-5-20251001`）に切り替える。環境変数を常にデプロイ時に確認するオペレーション体制を整える |
 
 ### トレードオフ
 

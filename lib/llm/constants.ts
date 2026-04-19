@@ -1,9 +1,8 @@
 /**
- * デフォルトモデル名。
- * Anthropic の `-latest` エイリアスは時期によって無効化される場合があるため、
- * date-stamped 版を採用することで長期的な安定稼働を確保する。
+ * デフォルトモデル名: Claude 4.5 Haiku の API エイリアス。
+ * date-stamped 版が必要なら `claude-haiku-4-5-20251001` を `ANTHROPIC_MODEL` 環境変数で指定。
  */
-export const DEFAULT_ANTHROPIC_MODEL = 'claude-3-5-haiku-20241022'
+export const DEFAULT_ANTHROPIC_MODEL = 'claude-haiku-4-5'
 
 /**
  * Vercel 環境変数で差し替え可能なモデル名を返す関数。
