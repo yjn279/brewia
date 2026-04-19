@@ -228,6 +228,49 @@ describe('AnthropicLLMClient.extractBeanFromImage — 正常系', () => {
     await expect(client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')).rejects.toThrow(ExtractionParseError)
   })
 
+  // ---- Markdown コードフェンス前処理 ----
+
+  it('given LLM が ```json ... ``` フェンス付きで JSON を返すとき then 正しく RawBeanExtraction がパースされる', async () => {
+    const innerJson = { name: 'モカシダモ', roaster: 'クレスト', country: 'Ethiopia' }
+    const fencedText = '```json\n' + JSON.stringify(innerJson) + '\n```'
+    messagesCreateMock.mockResolvedValue(
+      makeAnthropicResponse([{ type: 'text', text: fencedText }])
+    )
+    const result = await client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')
+    expect(result.name).toBe('モカシダモ')
+    expect(result.roaster).toBe('クレスト')
+    expect(result.country).toBe('Ethiopia')
+  })
+
+  it('given LLM が ``` ... ``` フェンス付き (language 指定なし) で JSON を返すとき then 正しく RawBeanExtraction がパースされる', async () => {
+    const innerJson = { name: 'Kenya AA', roast: 'Light' }
+    const fencedText = '```\n' + JSON.stringify(innerJson) + '\n```'
+    messagesCreateMock.mockResolvedValue(
+      makeAnthropicResponse([{ type: 'text', text: fencedText }])
+    )
+    const result = await client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')
+    expect(result.name).toBe('Kenya AA')
+    expect(result.roast).toBe('Light')
+  })
+
+  it('given LLM が Markdown フェンスなしで JSON を返すとき then 後方互換で正しくパースされる', async () => {
+    const innerJson = { name: 'Colombia Huila', process: 'Washed' }
+    messagesCreateMock.mockResolvedValue(
+      makeAnthropicResponse([{ type: 'text', text: JSON.stringify(innerJson) }])
+    )
+    const result = await client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')
+    expect(result.name).toBe('Colombia Huila')
+    expect(result.process).toBe('Washed')
+  })
+
+  it('given LLM が ```json フェンス付きで不正な JSON を返すとき then ExtractionParseError をスローする', async () => {
+    const fencedText = '```json\n{ invalid json here\n```'
+    messagesCreateMock.mockResolvedValue(
+      makeAnthropicResponse([{ type: 'text', text: fencedText }])
+    )
+    await expect(client.extractBeanFromImage(SAMPLE_BASE64, 'image/jpeg')).rejects.toThrow(ExtractionParseError)
+  })
+
   // ---- SDK 呼び出しの引数検証 ----
 
   it('given extractBeanFromImage を呼ぶとき then messages.create に max_tokens: 512 が渡される', async () => {

@@ -414,8 +414,15 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps)
 
 ### サニタイズ方針
 
-- LLM レスポンスのテキストブロックから JSON を取り出す際は `JSON.parse()` のみを使用。正規表現による抽出は行わない
-- `JSON.parse` が失敗した場合は `ExtractionFailedError` をスローし、上位でキャッチしてクライアントに `503` を返す
+- LLM レスポンスのテキストブロックには `stripJsonFence()` ヘルパーで前処理を施してから `JSON.parse()` に渡す。Claude は「JSON のみ返す」と指示しても ` ```json ... ``` ` 形式の Markdown コードブロックでラップして返す場合があるため、この前処理が必須となる
+  - ` ```json ... ``` ` 形式（language 指定あり）および ` ``` ... ``` ` 形式（language 指定なし）の両方を除去する
+  - Markdown フェンスが存在しない場合は trim のみ行い、後方互換を維持する
+  - `stripJsonFence()` は `anthropic-client.ts` 内のモジュールプライベートなヘルパーとして定義（エクスポートなし）
+- プロンプトでも「JSON のみ、Markdown コードブロック禁止」を User Prompt 末尾で明示的に強調している（二重防衛）:
+  - 「マークダウンコードブロック（` ```json ... ``` `）で囲まないこと」
+  - 「前後に説明文や挨拶を付けないこと」
+  - 「回答は必ず「{」で始まり「}」で終わる JSON オブジェクトのみとすること」
+- `JSON.parse` が失敗した場合は `ExtractionParseError` をスローし、上位でキャッチしてクライアントに `503` を返す
 - フィールド値は Service 層でトリム・長さ制限（`name`, `roaster` 等は 200 文字超なら切り捨て）を実施する
 - 画像データはログに出力しない（後述「8. セキュリティ」参照）
 
