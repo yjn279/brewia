@@ -449,13 +449,15 @@ export class InvalidImageError extends Error {
 
 ### 7.2 Route でのステータスコードマッピング
 
-| 例外クラス | HTTP ステータス | `code` フィールド |
-|---|---|---|
-| `InvalidImageError('INVALID_FILE')` | `400` | `INVALID_FILE` |
-| `InvalidImageError('FILE_TOO_LARGE')` | `400` | `FILE_TOO_LARGE` |
-| `ExtractionParseError` | `503` | `EXTRACTION_FAILED` |
-| `LLMApiError` | `503` | `EXTRACTION_FAILED` |
-| その他 `Error` | `500` | `INTERNAL_ERROR` |
+エラーレスポンスには `details` フィールドが含まれる。`details` は Anthropic SDK のエラーメッセージ（例: `"Invalid API key"`, `"rate_limit_exceeded"`）や予期しない例外のメッセージをそのまま格納する。フロントエンドはこの `details` をトーストメッセージに統合して表示することで、原因の診断を容易にする。
+
+| 例外クラス | HTTP ステータス | `code` フィールド | `details` フィールド |
+|---|---|---|---|
+| `InvalidImageError('INVALID_FILE')` | `400` | `INVALID_FILE` | なし |
+| `InvalidImageError('FILE_TOO_LARGE')` | `400` | `FILE_TOO_LARGE` | なし |
+| `ExtractionParseError` | `503` | `EXTRACTION_FAILED` | `err.message` |
+| `LLMApiError` | `503` | `EXTRACTION_FAILED` | `err.message` |
+| その他 `Error` | `500` | `INTERNAL_ERROR` | `err.message` |
 
 ```typescript
 // route.ts のエラーハンドリング骨格
@@ -468,10 +470,11 @@ try {
   }
   if (err instanceof LLMApiError || err instanceof ExtractionParseError) {
     console.error('[extract] LLM error:', err.message)  // 画像データは含めない
-    return NextResponse.json({ error: 'Extraction failed', code: 'EXTRACTION_FAILED' }, { status: 503 })
+    return NextResponse.json({ error: 'Extraction failed', code: 'EXTRACTION_FAILED', details: err.message }, { status: 503 })
   }
-  console.error('[extract] Unexpected error:', err)
-  return NextResponse.json({ error: 'Internal error', code: 'INTERNAL_ERROR' }, { status: 500 })
+  const details = err instanceof Error ? err.message : String(err)
+  console.error('[extract] Unexpected error:', details)
+  return NextResponse.json({ error: 'Internal error', code: 'INTERNAL_ERROR', details }, { status: 500 })
 }
 ```
 
@@ -490,14 +493,14 @@ try {
 
 #### エラー系（`response.ok === false`）
 
-レスポンス body の `code` フィールドに応じてメッセージを分岐する:
+レスポンス body の `code` フィールドに応じてベースメッセージを決定し、`details` フィールドが存在する場合は `"${ベースメッセージ}: ${details}"` の形式でトーストに表示する。`details` がない場合はベースメッセージのみを表示する（後方互換）。エラートーストは読む時間が必要なため `duration: 10000`（10 秒）で長めに表示する。
 
-| `code` | HTTP 例 | トーストメッセージ |
-|---|---|---|
-| `FILE_TOO_LARGE` | 400 | `ファイルサイズが大きすぎます（サーバー側）` |
-| `INVALID_FILE` | 400 | `画像形式が不正です（JPEG / PNG のみ対応）` |
-| `EXTRACTION_FAILED` | 503 | `AI 解析に失敗しました。しばらく経ってから再度お試しください` |
-| その他 / body 読み取り失敗 | 500 など | `自動入力に失敗しました。手動で入力してください` |
+| `code` | HTTP 例 | ベースメッセージ | `details` あり時の表示例 |
+|---|---|---|---|
+| `FILE_TOO_LARGE` | 400 | `ファイルサイズが大きすぎます（サーバー側）` | — |
+| `INVALID_FILE` | 400 | `画像形式が不正です（JPEG / PNG のみ対応）` | — |
+| `EXTRACTION_FAILED` | 503 | `AI 解析に失敗しました` | `AI 解析に失敗しました: Invalid API key` |
+| その他 / body 読み取り失敗 | 500 など | `自動入力に失敗しました。手動で入力してください` | `自動入力に失敗しました。手動で入力してください: rate_limit_exceeded` |
 
 #### ネットワークエラー（`fetch` 自体が reject）
 

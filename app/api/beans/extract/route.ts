@@ -57,16 +57,16 @@ export async function POST(request: Request): Promise<Response> {
       )
     }
     if (err instanceof LLMApiError || err instanceof ExtractionParseError) {
-      const message = err instanceof Error ? err.message : String(err)
-      console.error('[extract] LLM error:', message)
+      console.error('[extract] LLM error:', err.message)
       return NextResponse.json(
-        { error: 'Extraction failed', code: 'EXTRACTION_FAILED' },
+        { error: 'Extraction failed', code: 'EXTRACTION_FAILED', details: err.message },
         { status: 503 }
       )
     }
-    console.error('[extract] Unexpected error:', err instanceof Error ? err.message : String(err))
+    const details = err instanceof Error ? err.message : String(err)
+    console.error('[extract] Unexpected error:', details)
     return NextResponse.json(
-      { error: 'Internal error', code: 'INTERNAL_ERROR' },
+      { error: 'Internal error', code: 'INTERNAL_ERROR', details },
       { status: 500 }
     )
   }

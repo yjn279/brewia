@@ -145,7 +145,9 @@ describe('POST /api/beans/extract — バリデーション (skip until route.ts
     extractFromImageMock.mockRejectedValue(new Error('Unexpected'))
     const response = await POST(makeExtractRequest(makeFile(1024, 'image/jpeg')))
     expect(response.status).toBe(500)
-    expect((await response.json()).code).toBe('INTERNAL_ERROR')
+    const body = await response.json()
+    expect(body.code).toBe('INTERNAL_ERROR')
+    expect(body.details).toBe('Unexpected')
   })
 })
 
@@ -159,14 +161,27 @@ describe('POST /api/beans/extract — LLM エラー系 (skip until errors.ts fil
     extractFromImageMock.mockRejectedValue(new LLMApiError(503, 'Anthropic unavailable'))
     const response = await POST(makeExtractRequest(makeFile(1024, 'image/jpeg')))
     expect(response.status).toBe(503)
-    expect((await response.json()).code).toBe('EXTRACTION_FAILED')
+    const body = await response.json()
+    expect(body.code).toBe('EXTRACTION_FAILED')
+    expect(body.details).toBe('Anthropic unavailable')
   })
 
   it('given ExtractorService が ExtractionParseError をスローするとき then 503 と code: EXTRACTION_FAILED を返す', async () => {
     extractFromImageMock.mockRejectedValue(new ExtractionParseError('Bad JSON'))
     const response = await POST(makeExtractRequest(makeFile(1024, 'image/jpeg')))
     expect(response.status).toBe(503)
-    expect((await response.json()).code).toBe('EXTRACTION_FAILED')
+    const body = await response.json()
+    expect(body.code).toBe('EXTRACTION_FAILED')
+    expect(body.details).toBe('Bad JSON')
+  })
+
+  it('given ExtractorService が非 Error 値をスローするとき then 500 と details に文字列化した値を返す', async () => {
+    extractFromImageMock.mockRejectedValue('string error')
+    const response = await POST(makeExtractRequest(makeFile(1024, 'image/jpeg')))
+    expect(response.status).toBe(500)
+    const body = await response.json()
+    expect(body.code).toBe('INTERNAL_ERROR')
+    expect(body.details).toBe('string error')
   })
 })
 

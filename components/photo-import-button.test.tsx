@@ -143,7 +143,8 @@ describe('PhotoImportButton', () => {
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        'AI 解析に失敗しました。しばらく経ってから再度お試しください',
+        'AI 解析に失敗しました',
+        expect.objectContaining({ duration: 10000 }),
       )
     })
     expect(onExtracted).not.toHaveBeenCalled()
@@ -155,7 +156,10 @@ describe('PhotoImportButton', () => {
     const { input } = renderButton(onExtracted)
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('画像形式が不正です（JPEG / PNG のみ対応）')
+      expect(toast.error).toHaveBeenCalledWith(
+        '画像形式が不正です（JPEG / PNG のみ対応）',
+        expect.objectContaining({ duration: 10000 }),
+      )
     })
     expect(onExtracted).not.toHaveBeenCalled()
   })
@@ -283,7 +287,10 @@ describe('PhotoImportButton', () => {
     const { input } = renderButton(onExtracted)
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('ファイルサイズが大きすぎます（サーバー側）')
+      expect(toast.error).toHaveBeenCalledWith(
+        'ファイルサイズが大きすぎます（サーバー側）',
+        expect.objectContaining({ duration: 10000 }),
+      )
     })
     expect(onExtracted).not.toHaveBeenCalled()
   })
@@ -299,9 +306,59 @@ describe('PhotoImportButton', () => {
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
         expect.stringContaining('AI 解析に失敗しました'),
+        expect.objectContaining({ duration: 10000 }),
       )
     })
     expect(onExtracted).not.toHaveBeenCalled()
+  })
+
+  it('given POST が 503 で details ありのとき then トーストメッセージに details が含まれる', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        makeFetchResponse(false, 503, { code: 'EXTRACTION_FAILED', details: 'Invalid API key' }),
+      ),
+    )
+    const { input } = renderButton()
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        'AI 解析に失敗しました: Invalid API key',
+        expect.objectContaining({ duration: 10000 }),
+      )
+    })
+  })
+
+  it('given POST が 500 で details ありのとき then トーストメッセージに details が含まれる', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        makeFetchResponse(false, 500, { code: 'INTERNAL_ERROR', details: 'Database connection failed' }),
+      ),
+    )
+    const { input } = renderButton()
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        '自動入力に失敗しました。手動で入力してください: Database connection failed',
+        expect.objectContaining({ duration: 10000 }),
+      )
+    })
+  })
+
+  it('given POST が 503 で details なしのとき then トーストはベースメッセージのみを表示する（後方互換）', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(makeFetchResponse(false, 503, { code: 'EXTRACTION_FAILED' })),
+    )
+    const { input } = renderButton()
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        'AI 解析に失敗しました',
+        expect.objectContaining({ duration: 10000 }),
+      )
+    })
   })
 
   it('given POST が 500 {} (code なし) を返すとき then フォールバックメッセージが表示される', async () => {
@@ -311,6 +368,7 @@ describe('PhotoImportButton', () => {
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
         '自動入力に失敗しました。手動で入力してください',
+        expect.objectContaining({ duration: 10000 }),
       )
     })
   })

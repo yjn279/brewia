@@ -49,22 +49,26 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
 
       if (!response.ok) {
         let code: string | undefined
+        let details: string | undefined
         try {
           const err = await response.json()
           code = err?.code
+          details = err?.details
         } catch {
           // body が読めなくても続行
         }
 
-        const message =
+        const baseMessage =
           code === 'FILE_TOO_LARGE'
             ? 'ファイルサイズが大きすぎます（サーバー側）'
             : code === 'INVALID_FILE'
               ? '画像形式が不正です（JPEG / PNG のみ対応）'
               : code === 'EXTRACTION_FAILED'
-                ? 'AI 解析に失敗しました。しばらく経ってから再度お試しください'
+                ? 'AI 解析に失敗しました'
                 : '自動入力に失敗しました。手動で入力してください'
-        toast.error(message)
+
+        const fullMessage = details ? `${baseMessage}: ${details}` : baseMessage
+        toast.error(fullMessage, { duration: 10000 })
         return
       }
 
