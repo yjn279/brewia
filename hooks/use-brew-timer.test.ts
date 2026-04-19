@@ -35,7 +35,51 @@ describe('useBrewTimer', () => {
     expect(result.current.elapsed).toBeGreaterThanOrEqual(3000)
   })
 
-  it('T3: after start + 7000ms, reset sets idle/0 and stops further updates', () => {
+  // T3a: stop() from running freezes elapsed and status='stopped'; further time does NOT advance elapsed; reset() restores idle/0
+  it('T3a: after start + 7000ms, stop() sets stopped/frozen; advance 3000ms more does not change elapsed; reset() sets idle/0', () => {
+    let now = 0
+    const getNow = () => now
+
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
+
+    act(() => {
+      result.current.start()
+    })
+
+    act(() => {
+      now = 7000
+      vi.advanceTimersByTime(7000)
+    })
+
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(7000)
+
+    act(() => {
+      result.current.stop()
+    })
+
+    expect(result.current.status).toBe('stopped')
+    const frozenElapsed = result.current.elapsed
+    expect(frozenElapsed).toBeGreaterThanOrEqual(7000)
+
+    // Advance more time — elapsed must stay frozen (interval cleared on stop)
+    act(() => {
+      now = 10000
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.elapsed).toBe(frozenElapsed)
+
+    // reset() from stopped
+    act(() => {
+      result.current.reset()
+    })
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.elapsed).toBe(0)
+  })
+
+  // T3b: reset() directly from running (without stopping first) still works
+  it('T3b: after start + 7000ms, reset() from running directly sets idle/0 and stops further updates', () => {
     let now = 0
     const getNow = () => now
 
@@ -65,6 +109,62 @@ describe('useBrewTimer', () => {
       vi.advanceTimersByTime(3000)
     })
 
+    expect(result.current.elapsed).toBe(0)
+  })
+
+  // start() is a no-op from 'stopped' (no resume in this iteration)
+  it('start no-op from stopped: after stop, calling start() does not resume or restart', () => {
+    let now = 0
+    const getNow = () => now
+
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
+
+    act(() => {
+      result.current.start()
+    })
+
+    act(() => {
+      now = 5000
+      vi.advanceTimersByTime(5000)
+    })
+
+    act(() => {
+      result.current.stop()
+    })
+
+    expect(result.current.status).toBe('stopped')
+    const frozenElapsed = result.current.elapsed
+
+    // Attempt to start from stopped — should be no-op
+    act(() => {
+      result.current.start()
+    })
+
+    expect(result.current.status).toBe('stopped')
+
+    // Advance time — elapsed must not change
+    act(() => {
+      now = 8000
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.elapsed).toBe(frozenElapsed)
+  })
+
+  // stop() from idle does not throw and status stays idle
+  it('stop no-op from idle: stop() from idle does not throw and status stays idle', () => {
+    let now = 0
+    const getNow = () => now
+
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
+
+    expect(result.current.status).toBe('idle')
+
+    act(() => {
+      result.current.stop()
+    })
+
+    expect(result.current.status).toBe('idle')
     expect(result.current.elapsed).toBe(0)
   })
 

@@ -40,7 +40,7 @@ interface NewBrewFormProps {
   flavors: Flavor[]
 }
 
-const STEP_TIME_INTERVAL = 5
+const STEP_TIME_INTERVAL = 1
 const STEP_WATER_INTERVAL = 5
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 const CHART_PLOT_PADDING = {
@@ -189,10 +189,11 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     [stepInputs, totalTime, totalWater]
   )
 
-  const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, reset: resetTimer } = useBrewTimer()
+  const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, stop: stopTimer, reset: resetTimer } = useBrewTimer()
 
   const handleLap = () => {
-    const seconds = Math.floor(timerElapsed / 1000)
+    // Round to nearest 5 seconds
+    const seconds = Math.round(timerElapsed / 5000) * 5
     setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
     lapTimer()
   }
@@ -395,6 +396,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             elapsed={timerElapsed}
             onStart={startTimer}
             onLap={handleLap}
+            onStop={stopTimer}
             onReset={resetTimer}
           />
         </div>

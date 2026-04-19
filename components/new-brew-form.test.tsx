@@ -681,6 +681,10 @@ describe('NewBrewForm', () => {
     // Note: `Number('')` is `0` which is finite, so empty-water lap rows are
     // still included in the submitted `steps` payload as `{ time, water: 0 }`.
     // This is pre-existing behavior and not in scope for issue #62.
+    //
+    // Lap rounding rule: Math.round(timerElapsed / 5000) * 5
+    //   — rounds to nearest 5 s (e.g. 27 s → 25, 28 s → 30, 30 s → 30, 45 s → 45)
+    // Manual entry precision: STEP_TIME_INTERVAL = 1 (1-second snap on blur)
 
     beforeEach(() => {
       vi.useFakeTimers()
@@ -691,6 +695,7 @@ describe('NewBrewForm', () => {
     })
 
     // T5: After running 30 s, clicking Lap appends a step row with time='30' and water=''
+    // Math.round(30000 / 5000) * 5 = 30 — same as before under new rounding rule
     it('T5: given the timer runs for 30 s, when the user clicks Lap, then a new step row is appended with time "30" and empty water', () => {
       render(<NewBrewForm beans={beans} flavors={flavors} />)
 
@@ -713,8 +718,50 @@ describe('NewBrewForm', () => {
       expect(waterInput.value).toBe('')
     })
 
-    // T6: After a lap at 45 s, Reset clears timer but lap row persists
-    it('T6: given a lap row added at 45 s, when Reset is clicked, then the row persists, timer returns to idle (00:00), and Start button is visible', () => {
+    // T5b: Lap rounding — 27 s rounds DOWN to 25
+    // Math.round(27000 / 5000) * 5 = Math.round(5.4) * 5 = 5 * 5 = 25
+    it('T5b: given the timer runs for 27 s, when the user clicks Lap, then the step time is "25" (nearest 5 s, round down)', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(27000)
+      })
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+      })
+
+      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
+      expect(timeInput.value).toBe('25')
+    })
+
+    // T5c: Lap rounding — 28 s rounds UP to 30
+    // Math.round(28000 / 5000) * 5 = Math.round(5.6) * 5 = 6 * 5 = 30
+    it('T5c: given the timer runs for 28 s, when the user clicks Lap, then the step time is "30" (nearest 5 s, round up)', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(28000)
+      })
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+      })
+
+      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
+      expect(timeInput.value).toBe('30')
+    })
+
+    // T6: After a lap at 45 s, Stop then Reset clears timer but lap row persists
+    it('T6: given a lap row added at 45 s, when Stop then Reset is clicked, then the row persists, timer returns to idle (00:00.00), and Start button is visible', () => {
       render(<NewBrewForm beans={beans} flavors={flavors} />)
 
       act(() => {
@@ -730,6 +777,10 @@ describe('NewBrewForm', () => {
       })
 
       act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+      })
+
+      act(() => {
         fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
       })
 
@@ -737,8 +788,54 @@ describe('NewBrewForm', () => {
       expect(timeInput.value).toBe('45')
 
       expect(screen.queryByRole('button', { name: 'Lap' })).toBeNull()
+      expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull()
+      expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
       expect(screen.getByRole('button', { name: 'Start' })).toBeDefined()
-      expect(screen.getByRole('timer').textContent).toBe('00:00')
+      expect(screen.getByRole('timer').textContent).toBe('00:00.00')
+    })
+
+    // T_manual_entry_precision: manual time input accepts 1-second precision (STEP_TIME_INTERVAL=1)
+    it('T_manual_entry_precision: given a manually entered step time of 37, when the form submits, then the steps payload contains time: 37 (not snapped to 35)', async () => {
+      // Use real timers for the async fetch/waitFor portion of this test
+      vi.useRealTimers()
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        json: async () => ({ id: 'brew-manual' }),
+        ok: true,
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      // Fill required fields
+      fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
+        target: { value: 'bean-1' },
+      })
+      fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
+      fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
+      fillRequiredBrewFields()
+
+      // Manually enter step 1 time = 37 s and water = 40 g, then blur
+      fireEvent.change(screen.getByLabelText('Step 1 time'), { target: { value: '37' } })
+      fireEvent.blur(screen.getByLabelText('Step 1 time'))
+      fireEvent.change(screen.getByLabelText('Step 1 water'), { target: { value: '40' } })
+      fireEvent.blur(screen.getByLabelText('Step 1 water'))
+
+      fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+      })
+
+      const [, requestInit] = fetchMock.mock.calls[0]
+      const body = JSON.parse((requestInit as RequestInit).body as string) as {
+        steps: Array<{ time: number; water: number }>
+      }
+
+      // With STEP_TIME_INTERVAL=1, snapToInterval(37, 1) = 37
+      const step = body.steps.find((s) => s.water === 40)
+      expect(step).toBeDefined()
+      expect(step!.time).toBe(37)
     })
 
     // T_existing: fake timers do not affect non-timer form state

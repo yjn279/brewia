@@ -4,13 +4,14 @@ export interface UseBrewTimerOptions {
   getNow?: () => number
 }
 
-export type BrewTimerStatus = 'idle' | 'running'
+export type BrewTimerStatus = 'idle' | 'running' | 'stopped'
 
 export interface UseBrewTimerResult {
   status: BrewTimerStatus
-  elapsed: number
+  elapsed: number // ms
   start: () => void
   lap: () => void
+  stop: () => void
   reset: () => void
 }
 
@@ -25,7 +26,8 @@ export function useBrewTimer(options?: UseBrewTimerOptions): UseBrewTimerResult 
   const statusRef = useRef<BrewTimerStatus>('idle')
 
   const start = useCallback(() => {
-    if (statusRef.current === 'running') return
+    // Only allowed from 'idle'; no-op from 'running' or 'stopped'
+    if (statusRef.current !== 'idle') return
 
     const now = getNow()
     startTimeRef.current = now
@@ -34,11 +36,24 @@ export function useBrewTimer(options?: UseBrewTimerOptions): UseBrewTimerResult 
 
     intervalRef.current = setInterval(() => {
       setElapsed(getNow() - (startTimeRef.current ?? getNow()))
-    }, 100)
+    }, 50)
   }, [getNow])
 
   const lap = useCallback(() => {
     // no-op — exists for contract completeness and future use
+  }, [])
+
+  const stop = useCallback(() => {
+    // Only allowed from 'running'; no-op otherwise
+    if (statusRef.current !== 'running') return
+
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    statusRef.current = 'stopped'
+    setStatus('stopped')
+    // elapsed is NOT reset — it remains frozen at its current value
   }, [])
 
   const reset = useCallback(() => {
@@ -61,5 +76,5 @@ export function useBrewTimer(options?: UseBrewTimerOptions): UseBrewTimerResult 
     }
   }, [])
 
-  return { status, elapsed, start, lap, reset }
+  return { status, elapsed, start, lap, stop, reset }
 }
