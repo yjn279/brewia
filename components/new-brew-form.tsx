@@ -29,6 +29,8 @@ import {
   YAxis,
 } from 'recharts'
 import type { BrewStep } from '@/lib/types'
+import { useBrewTimer } from '@/hooks/use-brew-timer'
+import { BrewTimer } from '@/components/brew-timer'
 
 interface NewBrewFormProps {
   mode?: "create" | "edit"
@@ -38,7 +40,7 @@ interface NewBrewFormProps {
   flavors: Flavor[]
 }
 
-const STEP_TIME_INTERVAL = 5
+const STEP_TIME_INTERVAL = 1
 const STEP_WATER_INTERVAL = 5
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
 const CHART_PLOT_PADDING = {
@@ -186,6 +188,20 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         ),
     [stepInputs, totalTime, totalWater]
   )
+
+  const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, stop: stopTimer, reset: resetTimer } = useBrewTimer()
+
+  const handleLap = () => {
+    // Round to nearest 5 seconds
+    const seconds = Math.round(timerElapsed / 5000) * 5
+    setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
+    lapTimer()
+  }
+
+  const handleReset = () => {
+    resetTimer()
+    setStepInputs([{ time: '', water: '' }])
+  }
 
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
@@ -377,6 +393,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+
+        <div className="mb-4">
+          <BrewTimer
+            status={timerStatus}
+            elapsed={timerElapsed}
+            onStart={startTimer}
+            onLap={handleLap}
+            onStop={stopTimer}
+            onReset={handleReset}
+          />
         </div>
 
         <div className="space-y-2">
