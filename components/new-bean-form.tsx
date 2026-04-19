@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Slider } from '@/components/ui/slider'
 import { Button } from '@/components/ui/button'
+import { RoastPalette } from '@/components/roast-palette'
+import { RoastPhotoPicker } from '@/components/roast-photo-picker'
 import {
   Select,
   SelectContent,
@@ -171,11 +172,16 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
             </Select>
           </div>
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <Label>Roast Level</Label>
-              <span className="text-sm text-muted-foreground">{ROAST_LEVELS[roastIndex[0]]}</span>
+            <Label>Roast Level</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <RoastPalette
+                value={ROAST_LEVELS[roastIndex[0]]}
+                onChange={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
+              />
+              <RoastPhotoPicker
+                onEstimate={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
+              />
             </div>
-            <Slider value={roastIndex} onValueChange={setRoastIndex} min={0} max={ROAST_LEVELS.length - 1} step={1} className="w-full" />
           </div>
         </div>
       </div>
