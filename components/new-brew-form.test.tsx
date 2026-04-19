@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { NewBrewForm } from '@/components/new-brew-form'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 
@@ -675,5 +675,82 @@ describe('NewBrewForm', () => {
     expect(screen.queryByText('Total Time')).toBeNull()
     expect(document.getElementById('brewTime-unit')).toBeNull()
     expect(document.getElementById('brewTime')).toBeNull()
+  })
+
+  describe('timer', () => {
+    // Note: `Number('')` is `0` which is finite, so empty-water lap rows are
+    // still included in the submitted `steps` payload as `{ time, water: 0 }`.
+    // This is pre-existing behavior and not in scope for issue #62.
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    // T5: After running 30 s, clicking Lap appends a step row with time='30' and water=''
+    it('T5: given the timer runs for 30 s, when the user clicks Lap, then a new step row is appended with time "30" and empty water', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(30000)
+      })
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+      })
+
+      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
+      const waterInput = screen.getByLabelText('Step 2 water') as HTMLInputElement
+
+      expect(timeInput.value).toBe('30')
+      expect(waterInput.value).toBe('')
+    })
+
+    // T6: After a lap at 45 s, Reset clears timer but lap row persists
+    it('T6: given a lap row added at 45 s, when Reset is clicked, then the row persists, timer returns to idle (00:00), and Start button is visible', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(45000)
+      })
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+      })
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+      })
+
+      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
+      expect(timeInput.value).toBe('45')
+
+      expect(screen.queryByRole('button', { name: 'Lap' })).toBeNull()
+      expect(screen.getByRole('button', { name: 'Start' })).toBeDefined()
+      expect(screen.getByRole('timer').textContent).toBe('00:00')
+    })
+
+    // T_existing: fake timers do not affect non-timer form state
+    it('T_existing: given fake timers are active, when the form is rendered, then the existing "Choose a bean" Select still renders and "あとで記録" toggle is OFF by default', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      expect(screen.getByRole('combobox', { name: 'Bean' })).toBeDefined()
+      const select = screen.getByRole('combobox', { name: 'Bean' }) as HTMLSelectElement
+      expect(select.value).toBe('')
+
+      const toggle = screen.getByRole('switch', { name: 'あとで記録' })
+      expect(toggle.getAttribute('data-state')).toBe('unchecked')
+    })
   })
 })

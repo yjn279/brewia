@@ -29,6 +29,8 @@ import {
   YAxis,
 } from 'recharts'
 import type { BrewStep } from '@/lib/types'
+import { useBrewTimer } from '@/hooks/use-brew-timer'
+import { BrewTimer } from '@/components/brew-timer'
 
 interface NewBrewFormProps {
   mode?: "create" | "edit"
@@ -186,6 +188,14 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         ),
     [stepInputs, totalTime, totalWater]
   )
+
+  const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, reset: resetTimer } = useBrewTimer()
+
+  const handleLap = () => {
+    const seconds = Math.floor(timerElapsed / 1000)
+    setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
+    lapTimer()
+  }
 
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
@@ -377,6 +387,16 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+
+        <div className="mb-4">
+          <BrewTimer
+            status={timerStatus}
+            elapsed={timerElapsed}
+            onStart={startTimer}
+            onLap={handleLap}
+            onReset={resetTimer}
+          />
         </div>
 
         <div className="space-y-2">
