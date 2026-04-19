@@ -60,7 +60,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
   const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null ? String(initialBrew.waterTemp) : '')
   const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null ? String(initialBrew.beanGrind) : '')
-  const [brewTime, setBrewTime] = useState(initialBrew && initialBrew.steps.length > 0 ? String(initialBrew.steps[initialBrew.steps.length - 1]?.time ?? '') : '')
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
     initialBrew && initialBrew.steps.length > 0
       ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
@@ -157,7 +156,12 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     : '-'
 
   const totalWater = Math.max(parseFloat(waterWeight) || 0, 300)
-  const totalTime = Math.max(parseFloat(brewTime) || 0, 300)
+  const totalTime = useMemo(() => {
+    const stepTimes = stepInputs
+      .map((row) => parseFloat(row.time))
+      .filter((value) => Number.isFinite(value))
+    return Math.max(300, ...stepTimes, 0)
+  }, [stepInputs])
   const snapToInterval = (value: number, interval: number) =>
     Math.round(value / interval) * interval
   const clamp = (value: number, min: number, max: number) =>
@@ -307,24 +311,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 aria-describedby="grindSize-unit"
               />
               <span id="grindSize-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">clicks</span>
-            </div>
-          </div>
-          <div className="col-span-2 flex flex-col gap-2">
-            <Label htmlFor="brewTime">Total Time</Label>
-            <div className="relative">
-              <Input
-                id="brewTime"
-                type="number"
-                value={brewTime}
-                onChange={(e) => setBrewTime(e.target.value)}
-                min="30"
-                step="5"
-                required
-                placeholder="0"
-                className="pr-8"
-                aria-describedby="brewTime-unit"
-              />
-              <span id="brewTime-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
             </div>
           </div>
         </div>

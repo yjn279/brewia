@@ -194,9 +194,6 @@ function fillRequiredBrewFields() {
   fireEvent.change(screen.getByLabelText('Grind'), {
     target: { value: '24' },
   })
-  fireEvent.change(screen.getByLabelText('Total Time'), {
-    target: { value: '120' },
-  })
 }
 
 describe('NewBrewForm', () => {
@@ -523,8 +520,8 @@ describe('NewBrewForm', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    // Recipe is complete (steps non-empty so brewTime is pre-populated),
-    // only the cup evaluation is in draft state (all ratings = 0).
+    // Recipe is complete (steps non-empty), only the cup evaluation is
+    // in draft state (all ratings = 0).
     const draftBrew: BrewWithBean = {
       acidity: 0,
       aroma: 0,
@@ -613,7 +610,6 @@ describe('NewBrewForm', () => {
       { label: 'Water', unit: 'g' },
       { label: 'Temp', unit: '°C' },
       { label: 'Grind', unit: 'clicks' },
-      { label: 'Total Time', unit: 's' },
     ]
 
     for (const { label, unit } of cases) {
@@ -631,11 +627,11 @@ describe('NewBrewForm', () => {
   it('U2: given the Parameters section renders, when reading label text, then labels do not include a parenthesised unit', () => {
     render(<NewBrewForm beans={beans} flavors={flavors} />)
 
-    for (const label of ['Coffee', 'Water', 'Temp', 'Grind', 'Total Time']) {
+    for (const label of ['Coffee', 'Water', 'Temp', 'Grind']) {
       expect(screen.getByLabelText(label)).toBeDefined()
     }
 
-    for (const oldLabel of ['Coffee (g)', 'Water (g)', 'Temp (°C)', 'Grind (clicks)', 'Total Time (sec)']) {
+    for (const oldLabel of ['Coffee (g)', 'Water (g)', 'Temp (°C)', 'Grind (clicks)']) {
       expect(screen.queryByText(oldLabel)).toBeNull()
     }
   })
@@ -659,7 +655,6 @@ describe('NewBrewForm', () => {
       { label: 'Water', unit: 'g', suffixId: 'waterWeight-unit' },
       { label: 'Temp', unit: '°C', suffixId: 'waterTemp-unit' },
       { label: 'Grind', unit: 'clicks', suffixId: 'grindSize-unit' },
-      { label: 'Total Time', unit: 's', suffixId: 'brewTime-unit' },
     ]
 
     for (const { label, unit, suffixId } of cases) {
@@ -669,5 +664,16 @@ describe('NewBrewForm', () => {
       expect(suffix, `expected <span id="${suffixId}"> to exist`).not.toBeNull()
       expect(suffix!.textContent).toBe(unit)
     }
+  })
+
+  // U5: Total Time input has been removed from the Parameters section
+  it('U5: given the create mode form renders, when looking for a Total Time input, then there is no such labelled field and no brewTime-unit suffix', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    expect(screen.queryByLabelText('Total Time')).toBeNull()
+    expect(screen.queryByLabelText('Total Time (sec)')).toBeNull()
+    expect(screen.queryByText('Total Time')).toBeNull()
+    expect(document.getElementById('brewTime-unit')).toBeNull()
+    expect(document.getElementById('brewTime')).toBeNull()
   })
 })
