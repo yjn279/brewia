@@ -323,12 +323,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
       {/* Extraction Steps */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Extraction Steps
-          </h2>
-          <span className="text-xs text-muted-foreground">Form input only</span>
-        </div>
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Extraction Steps
+        </h2>
 
         <div
           className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20"
