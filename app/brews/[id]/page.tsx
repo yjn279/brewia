@@ -10,6 +10,7 @@ import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
 import { ArrowLeft, Thermometer, Scale, Coffee, Cog, Pencil, CopyPlus } from 'lucide-react'
+import { MetricTile } from '@/components/metric-tile'
 
 export const dynamic = 'force-dynamic'
 
@@ -89,42 +90,26 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
           <section>
           <SectionHeading>Parameters</SectionHeading>
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Coffee className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-mono text-lg font-medium">{brew.beanWeight}g</p>
-                <p className="text-xs text-muted-foreground">Coffee</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Scale className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-mono text-lg font-medium">{brew.waterWeight}g</p>
-                <p className="text-xs text-muted-foreground">Water</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Thermometer className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-mono text-lg font-medium">{brew.waterTemp == null ? '-' : brew.waterTemp}°C</p>
-                <p className="text-xs text-muted-foreground">Temperature</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Cog className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-mono text-lg font-medium">{brew.beanGrind == null ? '-' : brew.beanGrind}</p>
-                <p className="text-xs text-muted-foreground">Grind (clicks)</p>
-              </div>
-            </div>
+            <MetricTile
+              icon={<Coffee className="h-4 w-4 text-muted-foreground" />}
+              value={`${brew.beanWeight}g`}
+              label="Coffee"
+            />
+            <MetricTile
+              icon={<Scale className="h-4 w-4 text-muted-foreground" />}
+              value={`${brew.waterWeight}g`}
+              label="Water"
+            />
+            <MetricTile
+              icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
+              value={`${brew.waterTemp == null ? '-' : brew.waterTemp}°C`}
+              label="Temperature"
+            />
+            <MetricTile
+              icon={<Cog className="h-4 w-4 text-muted-foreground" />}
+              value={`${brew.beanGrind == null ? '-' : brew.beanGrind}`}
+              label="Grind (clicks)"
+            />
           </div>
           <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
             <span className="text-sm text-muted-foreground">Brew Ratio</span>

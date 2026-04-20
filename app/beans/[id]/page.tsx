@@ -8,6 +8,8 @@ import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
+import { DataField } from '@/components/data-field'
+import { InfoRow } from '@/components/info-row'
 import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -80,13 +82,10 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
                 {flag}
               </div>
-              <div className="flex-1">
+              <div className="flex flex-1 flex-col gap-2">
                 <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
-                <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Roastery</p>
-                <p className="text-sm text-foreground">{bean.roaster}</p>
-                <div className="mt-2">
-                  <RoastLevel level={bean.roast} size="sm" />
-                </div>
+                <DataField label="Roastery" valueClassName="font-normal">{bean.roaster}</DataField>
+                <RoastLevel level={bean.roast} size="sm" />
               </div>
             </div>
           </section>
@@ -97,32 +96,21 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
           <section>
             <SectionHeading>Origin</SectionHeading>
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Region</p>
-                  <p className="text-sm font-medium text-foreground">{bean.region}</p>
-                  <p className="text-xs text-muted-foreground">Country: {bean.country}</p>
-                </div>
-              </div>
+              <InfoRow icon={<MapPin className="h-4 w-4" />}>
+                <DataField label="Region">
+                  {bean.region}
+                  <p className="text-xs font-normal text-muted-foreground">Country: {bean.country}</p>
+                </DataField>
+              </InfoRow>
               {bean.farm && (
-                <div className="flex items-center gap-3">
-                  <Factory className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Producer</p>
-                    <p className="text-sm text-foreground">{bean.farm}</p>
-                  </div>
-                </div>
+                <InfoRow icon={<Factory className="h-4 w-4" />}>
+                  <DataField label="Producer" valueClassName="font-normal">{bean.farm}</DataField>
+                </InfoRow>
               )}
-              <div className="flex items-center gap-3">
-                <Leaf className="h-4 w-4 text-muted-foreground" />
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
-                  <span className="text-sm text-foreground">{bean.variety}</span>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
-                  <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
-                </div>
-              </div>
+              <InfoRow icon={<Leaf className="h-4 w-4" />}>
+                <DataField label="Variety" valueClassName="font-normal">{bean.variety}</DataField>
+                <DataField label="Process" valueClassName="font-normal">{bean.process ?? '—'}</DataField>
+              </InfoRow>
             </div>
           </section>
         </Card>
