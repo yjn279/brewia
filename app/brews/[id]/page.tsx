@@ -98,7 +98,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             />
             <MetricTile
               icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
-              value={brew.waterTemp == null ? '-' : `${brew.waterTemp} °C`}
+              value={brew.waterTemp == null ? '-' : `${brew.waterTemp}°C`}
               label="Temperature"
             />
             <MetricTile

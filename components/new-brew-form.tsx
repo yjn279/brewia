@@ -23,15 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { Card } from '@/components/ui/card'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { PourChart } from '@/components/pour-chart'
 import type { BrewStep } from '@/lib/types'
 
 interface NewBrewFormProps {
@@ -42,13 +34,6 @@ interface NewBrewFormProps {
   flavors: Flavor[]
 }
 
-const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
-const CHART_PLOT_PADDING = {
-  top: 20,
-  right: 12,
-  bottom: 0,
-  left: 8,
-}
 
 export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
@@ -255,7 +240,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 step="any"
                 placeholder="0"
                 required
-                className="pr-8"
+                className="pr-8 text-right"
                 aria-describedby="beanWeight-unit"
               />
               <span id="beanWeight-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -273,7 +258,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 step="any"
                 required
                 placeholder="0"
-                className="pr-8"
+                className="pr-8 text-right"
                 aria-describedby="waterWeight-unit"
               />
               <span id="waterWeight-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -291,7 +276,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 max="100"
                 required
                 placeholder="0"
-                className="pr-8"
+                className="pr-8 text-right"
                 aria-describedby="waterTemp-unit"
               />
               <span id="waterTemp-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">°C</span>
@@ -308,7 +293,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 min="1"
                 placeholder="0"
                 required
-                className="pr-14"
+                className="pr-14 text-right"
                 aria-describedby="grindSize-unit"
               />
               <span id="grindSize-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">clicks</span>
@@ -325,57 +310,8 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       <Card>
         <SectionHeading>Extraction Steps</SectionHeading>
 
-        <div
-          className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={steps}
-              margin={{
-                top: CHART_PLOT_PADDING.top,
-                right: CHART_PLOT_PADDING.right,
-                bottom: CHART_PLOT_PADDING.bottom,
-                left: CHART_PLOT_PADDING.left,
-              }}
-            >
-              <defs>
-                <linearGradient id="stepFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" />
-              <XAxis
-                dataKey="time"
-                domain={[0, totalTime]}
-                type="number"
-                tickFormatter={(v) => `${v}s`}
-                tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-                height={20}
-              />
-              <YAxis
-                dataKey="water"
-                domain={[0, totalWater]}
-                tickFormatter={(v) => `${v}g`}
-                tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-                width={30}
-              />
-              <Tooltip
-                formatter={(value: number, name: string) =>
-                  name === 'water' ? [`${value}g`, 'Water'] : [value, name]
-                }
-                labelFormatter={(label) => `${label}s`}
-              />
-              <Area
-                type="monotone"
-                dataKey="water"
-                stroke="var(--chart-2)"
-                strokeWidth={2}
-                fill="url(#stepFill)"
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="mb-4">
+          <PourChart steps={steps} totalWater={totalWater} variant="chart-only" />
         </div>
 
         <div className="space-y-2">
@@ -396,7 +332,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                   onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
                   onBlur={() => commitStepInput(index, 'time')}
                   placeholder="0"
-                  className="pr-8"
+                  className="pr-8 text-right"
                   aria-label={`Step ${index + 1} time`}
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
@@ -411,7 +347,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                   onChange={(e) => handleStepInputChange(index, 'water', e.target.value)}
                   onBlur={() => commitStepInput(index, 'water')}
                   placeholder="0"
-                  className="pr-8"
+                  className="pr-8 text-right"
                   aria-label={`Step ${index + 1} water`}
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -480,7 +416,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                     <div className="flex items-center justify-between">
                       <FieldLabel htmlFor={sliderId}>{rating.label}</FieldLabel>
                       <span className="text-sm text-muted-foreground">
-                        {rating.value[0]} - {ratingLabels[rating.value[0]]}
+                        {rating.value[0]}
                       </span>
                     </div>
                     <Slider

@@ -12,7 +12,7 @@ export function DataField({ label, children, className, valueClassName }: DataFi
   return (
     <div className={cn('flex flex-col gap-0.5', className)}>
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <div className={cn('text-sm font-medium text-foreground', valueClassName)}>
+      <div className={cn('text-base font-medium text-foreground', valueClassName)}>
         {children}
       </div>
     </div>

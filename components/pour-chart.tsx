@@ -18,6 +18,7 @@ import { SectionHeading } from '@/components/section-heading'
 interface PourChartProps {
   steps: BrewStep[]
   totalWater: number
+  variant?: 'full' | 'chart-only'
 }
 
 type ChartPoint = {
@@ -79,7 +80,7 @@ function StepMarker(props: { cx?: number; cy?: number; stepIndex: number }) {
   )
 }
 
-export function PourChart({ steps, totalWater }: PourChartProps) {
+export function PourChart({ steps, totalWater, variant = 'full' }: PourChartProps) {
   const sortedSteps = [...steps].sort((a, b) => a.time - b.time)
   const normalizedSteps = sortedSteps.length > 0 && sortedSteps[0]?.time !== 0
     ? [{ time: 0, water: 0 }, ...sortedSteps]
@@ -112,87 +113,95 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
     }
   })
 
+  const chartJsx = (
+    <ResponsiveContainer width="100%" height={220}>
+      <AreaChart data={chartData} margin={{ top: 12, right: 14, bottom: 5, left: 0 }}>
+        <defs>
+          <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.4} />
+            <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.05} />
+          </linearGradient>
+        </defs>
+        <XAxis
+          dataKey="time"
+          type="number"
+          domain={[0, 'dataMax']}
+          ticks={[0, ...stepTimes]}
+          padding={{ left: 0, right: 8 }}
+          tickFormatter={(v) => `${v}s`}
+          tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
+          tickLine={false}
+          axisLine={{ stroke: 'var(--border)' }}
+        />
+        <YAxis
+          domain={[0, totalWater]}
+          ticks={[0, ...stepWaters]}
+          tickFormatter={(v) => `${v}g`}
+          tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
+          tickLine={false}
+          axisLine={{ stroke: 'var(--border)' }}
+          width={40}
+        />
+        {stepTimes.map((time) => (
+          <ReferenceLine
+            key={`time-${time}`}
+            x={time}
+            stroke="var(--border)"
+            strokeDasharray="4 4"
+          />
+        ))}
+        {stepWaters.map((water) => (
+          <ReferenceLine
+            key={`water-${water}`}
+            y={water}
+            stroke="var(--border)"
+            strokeDasharray="4 4"
+          />
+        ))}
+        <Tooltip content={<StepTooltip />} />
+        <Area
+          type="monotone"
+          dataKey="water"
+          stroke="none"
+          fill="url(#waterGradient)"
+        />
+        <Line
+          type="monotone"
+          dataKey="water"
+          stroke="var(--chart-2)"
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 6, strokeWidth: 2, stroke: 'var(--chart-2)', fill: 'var(--background)' }}
+        />
+        {chartData
+          .filter((point) => point.stepIndex)
+          .map((point) => (
+            <ReferenceDot
+              key={`step-dot-${point.stepIndex}-${point.time}-${point.water}`}
+              x={point.time}
+              y={point.water}
+              ifOverflow="extendDomain"
+              shape={(shapeProps: { cx?: number; cy?: number }) => (
+                <StepMarker
+                  cx={shapeProps.cx}
+                  cy={shapeProps.cy}
+                  stepIndex={point.stepIndex as number}
+                />
+              )}
+            />
+          ))}
+      </AreaChart>
+    </ResponsiveContainer>
+  )
+
+  if (variant === 'chart-only') {
+    return <div>{chartJsx}</div>
+  }
+
   return (
     <Card>
       <SectionHeading level="h4">Pour Profile</SectionHeading>
-      <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={chartData} margin={{ top: 12, right: 14, bottom: 5, left: 0 }}>
-          <defs>
-            <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.05} />
-            </linearGradient>
-          </defs>
-          <XAxis
-            dataKey="time"
-            type="number"
-            domain={[0, 'dataMax']}
-            ticks={[0, ...stepTimes]}
-            padding={{ left: 0, right: 8 }}
-            tickFormatter={(v) => `${v}s`}
-            tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-            tickLine={false}
-            axisLine={{ stroke: 'var(--border)' }}
-          />
-          <YAxis
-            domain={[0, totalWater]}
-            ticks={[0, ...stepWaters]}
-            tickFormatter={(v) => `${v}g`}
-            tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-            tickLine={false}
-            axisLine={{ stroke: 'var(--border)' }}
-            width={40}
-          />
-          {stepTimes.map((time) => (
-            <ReferenceLine
-              key={`time-${time}`}
-              x={time}
-              stroke="var(--border)"
-              strokeDasharray="4 4"
-            />
-          ))}
-          {stepWaters.map((water) => (
-            <ReferenceLine
-              key={`water-${water}`}
-              y={water}
-              stroke="var(--border)"
-              strokeDasharray="4 4"
-            />
-          ))}
-          <Tooltip content={<StepTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="water"
-            stroke="none"
-            fill="url(#waterGradient)"
-          />
-          <Line
-            type="monotone"
-            dataKey="water"
-            stroke="var(--chart-2)"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 6, strokeWidth: 2, stroke: 'var(--chart-2)', fill: 'var(--background)' }}
-          />
-          {chartData
-            .filter((point) => point.stepIndex)
-            .map((point) => (
-              <ReferenceDot
-                key={`step-dot-${point.stepIndex}-${point.time}-${point.water}`}
-                x={point.time}
-                y={point.water}
-                ifOverflow="extendDomain"
-                shape={(shapeProps: { cx?: number; cy?: number }) => (
-                  <StepMarker
-                    cx={shapeProps.cx}
-                    cy={shapeProps.cy}
-                    stepIndex={point.stepIndex as number}
-                  />
-                )}
-              />
-            ))}
-        </AreaChart>
-      </ResponsiveContainer>
+      {chartJsx}
       {sortedSteps.length > 0 && (
         <div className="mt-4 flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -201,11 +210,11 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
           </div>
           {sortedSteps.map((step, i) => (
             <div key={`step-row-${step.time}-${step.water}-${i}`} className="grid grid-cols-2 gap-2">
-              <div className="relative flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm">
+              <div className="relative flex h-9 items-center justify-end rounded-md border border-input bg-background px-3 pr-8 text-sm">
                 <span className="font-mono">{step.time}</span>
                 <span className="pointer-events-none absolute right-3 text-xs text-muted-foreground">s</span>
               </div>
-              <div className="relative flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm">
+              <div className="relative flex h-9 items-center justify-end rounded-md border border-input bg-background px-3 pr-8 text-sm">
                 <span className="font-mono">{step.water}</span>
                 <span className="pointer-events-none absolute right-3 text-xs text-muted-foreground">g</span>
               </div>

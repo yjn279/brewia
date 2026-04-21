@@ -21,7 +21,7 @@ describe('DataField', () => {
   it('value wrapper has the canonical class set', () => {
     render(<DataField label="Region">Yirgacheffe</DataField>)
     const value = screen.getByText('Yirgacheffe')
-    expect(value.classList.contains('text-sm')).toBe(true)
+    expect(value.classList.contains('text-base')).toBe(true)
     expect(value.classList.contains('font-medium')).toBe(true)
     expect(value.classList.contains('text-foreground')).toBe(true)
   })

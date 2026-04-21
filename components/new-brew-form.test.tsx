@@ -127,6 +127,10 @@ vi.mock('@/components/ui/select', async () => {
   }
 })
 
+vi.mock('@/components/pour-chart', () => ({
+  PourChart: () => <div data-testid="pour-chart" />,
+}))
+
 vi.mock('@/components/ui/slider', async () => {
   const React = await import('react')
 

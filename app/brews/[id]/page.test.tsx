@@ -239,7 +239,7 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    expect(screen.getByText('92 °C')).toBeDefined()
+    expect(screen.getByText('92°C')).toBeDefined()
     expect(screen.getByText('24 clicks')).toBeDefined()
     expect(screen.queryByText('-')).toBeNull()
   })
