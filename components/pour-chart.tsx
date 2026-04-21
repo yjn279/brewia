@@ -193,6 +193,16 @@ export function PourChart({ steps, totalWater }: PourChartProps) {
             ))}
         </AreaChart>
       </ResponsiveContainer>
+      {sortedSteps.length > 0 && (
+        <ul className="mt-3 flex flex-col gap-1">
+          {sortedSteps.map((step, i) => (
+            <li key={`${step.time}-${step.water}-${i}`} className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Step {i + 1}</span>
+              <span className="font-mono text-foreground">{step.time} s · {step.water} g</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   )
 }

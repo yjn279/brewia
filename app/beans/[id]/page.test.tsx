@@ -100,7 +100,7 @@ describe('BeanDetailPage', () => {
     const page = await BeanDetailPage({ params: Promise.resolve({ id: 'bean-1' }) })
     render(page)
     expect(screen.getByText('Nyeri')).toBeDefined()
-    expect(screen.getByText('Country: Kenya')).toBeDefined()
+    expect(screen.getByText('Kenya')).toBeDefined()
   })
 
   it('renders process and variety', async () => {

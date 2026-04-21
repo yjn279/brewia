@@ -29,6 +29,8 @@ describe('MetricTile', () => {
     const label = screen.getByText('Coffee')
     expect(label.classList.contains('text-xs')).toBe(true)
     expect(label.classList.contains('text-muted-foreground')).toBe(true)
+    expect(label.classList.contains('uppercase')).toBe(true)
+    expect(label.classList.contains('tracking-wide')).toBe(true)
   })
 
   it('icon box has bg-secondary, rounded-lg, h-10, and w-10', () => {
@@ -43,15 +45,15 @@ describe('MetricTile', () => {
     expect(iconBox.classList.contains('w-10')).toBe(true)
   })
 
-  it('value element comes before label element in DOM order', () => {
+  it('label element comes before value element in DOM order', () => {
     render(
       <MetricTile icon={<svg data-testid="m-icon" />} value="20g" label="Coffee" />
     )
     const value = screen.getByText('20g')
     const label = screen.getByText('Coffee')
-    // value should precede label in the DOM
+    // label should precede value in the DOM
     expect(
-      value.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING
+      label.compareDocumentPosition(value) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy()
   })
 

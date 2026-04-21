@@ -9,8 +9,7 @@ import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { DataField } from '@/components/data-field'
-import { InfoRow } from '@/components/info-row'
-import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
+import { ArrowLeft, Plus, CopyPlus, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,42 +74,36 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
       />
 
       <main className="mx-auto max-w-md px-4 py-6">
-        {/* Bean Hero */}
+        {/* Bean Info (one card, full width) */}
         <Card asChild className="mb-6">
           <section>
-            <div className="flex items-start gap-4">
+            {/* Hero row: flag + name only */}
+            <div className="mb-4 flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
                 {flag}
               </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
-                <DataField label="Roastery" valueClassName="font-normal">{bean.roaster}</DataField>
-                <RoastLevel level={bean.roast} size="sm" />
-              </div>
+              <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
             </div>
-          </section>
-        </Card>
 
-        {/* Origin Info */}
-        <Card asChild className="mb-6">
-          <section>
-            <SectionHeading>Origin</SectionHeading>
-            <div className="flex flex-col gap-3">
-              <InfoRow icon={<MapPin className="h-4 w-4" />}>
-                <DataField label="Region">
-                  {bean.region}
-                  <p className="text-xs font-normal text-muted-foreground">Country: {bean.country}</p>
-                </DataField>
-              </InfoRow>
-              {bean.farm && (
-                <InfoRow icon={<Factory className="h-4 w-4" />}>
-                  <DataField label="Producer" valueClassName="font-normal">{bean.farm}</DataField>
-                </InfoRow>
+            {/* 2-column grid of DataFields */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+              <DataField label="Roaster" valueClassName="font-normal">{bean.roaster}</DataField>
+              <DataField label="Country" valueClassName="font-normal">{bean.country}</DataField>
+              <DataField label="Region" valueClassName="font-normal">{bean.region}</DataField>
+              {bean.farm ? (
+                <DataField label="Farm" valueClassName="font-normal">{bean.farm}</DataField>
+              ) : (
+                <div />
               )}
-              <InfoRow icon={<Leaf className="h-4 w-4" />}>
-                <DataField label="Variety" valueClassName="font-normal">{bean.variety}</DataField>
-                <DataField label="Process" valueClassName="font-normal">{bean.process ?? '—'}</DataField>
-              </InfoRow>
+              <DataField label="Variety" valueClassName="font-normal">{bean.variety}</DataField>
+              <DataField label="Process" valueClassName="font-normal">{bean.process ?? '—'}</DataField>
+            </div>
+
+            {/* Roast row — full width below the grid */}
+            <div className="mt-4">
+              <DataField label="Roast">
+                <RoastLevel level={bean.roast} size="sm" />
+              </DataField>
             </div>
           </section>
         </Card>

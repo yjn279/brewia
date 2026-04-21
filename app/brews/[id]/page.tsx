@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { TasteRadar } from '@/components/taste-radar'
+import { TasteBars } from '@/components/taste-bars'
 import { PourChart } from '@/components/pour-chart'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
@@ -74,14 +74,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-2xl">
               {flag}
             </div>
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold text-foreground">{brew.bean.name}</h1>
-              <p className="text-sm text-muted-foreground">{brew.bean.roaster}</p>
-            </div>
-            <div className="text-right">
-              <span className="font-mono text-2xl font-semibold text-primary">{brew.overall === 0 ? '-' : brew.overall}</span>
-              <span className="text-sm text-muted-foreground">/5</span>
-            </div>
+            <h1 className="flex-1 text-xl font-semibold text-foreground">{brew.bean.name}</h1>
           </Link>
         </Card>
 
@@ -92,23 +85,23 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
           <div className="grid grid-cols-2 gap-4">
             <MetricTile
               icon={<Coffee className="h-4 w-4 text-muted-foreground" />}
-              value={`${brew.beanWeight}g`}
+              value={`${brew.beanWeight} g`}
               label="Coffee"
             />
             <MetricTile
               icon={<Scale className="h-4 w-4 text-muted-foreground" />}
-              value={`${brew.waterWeight}g`}
+              value={`${brew.waterWeight} g`}
               label="Water"
             />
             <MetricTile
               icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
-              value={`${brew.waterTemp == null ? '-' : brew.waterTemp}°C`}
+              value={brew.waterTemp == null ? '-' : `${brew.waterTemp} °C`}
               label="Temperature"
             />
             <MetricTile
               icon={<Cog className="h-4 w-4 text-muted-foreground" />}
-              value={`${brew.beanGrind == null ? '-' : brew.beanGrind}`}
-              label="Grind (clicks)"
+              value={brew.beanGrind == null ? '-' : `${brew.beanGrind} clicks`}
+              label="Grind"
             />
           </div>
           <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
@@ -131,7 +124,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
           <Card asChild className="mb-6">
             <section>
               <SectionHeading>Taste Profile</SectionHeading>
-              <TasteRadar
+              <TasteBars
                 aroma={brew.aroma}
                 acidity={brew.acidity}
                 sweetness={brew.sweetness}

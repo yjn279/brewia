@@ -23,16 +23,15 @@ export function BeanCard({ bean, className }: BeanCardProps) {
             <p className="text-sm text-muted-foreground">
               {bean.region}, {bean.country}
             </p>
-            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span>{bean.variety}</span>
-              </span>
-              <span className="text-border">|</span>
-              <span className="flex items-center gap-1">
-                <span>{bean.process ?? '—'}</span>
-              </span>
-              <span className="text-border">|</span>
-              <span>{bean.roast}</span>
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              {[bean.variety, bean.process, bean.roast]
+                .filter((v): v is string => Boolean(v))
+                .map((val, i, arr) => (
+                  <span key={i} className="flex items-center gap-1.5">
+                    <span>{val}</span>
+                    {i < arr.length - 1 && <span className="text-border">·</span>}
+                  </span>
+                ))}
             </div>
           </div>
         </div>

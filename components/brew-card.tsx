@@ -32,11 +32,19 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
                 </p>
               </>
             ) : (
-              <time className="text-sm font-medium text-foreground">
-                {historyDateLabel}
-                {' '}
-                {date.getHours()}:{date.getMinutes()}
-              </time>
+              <div className="flex flex-col gap-1">
+                <time className="text-base font-semibold text-foreground">
+                  {historyDateLabel} {date.getHours()}:{String(date.getMinutes()).padStart(2, '0')}
+                </time>
+                <p className="font-mono text-xs text-muted-foreground">
+                  {[
+                    `${brew.beanWeight} g`,
+                    `${brew.waterWeight} g`,
+                    brew.waterTemp != null && `${brew.waterTemp} °C`,
+                    brew.beanGrind != null && `${brew.beanGrind} clicks`,
+                  ].filter(Boolean).join(' · ')}
+                </p>
+              </div>
             )}
             <div className="mt-2 flex flex-wrap gap-1.5">
               {brew.flavors.slice(0, 3).map((flavor) => (

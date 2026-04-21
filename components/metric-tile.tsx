@@ -15,8 +15,8 @@ export function MetricTile({ icon, value, label, className }: MetricTileProps) {
         {icon}
       </div>
       <div className="min-w-0">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
         <p className="font-mono text-lg font-medium text-foreground">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
   )
