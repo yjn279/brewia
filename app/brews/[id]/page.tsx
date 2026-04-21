@@ -74,7 +74,10 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-2xl">
               {flag}
             </div>
-            <h1 className="flex-1 text-xl font-semibold text-foreground">{brew.bean.name}</h1>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <h1 className="text-xl font-semibold text-foreground">{brew.bean.name}</h1>
+              <p className="text-sm text-muted-foreground">{brew.bean.roaster}</p>
+            </div>
           </Link>
         </Card>
 

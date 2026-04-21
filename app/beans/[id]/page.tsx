@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
+import { ROAST_COLORS } from '@/lib/roast-colors'
 import { BrewCard } from '@/components/brew-card'
-import { RoastLevel } from '@/components/roast-level'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
@@ -77,23 +77,23 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         {/* Bean Info (one card, full width) */}
         <Card asChild className="mb-6">
           <section>
-            {/* Hero row: flag + name only */}
+            {/* Hero row: flag + name + roaster */}
             <div className="mb-4 flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
                 {flag}
               </div>
-              <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
+                <p className="text-sm text-muted-foreground">{bean.roaster}</p>
+              </div>
             </div>
 
             {/* 2-column grid of DataFields */}
             <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-              <DataField label="Roaster" valueClassName="font-normal">{bean.roaster}</DataField>
               <DataField label="Country" valueClassName="font-normal">{bean.country}</DataField>
               <DataField label="Region" valueClassName="font-normal">{bean.region}</DataField>
-              {bean.farm ? (
+              {bean.farm && (
                 <DataField label="Farm" valueClassName="font-normal">{bean.farm}</DataField>
-              ) : (
-                <div />
               )}
               <DataField label="Variety" valueClassName="font-normal">{bean.variety}</DataField>
               <DataField label="Process" valueClassName="font-normal">{bean.process ?? '—'}</DataField>
@@ -101,15 +101,22 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
 
             {/* Roast row — full width below the grid */}
             <div className="mt-4">
-              <DataField label="Roast">
-                <RoastLevel level={bean.roast} size="sm" />
+              <DataField label="Roast" valueClassName="font-normal">
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 flex-shrink-0 rounded-full border border-border"
+                    style={{ backgroundColor: ROAST_COLORS[bean.roast] }}
+                    aria-hidden="true"
+                  />
+                  <span>{bean.roast}</span>
+                </span>
               </DataField>
             </div>
           </section>
         </Card>
 
         {/* Notes */}
-        {bean.notes && (
+        {bean.notes && bean.notes.trim().length > 0 && (
           <Card asChild className="mb-6">
             <section>
               <SectionHeading>Notes</SectionHeading>
