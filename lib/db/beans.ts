@@ -8,6 +8,7 @@ import { beansTable } from '@/lib/db/schema'
 function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {
   return {
     ...row,
+    userId: row.userId ?? null,
     country: row.country as Bean['country'],
     roast: row.roast as Bean['roast'],
   }

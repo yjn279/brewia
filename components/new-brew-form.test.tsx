@@ -172,6 +172,7 @@ const beans: Bean[] = [
     roast: 'Light',
     roaster: 'Glitch',
     updated: '2026-04-18T00:00:00.000Z',
+    userId: null,
     variety: 'SL28',
   },
 ]
@@ -441,6 +442,7 @@ describe('NewBrewForm', () => {
         roast: 'Light',
         roaster: 'Glitch',
         updated: '2026-04-18T00:00:00.000Z',
+        userId: null,
         variety: 'SL28',
       },
       beanGrind: 24,
@@ -455,6 +457,7 @@ describe('NewBrewForm', () => {
       steps: [],
       sweetness: 0,
       updated: '2026-04-18T00:00:00.000Z',
+      userId: null,
       waterTemp: 92,
       waterWeight: 225,
     }
@@ -485,6 +488,7 @@ describe('NewBrewForm', () => {
         roast: 'Light',
         roaster: 'Glitch',
         updated: '2026-04-18T00:00:00.000Z',
+        userId: null,
         variety: 'SL28',
       },
       beanGrind: 24,
@@ -499,6 +503,7 @@ describe('NewBrewForm', () => {
       steps: [],
       sweetness: 4,
       updated: '2026-04-18T00:00:00.000Z',
+      userId: null,
       waterTemp: 92,
       waterWeight: 225,
     }
@@ -537,6 +542,7 @@ describe('NewBrewForm', () => {
         roast: 'Light',
         roaster: 'Glitch',
         updated: '2026-04-18T00:00:00.000Z',
+        userId: null,
         variety: 'SL28',
       },
       beanGrind: 24,
@@ -551,6 +557,7 @@ describe('NewBrewForm', () => {
       steps: [{ time: 120, water: 225 }],
       sweetness: 0,
       updated: '2026-04-18T00:00:00.000Z',
+      userId: null,
       waterTemp: 92,
       waterWeight: 225,
     }

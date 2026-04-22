@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
@@ -15,14 +16,15 @@ interface BeanDetailPageProps {
 }
 
 export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
+  const user = await requireUser()
   const { id } = await params
-  const bean = await beansService.getBeanById(id)
+  const bean = await beansService.getBeanById(user.id, id)
 
   if (!bean) {
     notFound()
   }
 
-  const brews = await brewsService.getBrewsByBeanId(id)
+  const brews = await brewsService.getBrewsByBeanId(user.id, id)
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (
@@ -31,8 +33,8 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -133,7 +135,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         )}
 
 
-        
+
 
         {/* Brew History */}
         {brews.length > 0 && (

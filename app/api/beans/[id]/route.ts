@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { beansService } from '@/app/beans/service'
 import { upsertBeanSchema } from '@/app/beans/schema'
+import { getAuthenticatedUser } from '@/lib/auth/require-user'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,8 +10,13 @@ interface BeanRouteProps {
 }
 
 export async function GET(_: Request, { params }: BeanRouteProps) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { id } = await params
-  const bean = await beansService.getBeanById(id)
+  const bean = await beansService.getBeanById(user.id, id)
 
   if (!bean) {
     return NextResponse.json({ error: 'Bean not found' }, { status: 404 })
@@ -20,6 +26,11 @@ export async function GET(_: Request, { params }: BeanRouteProps) {
 }
 
 export async function PUT(request: Request, { params }: BeanRouteProps) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { id } = await params
   const json = await request.json()
   const parsed = upsertBeanSchema.safeParse(json)
@@ -28,7 +39,7 @@ export async function PUT(request: Request, { params }: BeanRouteProps) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const bean = await beansService.updateBean(id, parsed.data)
+  const bean = await beansService.updateBean(user.id, id, parsed.data)
 
   if (!bean) {
     return NextResponse.json({ error: 'Bean not found' }, { status: 404 })
@@ -38,8 +49,13 @@ export async function PUT(request: Request, { params }: BeanRouteProps) {
 }
 
 export async function DELETE(_: Request, { params }: BeanRouteProps) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { id } = await params
-  const deleted = await beansService.deleteBean(id)
+  const deleted = await beansService.deleteBean(user.id, id)
 
   if (!deleted) {
     return NextResponse.json({ error: 'Bean not found' }, { status: 404 })

@@ -3,12 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
 
-const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock } = vi.hoisted(() => ({
-  getBrewByIdMock: vi.fn(),
-  notFoundMock: vi.fn(),
-  pourChartSpy: vi.fn(),
-  pushMock: vi.fn(),
-  refreshMock: vi.fn(),
+const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock, requireUserMock } =
+  vi.hoisted(() => ({
+    getBrewByIdMock: vi.fn(),
+    notFoundMock: vi.fn(),
+    pourChartSpy: vi.fn(),
+    pushMock: vi.fn(),
+    refreshMock: vi.fn(),
+    requireUserMock: vi.fn(),
+  }))
+
+vi.mock('@/lib/auth/require-user', () => ({
+  requireUser: requireUserMock,
 }))
 
 vi.mock('@/app/brews/service', () => ({
@@ -66,6 +72,7 @@ const brew: BrewWithBean = {
     roast: 'Light',
     roaster: 'Glitch',
     updated: '2026-04-18T00:00:00.000Z',
+    userId: null,
     variety: 'SL28',
   },
   beanGrind: 24,
@@ -83,6 +90,7 @@ const brew: BrewWithBean = {
   ],
   sweetness: 4,
   updated: '2026-04-18T00:00:00.000Z',
+  userId: null,
   waterTemp: 92,
   waterWeight: 103,
 }
@@ -91,6 +99,11 @@ describe('BrewDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getBrewByIdMock.mockResolvedValue(brew)
+    requireUserMock.mockResolvedValue({
+      id: 'user-1',
+      email: 'a@example.com',
+      name: 'Alice',
+    })
   })
 
   it('given stored odd gram values when the page renders then it shows the exact values and derived ratio', async () => {

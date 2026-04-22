@@ -53,6 +53,7 @@ export const COUNTRY_FLAGS: Record<Country, string> = {
 
 export interface Bean {
   id: string
+  userId: string | null
   name: string
   country: Country
   region: string | null
@@ -73,6 +74,7 @@ export interface BrewStep {
 
 export interface Brew {
   id: string
+  userId: string | null
   beanId: string
   beanWeight: number
   beanGrind: number | null

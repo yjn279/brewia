@@ -33,6 +33,7 @@ const baseBrew: BrewWithBean = {
     roast: 'Light',
     roaster: 'Glitch',
     updated: '2026-04-18T00:00:00.000Z',
+    userId: null,
     variety: 'SL28',
   },
   beanGrind: 24,
@@ -47,6 +48,7 @@ const baseBrew: BrewWithBean = {
   steps: [],
   sweetness: 4,
   updated: '2026-04-18T00:00:00.000Z',
+  userId: null,
   waterTemp: 92,
   waterWeight: 225,
 }

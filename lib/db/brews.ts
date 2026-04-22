@@ -11,6 +11,7 @@ import type { Brew, BrewStep, BrewWithBean } from '@/lib/types'
 function mapBrewRow(row: typeof brewsTable.$inferSelect): Brew {
   return {
     ...row,
+    userId: row.userId ?? null,
     steps: parseSteps(row.steps),
   }
 }
