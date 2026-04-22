@@ -21,7 +21,7 @@ export function BeanCard({ bean, className }: BeanCardProps) {
           <div className="min-w-0 flex-1">
             <h3 className="truncate font-medium text-foreground">{bean.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {bean.region}, {bean.country}
+              {bean.roaster}
             </p>
           </div>
         </div>
