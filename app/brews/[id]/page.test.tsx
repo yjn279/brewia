@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
@@ -100,8 +100,8 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    expect(screen.getByText(/Coffee 7 g/)).toBeDefined()
-    expect(screen.getByText(/Water 103 g/)).toBeDefined()
+    expect(screen.getByText('7 g')).toBeDefined()
+    expect(screen.getByText('103 g')).toBeDefined()
     expect(screen.getByText('1:14.7')).toBeDefined()
   })
 
@@ -179,8 +179,8 @@ describe('BrewDetailPage', () => {
     expect(screen.getByTestId('taste-bars')).toBeDefined()
   })
 
-  // C4: waterTemp null → Temperature segment omitted from Parameters text, "null" NOT shown
-  it('C4: given a brew with waterTemp === null, when the page renders, then the Parameters text does not include "Temperature", and "null" is not shown', async () => {
+  // C4: waterTemp null → Temperature tile shows '-', "null" NOT shown
+  it('C4: given a brew with waterTemp === null, when the page renders, then the Temperature tile shows "-", and "null" is not shown', async () => {
     const brewNullTemp: BrewWithBean = { ...brew, waterTemp: null }
     getBrewByIdMock.mockResolvedValue(brewNullTemp)
 
@@ -190,12 +190,13 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    expect(screen.queryByText(/Temperature/)).toBeNull()
+    expect(screen.getByText('Temperature')).toBeDefined()
+    expect(screen.getByText('-')).toBeDefined()
     expect(screen.queryByText(/null/)).toBeNull()
   })
 
-  // C5: beanGrind null → Grind segment omitted from Parameters text, "null" not shown
-  it('C5: given a brew with beanGrind === null, when the page renders, then the Parameters text does not include "Grind", and "null" is not shown', async () => {
+  // C5: beanGrind null → Grind tile shows '-', "null" not shown
+  it('C5: given a brew with beanGrind === null, when the page renders, then the Grind tile shows "-", and "null" is not shown', async () => {
     const brewNullGrind: BrewWithBean = { ...brew, beanGrind: null }
     getBrewByIdMock.mockResolvedValue(brewNullGrind)
 
@@ -205,12 +206,13 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    expect(screen.queryByText(/Grind/)).toBeNull()
+    const grindLabel = screen.getByText('Grind')
+    expect(within(grindLabel.parentElement!).getByText('-')).toBeDefined()
     expect(screen.queryByText(/null/)).toBeNull()
   })
 
-  // C6: both waterTemp and beanGrind null → neither Temperature nor Grind appear in Parameters text
-  it('C6: given a brew with both waterTemp and beanGrind null, when the page renders, then neither "Temperature" nor "Grind" appear in the Parameters text, and "null" does not appear', async () => {
+  // C6: both waterTemp and beanGrind null → both tiles show '-', "null" does not appear
+  it('C6: given a brew with both waterTemp and beanGrind null, when the page renders, then both Temperature and Grind tiles show "-", and "null" does not appear', async () => {
     const brewBothNull: BrewWithBean = { ...brew, waterTemp: null, beanGrind: null }
     getBrewByIdMock.mockResolvedValue(brewBothNull)
 
@@ -220,13 +222,14 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    expect(screen.queryByText(/Temperature/)).toBeNull()
-    expect(screen.queryByText(/Grind/)).toBeNull()
+    expect(screen.getAllByText('-')).toHaveLength(2)
+    expect(screen.getByText('Temperature')).toBeDefined()
+    expect(screen.getByText('Grind')).toBeDefined()
     expect(screen.queryByText(/null/)).toBeNull()
   })
 
-  // C7: happy path regression — waterTemp and beanGrind both present render in Parameters text
-  it('C7: given a brew with waterTemp === 92 and beanGrind === 24, when the page renders, then "Temperature 92°C" and "Grind 24 clicks" appear in the Parameters text', async () => {
+  // C7: happy path regression — waterTemp and beanGrind both present render in MetricTile grid
+  it('C7: given a brew with waterTemp === 92 and beanGrind === 24, when the page renders, then "92°C" and "24 clicks" appear in the Parameters grid', async () => {
     // Default mock already returns the brew with waterTemp: 92 and beanGrind: 24
     const page = await BrewDetailPage({
       params: Promise.resolve({ id: 'brew-1' }),
@@ -234,7 +237,7 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    expect(screen.getByText(/Temperature 92°C/)).toBeDefined()
-    expect(screen.getByText(/Grind 24 clicks/)).toBeDefined()
+    expect(screen.getByText('92°C')).toBeDefined()
+    expect(screen.getByText('24 clicks')).toBeDefined()
   })
 })

@@ -9,8 +9,9 @@ import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
-import { ArrowLeft, Pencil, CopyPlus } from 'lucide-react'
+import { ArrowLeft, Pencil, CopyPlus, Coffee, Scale, Thermometer, Cog } from 'lucide-react'
 import { DataField } from '@/components/data-field'
+import { MetricTile } from '@/components/metric-tile'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,14 +86,28 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         <Card asChild className="mb-6">
           <section>
           <SectionHeading>Parameters</SectionHeading>
-          <DataField label="Parameters" valueClassName="font-normal text-base">
-            {[
-              `Coffee ${brew.beanWeight} g`,
-              `Water ${brew.waterWeight} g`,
-              brew.waterTemp != null ? `Temperature ${brew.waterTemp}°C` : null,
-              brew.beanGrind != null ? `Grind ${brew.beanGrind} clicks` : null,
-            ].filter(Boolean).join(', ')}
-          </DataField>
+          <div className="grid grid-cols-2 gap-4">
+            <MetricTile
+              icon={<Coffee className="h-4 w-4 text-muted-foreground" />}
+              value={`${brew.beanWeight} g`}
+              label="Coffee"
+            />
+            <MetricTile
+              icon={<Scale className="h-4 w-4 text-muted-foreground" />}
+              value={`${brew.waterWeight} g`}
+              label="Water"
+            />
+            <MetricTile
+              icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
+              value={brew.waterTemp == null ? '-' : `${brew.waterTemp}°C`}
+              label="Temperature"
+            />
+            <MetricTile
+              icon={<Cog className="h-4 w-4 text-muted-foreground" />}
+              value={brew.beanGrind == null ? '-' : `${brew.beanGrind} clicks`}
+              label="Grind"
+            />
+          </div>
           <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
             <span className="text-sm text-muted-foreground">Brew Ratio</span>
             <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>

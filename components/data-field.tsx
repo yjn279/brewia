@@ -11,7 +11,7 @@ interface DataFieldProps {
 export function DataField({ label, children, className, valueClassName }: DataFieldProps) {
   return (
     <div className={cn('flex flex-col gap-0.5', className)}>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-xs tracking-wide text-muted-foreground">{label}</p>
       <div className={cn('text-lg font-medium text-foreground', valueClassName)}>
         {children}
       </div>

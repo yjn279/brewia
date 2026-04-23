@@ -13,7 +13,7 @@ describe('DataField', () => {
     render(<DataField label="Region">Yirgacheffe</DataField>)
     const label = screen.getByText('Region')
     expect(label.classList.contains('text-xs')).toBe(true)
-    expect(label.classList.contains('uppercase')).toBe(true)
+    expect(label.classList.contains('uppercase')).toBe(false)
     expect(label.classList.contains('tracking-wide')).toBe(true)
     expect(label.classList.contains('text-muted-foreground')).toBe(true)
   })

@@ -92,9 +92,9 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <div className="grid grid-cols-2 gap-x-4 gap-y-4">
               <DataField label="Country" valueClassName="font-normal">{bean.country}</DataField>
               <DataField label="Region" valueClassName="font-normal">{bean.region || '—'}</DataField>
-              <DataField label="Farm" valueClassName="font-normal">{bean.farm || '—'}</DataField>
+              <DataField label="Farm / Station" valueClassName="font-normal">{bean.farm || '—'}</DataField>
               <DataField label="Variety" valueClassName="font-normal">{bean.variety || '—'}</DataField>
-              <DataField label="Process" valueClassName="font-normal">{bean.process ?? '—'}</DataField>
+              <DataField label="Process" valueClassName="font-normal">{bean.process || '—'}</DataField>
             </div>
 
             {/* Roast row — full width below the grid */}

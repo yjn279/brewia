@@ -31,7 +31,7 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
                   `${brew.waterWeight} g`,
                   brew.waterTemp != null && `${brew.waterTemp}°C`,
                   brew.beanGrind != null && `${brew.beanGrind} clicks`,
-                ].filter(Boolean).join(' | ')}
+                ].filter(Boolean).join(', ')}
               </p>
               {brew.flavors.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1.5">
