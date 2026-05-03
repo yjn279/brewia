@@ -99,6 +99,10 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.process !== undefined) setProcess(fields.process)
           if (fields.notes !== undefined) setNotes(fields.notes)
         }}
+        onRoastEstimated={(level) => {
+          // 競合方針 (A): 取り込み完了時に Lab 解析結果で常に上書きする
+          setRoastIndex([ROAST_LEVELS.indexOf(level)])
+        }}
       />
       <div className="rounded-xl bg-card p-4 shadow-sm">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
