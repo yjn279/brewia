@@ -109,7 +109,8 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">region</p>
                 <p className="text-sm font-medium text-foreground">{bean.region}</p>
-                <p className="text-xs text-muted-foreground">country: {bean.country}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">country</p>
+                <p className="text-sm font-medium text-foreground">{bean.country}</p>
               </div>
             </div>
             {bean.farm && (
