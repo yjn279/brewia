@@ -78,8 +78,15 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             </div>
             <div className="flex-1">
               <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
-              <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Roastery</p>
+              <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">roastery</p>
               <p className="text-sm text-foreground">{bean.roaster}</p>
+              {bean.priceJpy != null && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  <span className="font-mono text-sm font-medium text-foreground">¥{bean.priceJpy.toLocaleString()}</span>
+                  {' '}
+                  <span className="text-xs text-muted-foreground">JPY</span>
+                </p>
+              )}
               <div className="mt-2">
                 <RoastLevel level={bean.roast} size="sm" />
               </div>

@@ -1,0 +1,1 @@
+ALTER TABLE `bean` ADD `price_jpy` integer;

@@ -24,6 +24,7 @@ export class BeansService {
       variety: dto.variety,
       process: dto.process,
       roast: dto.roast,
+      priceJpy: dto.priceJpy ?? null,
       notes: dto.notes,
     })
   }
@@ -38,6 +39,7 @@ export class BeansService {
       variety: dto.variety,
       process: dto.process,
       roast: dto.roast,
+      priceJpy: dto.priceJpy ?? null,
       notes: dto.notes,
     })
   }

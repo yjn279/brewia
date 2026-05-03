@@ -12,6 +12,7 @@ export const beansTable = sqliteTable('bean', {
   variety: text('variety'),
   roast: text('roast').notNull(),
   roaster: text('roaster'),
+  priceJpy: integer('price_jpy'),
   notes: text('notes'),
   created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
   updated: text('updated').notNull().default(sql`CURRENT_TIMESTAMP`),

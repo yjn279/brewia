@@ -312,7 +312,7 @@ describe('NewBeanForm', () => {
     const bean = {
       id: 'b1', name: 'Test', country: 'Ethiopia' as const, region: null, farm: null,
       process: null, variety: null, roast: 'Medium' as const, roaster: 'R',
-      notes: null, created: '', updated: '',
+      priceJpy: null, notes: null, created: '', updated: '',
     }
     render(<NewBeanForm mode="edit" initialBean={bean} />)
     expect(screen.getByTestId('mock-photo-picker')).toBeDefined()
@@ -455,6 +455,7 @@ describe('NewBeanForm', () => {
       variety: 'SL28',
       process: 'Washed',
       roast: 'Light' as const,
+      priceJpy: null,
       notes: null,
       created: '2026-04-18T00:00:00.000Z',
       updated: '2026-04-18T00:00:00.000Z',
@@ -472,5 +473,66 @@ describe('NewBeanForm', () => {
     })
     const roasterInput = screen.getByLabelText('Roaster') as HTMLInputElement
     expect(roasterInput.value).toBe('New LLM Roaster')
+  })
+
+  // Sprint 1: Price (JPY) フィールドのテスト
+  it('S1-P1: given the price field is filled and the form is submitted, then fetch body includes priceJpy', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'bean-1' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBeanForm />)
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
+    fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
+    const comboboxes = screen.getAllByRole('combobox')
+    fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
+    fireEvent.change(screen.getByLabelText('price (jpy)'), { target: { value: '1500' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: number }
+    expect(body.priceJpy).toBe(1500)
+  })
+
+  it('S1-P2: given the price field is empty and the form is submitted, then fetch body includes priceJpy as empty string', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'bean-1' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBeanForm />)
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
+    fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
+    const comboboxes = screen.getAllByRole('combobox')
+    fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: string }
+    // empty string is sent when no price entered (schema transforms '' to null)
+    expect(body.priceJpy).toBe('')
+  })
+
+  // Sprint 1: 生産国拡張のテスト
+  it('S1-C1: given the form renders, then the country select includes Bolivia and Vietnam', () => {
+    render(<NewBeanForm />)
+
+    const countrySelect = screen.getByRole('combobox', { name: 'Select country' }) as HTMLSelectElement
+    const optionValues = Array.from(countrySelect.options).map((o) => o.value)
+    expect(optionValues).toContain('Bolivia')
+    expect(optionValues).toContain('Vietnam')
+    expect(optionValues).toContain('Honduras')
+    expect(optionValues).toContain('Tanzania')
   })
 })

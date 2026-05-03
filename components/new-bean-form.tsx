@@ -18,6 +18,9 @@ import {
 import { COUNTRIES, COUNTRY_FLAGS, PROCESSES, ROAST_LEVELS, type Bean, type Country } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
 import { PhotoImportButton } from '@/components/photo-import-button'
+import { sampleImageColor } from '@/lib/color/image-sampler'
+import { srgbToLab } from '@/lib/color/srgb-to-lab'
+import { estimateRoastLevel } from '@/lib/color/roast-estimator'
 
 const NO_PROCESS_VALUE = '__none__'
 
@@ -38,6 +41,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   const [farm, setFarm] = useState(initialBean?.farm ?? '')
   const [variety, setVariety] = useState(initialBean?.variety ?? '')
   const [process, setProcess] = useState(initialBean?.process ?? '')
+  const [priceJpy, setPriceJpy] = useState(initialBean?.priceJpy != null ? String(initialBean.priceJpy) : '')
   const [notes, setNotes] = useState(initialBean?.notes ?? '')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -64,6 +68,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           variety,
           process,
           roast: ROAST_LEVELS[roastIndex[0]],
+          priceJpy: priceJpy === '' ? '' : Number(priceJpy),
           notes,
         }),
       })
@@ -99,6 +104,18 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.process !== undefined) setProcess(fields.process)
           if (fields.notes !== undefined) setNotes(fields.notes)
         }}
+        onFileSelected={async (file) => {
+          try {
+            const rgb = await sampleImageColor(file)
+            const lab = srgbToLab(rgb.r, rgb.g, rgb.b)
+            const level = estimateRoastLevel(lab.L)
+            if (level !== null) {
+              setRoastIndex([ROAST_LEVELS.indexOf(level)])
+            }
+          } catch {
+            // 焙煎度推定失敗は silent — ユーザーは手動で変更できる
+          }
+        }}
       />
       <div className="rounded-xl bg-card p-4 shadow-sm">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
@@ -112,6 +129,23 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           <div className="flex flex-col gap-2">
             <Label htmlFor="roaster">Roaster</Label>
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="priceJpy">price (jpy)</Label>
+            <div className="relative">
+              <Input
+                id="priceJpy"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                value={priceJpy}
+                onChange={(e) => setPriceJpy(e.target.value)}
+                className="pr-10"
+                aria-describedby="priceJpy-unit"
+              />
+              <span id="priceJpy-unit" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">¥</span>
+            </div>
           </div>
         </div>
       </div>

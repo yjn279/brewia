@@ -10,9 +10,11 @@ import type { ExtractedBeanFields } from '@/lib/llm/types'
 interface PhotoImportButtonProps {
   /** 解析完了時に呼ばれるコールバック。親フォームがフィールドを更新する */
   onExtracted: (fields: ExtractedBeanFields) => void
+  /** 選択ファイルが確定したときに呼ばれるオプションコールバック（焙煎度推定など追加処理用） */
+  onFileSelected?: (file: File) => void
 }
 
-export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
+export function PhotoImportButton({ onExtracted, onFileSelected }: PhotoImportButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -38,6 +40,9 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
         toast.error('JPEG または PNG の画像を選択してください')
         return
       }
+
+      // バリデーション通過後に追加処理コールバックを呼ぶ（焙煎度推定など）
+      onFileSelected?.(file)
 
       const formData = new FormData()
       formData.append('file', file)
