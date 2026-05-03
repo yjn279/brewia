@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { brewsService } from '@/app/brews/service'
 import { upsertBrewSchema } from '@/app/brews/schema'
+import { requireUser } from '@/lib/auth/get-current-user'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  const [user, err] = await requireUser()
+  if (err) return err
+
   const json = await request.json()
   const parsed = upsertBrewSchema.safeParse(json)
 
@@ -12,20 +16,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const brew = await brewsService.createBrew(parsed.data)
+  const brew = await brewsService.createBrew(user.id, parsed.data)
 
   return NextResponse.json({ id: brew.id }, { status: 201 })
 }
 
 export async function GET(request: Request) {
+  const [user, err] = await requireUser()
+  if (err) return err
+
   const { searchParams } = new URL(request.url)
   const beanId = searchParams.get('beanId')
 
   if (beanId) {
-    const brews = await brewsService.getBrewsByBeanId(beanId)
+    const brews = await brewsService.getBrewsByBeanId(beanId, user.id)
     return NextResponse.json(brews)
   }
 
-  const brews = await brewsService.getBrews()
+  const brews = await brewsService.getBrews(user.id)
   return NextResponse.json(brews)
 }

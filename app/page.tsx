@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
 import { StatsCard } from '@/components/stats-card'
@@ -13,13 +14,20 @@ import {
 } from '@/components/ui/empty'
 import { Coffee, Flame, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
+import { LogoutButton } from '@/components/logout-button'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect('/login')
+  }
+
   const [beans, brews] = await Promise.all([
-    beansService.getBeans(),
-    brewsService.getBrews(),
+    beansService.getBeans(user.id),
+    brewsService.getBrews(user.id),
   ])
 
   // Calculate stats
@@ -34,6 +42,7 @@ export default async function HomePage() {
             <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
           </div>
           <div className="flex items-center gap-2">
+            <LogoutButton />
             <Link
               href="/new?type=bean"
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"

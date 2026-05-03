@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
@@ -6,6 +6,7 @@ import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { ArrowLeft, Thermometer, Scale, Coffee, Cog, Pencil, CopyPlus } from 'lucide-react'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,8 +15,13 @@ interface BrewDetailPageProps {
 }
 
 export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect('/login')
+  }
+
   const { id } = await params
-  const brew = await brewsService.getBrewById(id)
+  const brew = await brewsService.getBrewById(id, user.id)
 
   if (!brew) {
     notFound()
@@ -30,8 +36,8 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <Link 
-              href={`/beans/${brew.bean.id}`} 
+            <Link
+              href={`/beans/${brew.bean.id}`}
               className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -64,7 +70,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
       <main className="mx-auto max-w-md px-4 py-6">
         {/* Bean Reference */}
-        <Link 
+        <Link
           href={`/beans/${brew.bean.id}`}
           className="mb-6 flex items-center gap-4 rounded-xl bg-card p-4 shadow-sm transition-all hover:shadow-md"
         >
@@ -130,9 +136,6 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
           </div>
         </section>
 
-
-        
-
         {/* Pour Profile */}
         <section className="mb-6">
           <PourChart steps={brew.steps} totalWater={brew.waterWeight} />
@@ -162,7 +165,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             </h2>
             <div className="flex flex-wrap gap-2">
               {brew.flavors.map((flavor) => (
-                <span 
+                <span
                   key={flavor.id}
                   className="rounded-full bg-secondary px-3 py-1.5 text-sm text-secondary-foreground"
                 >

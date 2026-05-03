@@ -165,6 +165,7 @@ const beans: Bean[] = [
     created: '2026-04-18T00:00:00.000Z',
     farm: 'Kieni',
     id: 'bean-1',
+    userId: 'user-1',
     name: 'Kenya AA',
     notes: null,
     process: 'Washed',
@@ -429,11 +430,13 @@ describe('NewBrewForm', () => {
     const draftBrew: BrewWithBean = {
       acidity: 0,
       aroma: 0,
+      userId: 'user-1',
       bean: {
         country: 'Kenya',
         created: '2026-04-18T00:00:00.000Z',
         farm: 'Kieni',
         id: 'bean-1',
+        userId: 'user-1',
         name: 'Kenya AA',
         notes: null,
         process: 'Washed',
@@ -473,11 +476,13 @@ describe('NewBrewForm', () => {
     const normalBrew: BrewWithBean = {
       acidity: 3,
       aroma: 4,
+      userId: 'user-1',
       bean: {
         country: 'Kenya',
         created: '2026-04-18T00:00:00.000Z',
         farm: 'Kieni',
         id: 'bean-1',
+        userId: 'user-1',
         name: 'Kenya AA',
         notes: null,
         process: 'Washed',
@@ -525,11 +530,13 @@ describe('NewBrewForm', () => {
     const draftBrew: BrewWithBean = {
       acidity: 0,
       aroma: 0,
+      userId: 'user-1',
       bean: {
         country: 'Kenya',
         created: '2026-04-18T00:00:00.000Z',
         farm: 'Kieni',
         id: 'bean-1',
+        userId: 'user-1',
         name: 'Kenya AA',
         notes: null,
         process: 'Washed',

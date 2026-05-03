@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
 import { brewsService } from '@/app/brews/service'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,12 +20,17 @@ interface NewPageProps {
 }
 
 export default async function NewPage({ searchParams }: NewPageProps) {
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect('/login')
+  }
+
   const params = await searchParams
   const [beans, flavors, initialBean, initialBrew] = await Promise.all([
-    beansService.getBeans(),
+    beansService.getBeans(user.id),
     flavorsService.getFlavors(),
-    params.copyBean ? beansService.getBeanById(params.copyBean) : Promise.resolve(undefined),
-    params.copyBrew ? brewsService.getBrewById(params.copyBrew) : Promise.resolve(undefined),
+    params.copyBean ? beansService.getBeanById(params.copyBean, user.id) : Promise.resolve(undefined),
+    params.copyBrew ? brewsService.getBrewById(params.copyBrew, user.id) : Promise.resolve(undefined),
   ])
 
   return (

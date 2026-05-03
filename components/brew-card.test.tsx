@@ -21,11 +21,13 @@ vi.mock('next/link', () => ({
 const baseBrew: BrewWithBean = {
   acidity: 3,
   aroma: 4,
+  userId: 'user-1',
   bean: {
     country: 'Kenya',
     created: '2026-04-18T00:00:00.000Z',
     farm: 'Kieni',
     id: 'bean-1',
+    userId: 'user-1',
     name: 'Kenya AA',
     notes: null,
     process: 'Washed',

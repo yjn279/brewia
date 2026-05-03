@@ -33,6 +33,7 @@ export async function getBeanById(id: string): Promise<Bean | undefined> {
 }
 
 interface CreateBeanInput {
+  userId: string
   name: string
   country: Bean['country']
   roast: Bean['roast']

@@ -87,6 +87,7 @@ export async function getBrewById(id: string): Promise<BrewWithBean | undefined>
 }
 
 interface CreateBrewInput {
+  userId: string
   beanId: string
   beanWeight: number
   beanGrind: number | null
@@ -107,6 +108,7 @@ export async function createBrew(input: CreateBrewInput): Promise<Brew> {
     const [brewRow] = await tx
       .insert(brewsTable)
       .values({
+        userId: input.userId,
         beanId: input.beanId,
         beanWeight: input.beanWeight,
         beanGrind: input.beanGrind,

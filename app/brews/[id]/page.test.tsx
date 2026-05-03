@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
+import { TEST_USER } from '@/lib/auth/test-helpers'
 
 const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock } = vi.hoisted(() => ({
   getBrewByIdMock: vi.fn(),
@@ -15,6 +16,11 @@ vi.mock('@/app/brews/service', () => ({
   brewsService: {
     getBrewById: getBrewByIdMock,
   },
+}))
+
+vi.mock('@/lib/auth/get-current-user', () => ({
+  getCurrentUser: () => Promise.resolve(TEST_USER),
+  requireUser: () => Promise.resolve([TEST_USER, null]),
 }))
 
 vi.mock('next/link', () => ({
@@ -34,6 +40,7 @@ vi.mock('next/link', () => ({
 
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
+  redirect: vi.fn(),
   useRouter: () => ({
     push: pushMock,
     refresh: refreshMock,
@@ -51,14 +58,24 @@ vi.mock('@/components/taste-radar', () => ({
   TasteRadar: () => <div data-testid="taste-radar" />,
 }))
 
+vi.mock('@/components/delete-resource-button', () => ({
+  DeleteResourceButton: () => <button>Delete</button>,
+}))
+
+vi.mock('@/components/logout-button', () => ({
+  LogoutButton: () => <button>Logout</button>,
+}))
+
 const brew: BrewWithBean = {
   acidity: 3,
   aroma: 4,
+  userId: 'test-user-id-1',
   bean: {
     country: 'Kenya',
     created: '2026-04-18T00:00:00.000Z',
     farm: 'Kieni',
     id: 'bean-1',
+    userId: 'test-user-id-1',
     name: 'Kenya AA',
     notes: null,
     process: 'Washed',

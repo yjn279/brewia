@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { TEST_USER } from '@/lib/auth/test-helpers'
 
 const { createBrewMock } = vi.hoisted(() => ({
   createBrewMock: vi.fn(),
@@ -12,6 +13,11 @@ vi.mock('@/app/brews/service', () => ({
     getBrews: vi.fn(),
     getBrewsByBeanId: vi.fn(),
   },
+}))
+
+vi.mock('@/lib/auth/get-current-user', () => ({
+  getCurrentUser: () => Promise.resolve(TEST_USER),
+  requireUser: () => Promise.resolve([TEST_USER, null]),
 }))
 
 import { POST } from '@/app/api/brews/route'
@@ -51,7 +57,7 @@ describe('POST /api/brews', () => {
     const response = await POST(createRequest(validBody))
 
     expect(response.status).toBe(201)
-    expect(createBrewMock).toHaveBeenCalledWith({
+    expect(createBrewMock).toHaveBeenCalledWith(TEST_USER.id, {
       acidity: 3,
       aroma: 4,
       beanGrind: 24,
@@ -78,7 +84,7 @@ describe('POST /api/brews', () => {
     )
 
     expect(response.status).toBe(201)
-    expect(createBrewMock).toHaveBeenCalledWith({
+    expect(createBrewMock).toHaveBeenCalledWith(TEST_USER.id, {
       acidity: 3,
       aroma: 4,
       beanGrind: 24,

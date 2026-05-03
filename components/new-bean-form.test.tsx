@@ -310,7 +310,7 @@ describe('NewBeanForm', () => {
 
   it('S5-T5: given NewBeanForm with mode="edit" and an initialBean, when rendered, then the RoastPhotoPicker mock is present', () => {
     const bean = {
-      id: 'b1', name: 'Test', country: 'Ethiopia' as const, region: null, farm: null,
+      id: 'b1', userId: 'user-1', name: 'Test', country: 'Ethiopia' as const, region: null, farm: null,
       process: null, variety: null, roast: 'Medium' as const, roaster: 'R',
       notes: null, created: '', updated: '',
     }
@@ -447,6 +447,7 @@ describe('NewBeanForm', () => {
     // Arrange
     const initialBean = {
       id: 'bean-1',
+      userId: 'user-1',
       name: 'Old Name',
       roaster: 'Old Roaster',
       country: 'Kenya' as const,
