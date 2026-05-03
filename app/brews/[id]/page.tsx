@@ -83,7 +83,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
         {/* Brew Parameters */}
         <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="mb-4 text-sm font-medium tracking-wider text-muted-foreground">
+          <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
             parameters
           </h2>
           <div className="grid grid-cols-2 gap-4">
@@ -157,7 +157,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         {/* Flavors */}
         {brew.flavors.length > 0 && (
           <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-medium tracking-wider text-muted-foreground">
+            <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
               flavor notes
             </h2>
             <div className="flex flex-wrap gap-2">

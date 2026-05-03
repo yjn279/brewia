@@ -89,7 +89,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
 
         {/* Origin Info */}
         <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-medium tracking-wider text-muted-foreground">
+          <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
             origin
           </h2>
           <div className="flex flex-col gap-3">
@@ -138,7 +138,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         {/* Brew History */}
         {brews.length > 0 && (
           <section>
-            <h2 className="mb-3 text-sm font-medium tracking-wider text-muted-foreground">
+            <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
               brew history
             </h2>
             <div className="flex flex-col gap-3">
