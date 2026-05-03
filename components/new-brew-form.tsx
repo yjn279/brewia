@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, Plus, X } from 'lucide-react'
+import { GripVertical, Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -31,6 +31,26 @@ import {
 import type { BrewStep } from '@/lib/types'
 import { useBrewTimer } from '@/hooks/use-brew-timer'
 import { BrewTimer } from '@/components/brew-timer'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { v4 as uuidv4 } from 'uuid'
+
+type StepInput = { id: string; time: string; water: string }
 
 interface NewBrewFormProps {
   mode?: "create" | "edit"
@@ -50,24 +70,121 @@ const CHART_PLOT_PADDING = {
   left: 8,
 }
 
+interface SortableStepRowProps {
+  stepInput: StepInput
+  index: number
+  totalTime: number
+  totalWater: number
+  disabled: boolean
+  onTimeChange: (index: number, value: string) => void
+  onWaterChange: (index: number, value: string) => void
+  onTimeBlur: (index: number) => void
+  onWaterBlur: (index: number) => void
+  onDelete: (index: number) => void
+}
+
+function SortableStepRow({
+  stepInput,
+  index,
+  totalTime,
+  totalWater,
+  disabled,
+  onTimeChange,
+  onWaterChange,
+  onTimeBlur,
+  onWaterBlur,
+  onDelete,
+}: SortableStepRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: stepInput.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-2"
+    >
+      <button
+        type="button"
+        aria-label={`Step ${index + 1} drag handle`}
+        className="cursor-grab touch-none text-muted-foreground hover:text-foreground focus:outline-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="relative">
+        <Input
+          type="number"
+          min="0"
+          max={totalTime}
+          step={STEP_TIME_INTERVAL}
+          value={stepInput.time}
+          onChange={(e) => onTimeChange(index, e.target.value)}
+          onBlur={() => onTimeBlur(index)}
+          placeholder="0"
+          className="pr-8"
+          aria-label={`Step ${index + 1} time`}
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
+      </div>
+      <div className="relative">
+        <Input
+          type="number"
+          min="0"
+          max={totalWater}
+          step={STEP_WATER_INTERVAL}
+          value={stepInput.water}
+          onChange={(e) => onWaterChange(index, e.target.value)}
+          onBlur={() => onWaterBlur(index)}
+          placeholder="0"
+          className="pr-8"
+          aria-label={`Step ${index + 1} water`}
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => onDelete(index)}
+        disabled={disabled}
+        aria-label={`Delete step ${index + 1}`}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
 export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBean, setSelectedBean] = useState(initialBrew?.beanId ?? initialBeanId)
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>(initialBrew?.flavors.map((flavor) => flavor.id) ?? [])
   const [notes, setNotes] = useState(initialBrew?.notes ?? '')
-  
+
   // Brew parameters
   const [beanWeight, setBeanWeight] = useState(initialBrew ? String(initialBrew.beanWeight) : '')
   const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
   const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null ? String(initialBrew.waterTemp) : '')
   const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null ? String(initialBrew.beanGrind) : '')
-  const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
+  const [stepInputs, setStepInputs] = useState<StepInput[]>(
     initialBrew && initialBrew.steps.length > 0
-      ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
-      : [{ time: '', water: '' }]
+      ? initialBrew.steps.map((step) => ({ id: uuidv4(), time: String(step.time), water: String(step.water) }))
+      : [{ id: uuidv4(), time: '', water: '' }]
   )
-  
+
   // Ratings
   const [aroma, setAroma] = useState([initialBrew?.aroma ?? 4])
   const [acidity, setAcidity] = useState([initialBrew?.acidity ?? 3])
@@ -79,6 +196,24 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const [recordLater, setRecordLater] = useState(
     initialBrew !== undefined ? initialBrew.overall === 0 : false
   )
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setStepInputs((prev) => {
+        const oldIndex = prev.findIndex((item) => item.id === active.id)
+        const newIndex = prev.findIndex((item) => item.id === over.id)
+        return arrayMove(prev, oldIndex, newIndex)
+      })
+    }
+  }
 
   const handleRecordLaterToggle = (checked: boolean) => {
     // When toggling OFF: if every rating is currently 0, reset to defaults
@@ -123,7 +258,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           beanGrind: grindSize ? parseFloat(grindSize) : '',
           waterWeight: parseFloat(waterWeight),
           waterTemp: waterTemp ? parseFloat(waterTemp) : '',
-          steps,
+          steps: stepsForSubmit,
           aroma: recordLater ? 0 : aroma[0],
           acidity: recordLater ? 0 : acidity[0],
           sweetness: recordLater ? 0 : sweetness[0],
@@ -153,7 +288,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   }
 
   // Calculate ratio
-  const ratio = beanWeight && waterWeight 
+  const ratio = beanWeight && waterWeight
     ? (parseFloat(waterWeight) / parseFloat(beanWeight)).toFixed(1)
     : '-'
 
@@ -169,7 +304,8 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max)
 
-  const steps = useMemo(
+  // Submit-order steps: preserve UI display order (no time-ascending sort)
+  const stepsForSubmit = useMemo(
     () =>
       stepInputs
         .map((row) => ({
@@ -181,7 +317,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           time: clamp(snapToInterval(row.time, STEP_TIME_INTERVAL), 0, totalTime),
           water: clamp(snapToInterval(row.water, STEP_WATER_INTERVAL), 0, totalWater),
         }))
-        .sort((a, b) => a.time - b.time)
         .filter(
           (step, index, list) =>
             list.findIndex((target) => target.time === step.time && target.water === step.water) === index
@@ -189,24 +324,30 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     [stepInputs, totalTime, totalWater]
   )
 
+  // Chart-order steps: time-ascending for monotone AreaChart
+  const stepsForChart = useMemo(
+    () => [...stepsForSubmit].sort((a, b) => a.time - b.time),
+    [stepsForSubmit]
+  )
+
   const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, stop: stopTimer, reset: resetTimer } = useBrewTimer()
 
   const handleLap = () => {
     // Round to nearest 5 seconds
     const seconds = Math.round(timerElapsed / 5000) * 5
-    setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
+    setStepInputs((prev) => [...prev, { id: uuidv4(), time: String(seconds), water: '' }])
     lapTimer()
   }
 
   const handleReset = () => {
     resetTimer()
-    setStepInputs([{ time: '', water: '' }])
+    setStepInputs([{ id: uuidv4(), time: '', water: '' }])
   }
 
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
       const next = [...prev]
-      const current = next[index] ?? { time: '', water: '' }
+      const current = next[index] ?? { id: uuidv4(), time: '', water: '' }
       next[index] = { ...current, [key]: value }
       return next
     })
@@ -347,7 +488,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={steps}
+              data={stepsForChart}
               margin={{
                 top: CHART_PLOT_PADDING.top,
                 right: CHART_PLOT_PADDING.right,
@@ -407,65 +548,48 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         </div>
 
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span />
             <span>Time</span>
             <span>Water</span>
             <span />
           </div>
-          {stepInputs.map((stepInput, index) => (
-            <div key={`step-input-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-              <div className="relative">
-                <Input
-                  type="number"
-                  min="0"
-                  max={totalTime}
-                  step={STEP_TIME_INTERVAL}
-                  value={stepInput.time}
-                  onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
-                  onBlur={() => commitStepInput(index, 'time')}
-                  placeholder="0"
-                  className="pr-8"
-                  aria-label={`Step ${index + 1} time`}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={stepInputs.map((s) => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {stepInputs.map((stepInput, index) => (
+                <SortableStepRow
+                  key={stepInput.id}
+                  stepInput={stepInput}
+                  index={index}
+                  totalTime={totalTime}
+                  totalWater={totalWater}
+                  disabled={stepInputs.length <= 1}
+                  onTimeChange={(i, v) => handleStepInputChange(i, 'time', v)}
+                  onWaterChange={(i, v) => handleStepInputChange(i, 'water', v)}
+                  onTimeBlur={(i) => commitStepInput(i, 'time')}
+                  onWaterBlur={(i) => commitStepInput(i, 'water')}
+                  onDelete={(i) => {
+                    setStepInputs((prev) => {
+                      if (prev.length <= 1) return prev
+                      return prev.filter((_, targetIndex) => targetIndex !== i)
+                    })
+                  }}
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
-              </div>
-              <div className="relative">
-                <Input
-                  type="number"
-                  min="0"
-                  max={totalWater}
-                  step={STEP_WATER_INTERVAL}
-                  value={stepInput.water}
-                  onChange={(e) => handleStepInputChange(index, 'water', e.target.value)}
-                  onBlur={() => commitStepInput(index, 'water')}
-                  placeholder="0"
-                  className="pr-8"
-                  aria-label={`Step ${index + 1} water`}
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setStepInputs((prev) => {
-                    if (prev.length <= 1) return prev
-                    return prev.filter((_, targetIndex) => targetIndex !== index)
-                  })
-                }}
-                disabled={stepInputs.length <= 1}
-                aria-label={`Delete step ${index + 1}`}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+              ))}
+            </SortableContext>
+          </DndContext>
           <Button
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => setStepInputs((prev) => [...prev, { time: '', water: '' }])}
+            onClick={() => setStepInputs((prev) => [...prev, { id: uuidv4(), time: '', water: '' }])}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Step
