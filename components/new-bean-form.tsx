@@ -33,6 +33,9 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   const [roastIndex, setRoastIndex] = useState([initialRoastIndex])
   const [name, setName] = useState(initialBean?.name ?? '')
   const [roaster, setRoaster] = useState(initialBean?.roaster ?? '')
+  const [priceJpy, setPriceJpy] = useState<string>(
+    initialBean?.priceJpy != null ? String(initialBean.priceJpy) : '',
+  )
   const [country, setCountry] = useState<(typeof COUNTRIES)[number] | ''>(initialBean?.country ?? '')
   const [region, setRegion] = useState(initialBean?.region ?? '')
   const [farm, setFarm] = useState(initialBean?.farm ?? '')
@@ -64,6 +67,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           variety,
           process,
           roast: ROAST_LEVELS[roastIndex[0]],
+          priceJpy: priceJpy === '' ? null : Number(priceJpy),
           notes,
         }),
       })
@@ -112,6 +116,19 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           <div className="flex flex-col gap-2">
             <Label htmlFor="roaster">Roaster</Label>
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="priceJpy">Price (JPY)</Label>
+            <Input
+              id="priceJpy"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              step="1"
+              placeholder="1500"
+              value={priceJpy}
+              onChange={(event) => setPriceJpy(event.target.value)}
+            />
           </div>
         </div>
       </div>

@@ -80,6 +80,14 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
               <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Roastery</p>
               <p className="text-sm text-foreground">{bean.roaster}</p>
+              {bean.priceJpy != null && (
+                <div className="mt-1">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Price</p>
+                  <p className="text-sm text-foreground">
+                    {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(bean.priceJpy)}
+                  </p>
+                </div>
+              )}
               <div className="mt-2">
                 <RoastLevel level={bean.roast} size="sm" />
               </div>

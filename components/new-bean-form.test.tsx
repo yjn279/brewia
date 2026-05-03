@@ -443,6 +443,32 @@ describe('NewBeanForm', () => {
     })
   })
 
+  it('given Price (JPY) input has value 1500 and form is submitted, then fetch body contains priceJpy: 1500', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'bean-1' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBeanForm />)
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
+    fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
+
+    const comboboxes = screen.getAllByRole('combobox')
+    fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
+
+    fireEvent.change(screen.getByLabelText('Price (JPY)'), { target: { value: '1500' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: number }
+    expect(body.priceJpy).toBe(1500)
+  })
+
   it('given edit モードで initialBean が設定されているとき then onExtracted でフィールドが上書きされる', async () => {
     // Arrange
     const initialBean = {
