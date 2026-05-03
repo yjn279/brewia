@@ -8,6 +8,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Slider } from '@/components/ui/slider'
 import { Button } from '@/components/ui/button'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -16,7 +22,7 @@ import {
 } from '@/components/ui/select'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, Plus, X } from 'lucide-react'
+import { GripVertical, Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -28,9 +34,26 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import type { BrewStep } from '@/lib/types'
 import { useBrewTimer } from '@/hooks/use-brew-timer'
 import { BrewTimer } from '@/components/brew-timer'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { BREW_PRESETS } from '@/lib/brew-presets'
 
 interface NewBrewFormProps {
   mode?: "create" | "edit"
@@ -43,6 +66,105 @@ interface NewBrewFormProps {
 const STEP_TIME_INTERVAL = 1
 const STEP_WATER_INTERVAL = 5
 const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Exceptional']
+
+let _stepIdCounter = 0
+function newStepId() {
+  return `step-${++_stepIdCounter}`
+}
+
+interface StepInput {
+  id: string
+  time: string
+  water: string
+}
+
+interface SortableStepRowProps {
+  step: StepInput
+  index: number
+  totalTime: number
+  totalWater: number
+  stepCount: number
+  onChange: (index: number, key: 'time' | 'water', value: string) => void
+  onBlur: (index: number, key: 'time' | 'water') => void
+  onDelete: (index: number) => void
+}
+
+function SortableStepRow({
+  step,
+  index,
+  totalTime,
+  totalWater,
+  stepCount,
+  onChange,
+  onBlur,
+  onDelete,
+}: SortableStepRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: step.id })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-2"
+    >
+      <button
+        type="button"
+        className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+        aria-label={`Drag step ${index + 1}`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="relative">
+        <Input
+          type="number"
+          min="0"
+          max={totalTime}
+          step={STEP_TIME_INTERVAL}
+          value={step.time}
+          onChange={(e) => onChange(index, 'time', e.target.value)}
+          onBlur={() => onBlur(index, 'time')}
+          placeholder="0"
+          className="pr-8"
+          aria-label={`Step ${index + 1} time`}
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
+      </div>
+      <div className="relative">
+        <Input
+          type="number"
+          min="0"
+          max={totalWater}
+          step={STEP_WATER_INTERVAL}
+          value={step.water}
+          onChange={(e) => onChange(index, 'water', e.target.value)}
+          onBlur={() => onBlur(index, 'water')}
+          placeholder="0"
+          className="pr-8"
+          aria-label={`Step ${index + 1} water`}
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => onDelete(index)}
+        disabled={stepCount <= 1}
+        aria-label={`Delete step ${index + 1}`}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
 const CHART_PLOT_PADDING = {
   top: 20,
   right: 12,
@@ -62,10 +184,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
   const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null ? String(initialBrew.waterTemp) : '')
   const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null ? String(initialBrew.beanGrind) : '')
-  const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
+  const [stepInputs, setStepInputs] = useState<StepInput[]>(
     initialBrew && initialBrew.steps.length > 0
-      ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
-      : [{ time: '', water: '' }]
+      ? initialBrew.steps.map((step) => ({ id: newStepId(), time: String(step.time), water: String(step.water) }))
+      : [{ id: newStepId(), time: '', water: '' }]
   )
   
   // Ratings
@@ -169,9 +291,15 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max)
 
+  // Determine if we should respect D&D order (all times are 0 or blank → user is using manual order)
+  const allTimesAreZeroOrBlank = useMemo(
+    () => stepInputs.every((row) => row.time === '' || Number(row.time) === 0),
+    [stepInputs]
+  )
+
   const steps = useMemo(
-    () =>
-      stepInputs
+    () => {
+      const mapped = stepInputs
         .map((row) => ({
           time: Number(row.time),
           water: Number(row.water),
@@ -181,38 +309,67 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           time: clamp(snapToInterval(row.time, STEP_TIME_INTERVAL), 0, totalTime),
           water: clamp(snapToInterval(row.water, STEP_WATER_INTERVAL), 0, totalWater),
         }))
-        .sort((a, b) => a.time - b.time)
-        .filter(
-          (step, index, list) =>
-            list.findIndex((target) => target.time === step.time && target.water === step.water) === index
-        ),
-    [stepInputs, totalTime, totalWater]
+
+      // When times are all 0/blank (D&D-only mode), preserve input order; otherwise sort by time
+      const sorted = allTimesAreZeroOrBlank ? mapped : [...mapped].sort((a, b) => a.time - b.time)
+
+      return sorted.filter(
+        (step, index, list) =>
+          list.findIndex((target) => target.time === step.time && target.water === step.water) === index
+      )
+    },
+    [stepInputs, totalTime, totalWater, allTimesAreZeroOrBlank]
   )
 
   const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, stop: stopTimer, reset: resetTimer } = useBrewTimer()
 
+  // D&D sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setStepInputs((prev) => {
+        const oldIndex = prev.findIndex((s) => s.id === active.id)
+        const newIndex = prev.findIndex((s) => s.id === over.id)
+        return arrayMove(prev, oldIndex, newIndex)
+      })
+    }
+  }
+
+  const applyPreset = (presetId: string) => {
+    const preset = BREW_PRESETS.find((p) => p.id === presetId)
+    if (!preset) return
+    setStepInputs(preset.steps.map((step) => ({ id: newStepId(), time: String(step.time), water: String(step.water) })))
+    if (preset.defaultBeanWeight != null) setBeanWeight(String(preset.defaultBeanWeight))
+    if (preset.defaultWaterTemp != null) setWaterTemp(String(preset.defaultWaterTemp))
+  }
+
   const handleLap = () => {
     // Round to nearest 5 seconds
     const seconds = Math.round(timerElapsed / 5000) * 5
-    setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
+    setStepInputs((prev) => [...prev, { id: newStepId(), time: String(seconds), water: '' }])
     lapTimer()
   }
 
   const handleReset = () => {
     resetTimer()
-    setStepInputs([{ time: '', water: '' }])
+    setStepInputs([{ id: newStepId(), time: '', water: '' }])
   }
 
-  const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
+  const handleStepInputChange = (index: number, key: 'time' | 'water', value: string) => {
     setStepInputs((prev) => {
       const next = [...prev]
-      const current = next[index] ?? { time: '', water: '' }
+      const current = next[index] ?? { id: newStepId(), time: '', water: '' }
       next[index] = { ...current, [key]: value }
       return next
     })
   }
 
-  const commitStepInput = (index: number, key: keyof BrewStep) => {
+  const commitStepInput = (index: number, key: 'time' | 'water') => {
     setStepInputs((prev) => {
       const next = [...prev]
       const target = next[index]
@@ -338,9 +495,25 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
       {/* Extraction Steps */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Extraction Steps
-        </h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Extraction Steps
+          </h2>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" size="sm">
+                Insert preset
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {BREW_PRESETS.map((preset) => (
+                <DropdownMenuItem key={preset.id} onClick={() => applyPreset(preset.id)}>
+                  <span className="font-medium">{preset.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div
           className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20"
@@ -407,65 +580,46 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         </div>
 
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span />
             <span>Time</span>
             <span>Water</span>
             <span />
           </div>
-          {stepInputs.map((stepInput, index) => (
-            <div key={`step-input-${index}`} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-              <div className="relative">
-                <Input
-                  type="number"
-                  min="0"
-                  max={totalTime}
-                  step={STEP_TIME_INTERVAL}
-                  value={stepInput.time}
-                  onChange={(e) => handleStepInputChange(index, 'time', e.target.value)}
-                  onBlur={() => commitStepInput(index, 'time')}
-                  placeholder="0"
-                  className="pr-8"
-                  aria-label={`Step ${index + 1} time`}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={stepInputs.map((s) => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {stepInputs.map((stepInput, index) => (
+                <SortableStepRow
+                  key={stepInput.id}
+                  step={stepInput}
+                  index={index}
+                  totalTime={totalTime}
+                  totalWater={totalWater}
+                  stepCount={stepInputs.length}
+                  onChange={handleStepInputChange}
+                  onBlur={commitStepInput}
+                  onDelete={(i) => {
+                    setStepInputs((prev) => {
+                      if (prev.length <= 1) return prev
+                      return prev.filter((_, targetIndex) => targetIndex !== i)
+                    })
+                  }}
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
-              </div>
-              <div className="relative">
-                <Input
-                  type="number"
-                  min="0"
-                  max={totalWater}
-                  step={STEP_WATER_INTERVAL}
-                  value={stepInput.water}
-                  onChange={(e) => handleStepInputChange(index, 'water', e.target.value)}
-                  onBlur={() => commitStepInput(index, 'water')}
-                  placeholder="0"
-                  className="pr-8"
-                  aria-label={`Step ${index + 1} water`}
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setStepInputs((prev) => {
-                    if (prev.length <= 1) return prev
-                    return prev.filter((_, targetIndex) => targetIndex !== index)
-                  })
-                }}
-                disabled={stepInputs.length <= 1}
-                aria-label={`Delete step ${index + 1}`}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+              ))}
+            </SortableContext>
+          </DndContext>
           <Button
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => setStepInputs((prev) => [...prev, { time: '', water: '' }])}
+            onClick={() => setStepInputs((prev) => [...prev, { id: newStepId(), time: '', water: '' }])}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Step

@@ -15,6 +15,77 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
+// Mock DropdownMenu to render items inline in jsdom
+vi.mock('@/components/ui/dropdown-menu', async () => {
+  const React = await import('react')
+
+  function DropdownMenu({ children }: { children: React.ReactNode }) {
+    return <>{children}</>
+  }
+
+  function DropdownMenuTrigger({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) {
+    void asChild
+    if (React.isValidElement(children)) {
+      return children
+    }
+    return <>{children}</>
+  }
+
+  function DropdownMenuContent({ children }: { children: React.ReactNode; align?: string }) {
+    return <div role="menu">{children}</div>
+  }
+
+  function DropdownMenuItem({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+    return (
+      <button type="button" role="menuitem" onClick={onClick}>
+        {children}
+      </button>
+    )
+  }
+
+  return { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem }
+})
+
+// Mock @dnd-kit to avoid pointer/keyboard sensor issues in jsdom
+vi.mock('@dnd-kit/core', async () => {
+  const React = await import('react')
+  return {
+    DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    PointerSensor: class {},
+    KeyboardSensor: class {},
+    closestCenter: () => null,
+    useSensor: () => ({}),
+    useSensors: (...args: unknown[]) => args,
+  }
+})
+
+vi.mock('@dnd-kit/sortable', async () => {
+  const React = await import('react')
+  return {
+    SortableContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    arrayMove: (arr: unknown[], from: number, to: number) => {
+      const result = [...(arr as unknown[])]
+      const [removed] = result.splice(from, 1)
+      result.splice(to, 0, removed)
+      return result
+    },
+    sortableKeyboardCoordinates: () => ({ x: 0, y: 0 }),
+    useSortable: () => ({
+      attributes: {},
+      listeners: {},
+      setNodeRef: () => {},
+      transform: null,
+      transition: undefined,
+      isDragging: false,
+    }),
+    verticalListSortingStrategy: {},
+  }
+})
+
+vi.mock('@dnd-kit/utilities', () => ({
+  CSS: { Transform: { toString: () => undefined } },
+}))
+
 vi.mock('@/components/ui/select', async () => {
   const React = await import('react')
 
@@ -947,5 +1018,63 @@ describe('NewBrewForm', () => {
       const toggle = screen.getByRole('switch', { name: 'あとで記録' })
       expect(toggle.getAttribute('data-state')).toBe('unchecked')
     })
+  })
+})
+
+// Sprint 2: Preset and D&D tests
+describe('NewBrewForm — Preset and D&D', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('S2-P1: given the form renders, then the "Insert preset" button is visible', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+    expect(screen.getByRole('button', { name: 'Insert preset' })).toBeDefined()
+  })
+
+  it('S2-P2: given the user clicks Insert preset and selects Hario V60 4:6, then beanWeight and waterTemp are updated', async () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Click "Insert preset" to open dropdown
+    fireEvent.click(screen.getByRole('button', { name: 'Insert preset' }))
+
+    // Click the Hario V60 4:6 menu item
+    await waitFor(() => {
+      expect(screen.getByText('Hario V60 4:6')).toBeDefined()
+    })
+    fireEvent.click(screen.getByText('Hario V60 4:6'))
+
+    await waitFor(() => {
+      const beanWeightInput = screen.getByLabelText('Coffee') as HTMLInputElement
+      expect(beanWeightInput.value).toBe('20')
+    })
+    const waterTempInput = screen.getByLabelText('Temp') as HTMLInputElement
+    expect(waterTempInput.value).toBe('93')
+  })
+
+  it('S2-P3: given preset is applied, then the step inputs are replaced with preset steps', async () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Insert preset' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Hario V60 4:6')).toBeDefined()
+    })
+    fireEvent.click(screen.getByText('Hario V60 4:6'))
+
+    await waitFor(() => {
+      // Hario V60 4:6 has 5 steps
+      const step1TimeInput = screen.getByLabelText('Step 1 time') as HTMLInputElement
+      expect(step1TimeInput.value).toBe('0')
+    })
+    const step2TimeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
+    expect(step2TimeInput.value).toBe('45')
+  })
+
+  it('S2-D1: given drag handles are rendered, then each step has a drag handle button', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+    // Initially 1 step, should have 1 drag handle
+    const dragHandles = screen.getAllByRole('button', { name: /Drag step/ })
+    expect(dragHandles.length).toBeGreaterThanOrEqual(1)
   })
 })
