@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import type { Bean } from '@/lib/types'
 import { db } from '@/lib/db/drizzle'
 import { beansTable, brewFlavorsTable, brewsTable } from '@/lib/db/schema'
@@ -27,53 +27,54 @@ function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {
 }
 
 export class BeansRepository {
-  async findAll(): Promise<Bean[]> {
+  async findAll(userId: string): Promise<Bean[]> {
     const rows = await db
       .select()
       .from(beansTable)
+      .where(eq(beansTable.userId, userId))
       .orderBy(desc(beansTable.updated))
 
     return rows.map(mapBeanRow)
   }
 
-  async findById(id: string): Promise<Bean | undefined> {
+  async findById(id: string, userId: string): Promise<Bean | undefined> {
     const [row] = await db
       .select()
       .from(beansTable)
-      .where(eq(beansTable.id, id))
+      .where(and(eq(beansTable.id, id), eq(beansTable.userId, userId)))
       .limit(1)
 
     return row ? mapBeanRow(row) : undefined
   }
 
-  async create(input: BeanMutationInput): Promise<Bean> {
+  async create(userId: string, input: BeanMutationInput): Promise<Bean> {
     const [row] = await db
       .insert(beansTable)
-      .values(input)
+      .values({ ...input, userId })
       .returning()
 
     return mapBeanRow(row)
   }
 
-  async update(id: string, input: BeanMutationInput): Promise<Bean | undefined> {
+  async update(id: string, userId: string, input: BeanMutationInput): Promise<Bean | undefined> {
     const [row] = await db
       .update(beansTable)
       .set({
         ...input,
         updated: new Date().toISOString(),
       })
-      .where(eq(beansTable.id, id))
+      .where(and(eq(beansTable.id, id), eq(beansTable.userId, userId)))
       .returning()
 
     return row ? mapBeanRow(row) : undefined
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, userId: string): Promise<boolean> {
     const deleted = await db.transaction(async (tx) => {
       const brewRows = await tx
         .select({ id: brewsTable.id })
         .from(brewsTable)
-        .where(eq(brewsTable.beanId, id))
+        .where(and(eq(brewsTable.beanId, id), eq(brewsTable.userId, userId)))
 
       if (brewRows.length > 0) {
         const brewIds = brewRows.map((row) => row.id)
@@ -93,7 +94,7 @@ export class BeansRepository {
 
       const result = await tx
         .delete(beansTable)
-        .where(eq(beansTable.id, id))
+        .where(and(eq(beansTable.id, id), eq(beansTable.userId, userId)))
         .returning({ id: beansTable.id })
 
       return result.length > 0

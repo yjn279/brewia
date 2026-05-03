@@ -2,8 +2,25 @@ import { sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { v7 as uuidv7 } from 'uuid'
 
+export const usersTable = sqliteTable('user', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  passwordSalt: text('password_salt').notNull(),
+  created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated: text('updated').notNull().default(sql`CURRENT_TIMESTAMP`),
+})
+
+export const sessionsTable = sqliteTable('session', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  userId: text('user_id').notNull().references(() => usersTable.id),
+  expiresAt: text('expires_at').notNull(),
+  created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
+})
+
 export const beansTable = sqliteTable('bean', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  userId: text('user_id').notNull().references(() => usersTable.id),
   name: text('name').notNull(),
   country: text('country').notNull(),
   region: text('region'),
@@ -20,6 +37,7 @@ export const beansTable = sqliteTable('bean', {
 
 export const brewsTable = sqliteTable('brew', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  userId: text('user_id').notNull().references(() => usersTable.id),
   beanId: text('bean_id').notNull().references(() => beansTable.id),
   beanWeight: real('bean_weight').notNull(),
   beanGrind: real('bean_grind'),

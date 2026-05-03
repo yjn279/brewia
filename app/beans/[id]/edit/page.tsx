@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { beansService } from '@/app/beans/service'
+import { getCurrentUser } from '@/lib/auth/session'
 import { NewBeanForm } from '@/components/new-bean-form'
 
 interface EditBeanPageProps {
@@ -9,8 +10,11 @@ interface EditBeanPageProps {
 }
 
 export default async function EditBeanPage({ params }: EditBeanPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+
   const { id } = await params
-  const bean = await beansService.getBeanById(id)
+  const bean = await beansService.getBeanById(id, user.id)
 
   if (!bean) {
     notFound()

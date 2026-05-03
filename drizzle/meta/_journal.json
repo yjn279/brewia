@@ -15,6 +15,13 @@
       "when": 1777791382549,
       "tag": "0001_broad_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777792901812,
+      "tag": "0002_clever_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }

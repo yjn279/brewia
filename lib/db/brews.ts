@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq } from 'drizzle-orm'
 import { getBeanById } from '@/lib/db/beans'
 import { db } from '@/lib/db/drizzle'
 import { brewFlavorsTable, brewsTable } from '@/lib/db/schema'
@@ -15,31 +15,33 @@ function mapBrewRow(row: typeof brewsTable.$inferSelect): Brew {
   }
 }
 
-export async function getBrews(): Promise<Brew[]> {
+export async function getBrews(userId: string): Promise<Brew[]> {
   const rows = await db
     .select()
     .from(brewsTable)
+    .where(eq(brewsTable.userId, userId))
     .orderBy(desc(brewsTable.created))
 
   return rows.map(mapBrewRow)
 }
 
-export async function getBrewCountByBeanIdMap(): Promise<Map<string, number>> {
+export async function getBrewCountByBeanIdMap(userId: string): Promise<Map<string, number>> {
   const rows = await db
     .select({ beanId: brewsTable.beanId, brewCount: count(brewsTable.id) })
     .from(brewsTable)
+    .where(eq(brewsTable.userId, userId))
     .groupBy(brewsTable.beanId)
 
   return new Map(rows.map((row) => [row.beanId, row.brewCount]))
 }
 
-export async function getBrewsByBeanId(beanId: string): Promise<BrewWithBean[]> {
+export async function getBrewsByBeanId(beanId: string, userId: string): Promise<BrewWithBean[]> {
   const [bean, brewRows, flavorByBrewId] = await Promise.all([
-    getBeanById(beanId),
+    getBeanById(beanId, userId),
     db
       .select()
       .from(brewsTable)
-      .where(eq(brewsTable.beanId, beanId))
+      .where(and(eq(brewsTable.beanId, beanId), eq(brewsTable.userId, userId)))
       .orderBy(desc(brewsTable.created)),
     getFlavorMapByBeanId(beanId),
   ])
@@ -58,11 +60,11 @@ export async function getBrewsByBeanId(beanId: string): Promise<BrewWithBean[]> 
   })
 }
 
-export async function getBrewById(id: string): Promise<BrewWithBean | undefined> {
+export async function getBrewById(id: string, userId: string): Promise<BrewWithBean | undefined> {
   const [brewRow] = await db
     .select()
     .from(brewsTable)
-    .where(eq(brewsTable.id, id))
+    .where(and(eq(brewsTable.id, id), eq(brewsTable.userId, userId)))
     .limit(1)
 
   if (!brewRow) {
@@ -71,7 +73,7 @@ export async function getBrewById(id: string): Promise<BrewWithBean | undefined>
 
   const brew = mapBrewRow(brewRow)
   const [bean, flavors] = await Promise.all([
-    getBeanById(brew.beanId),
+    getBeanById(brew.beanId, userId),
     getFlavorsByBrewId(id),
   ])
 
@@ -87,6 +89,7 @@ export async function getBrewById(id: string): Promise<BrewWithBean | undefined>
 }
 
 interface CreateBrewInput {
+  userId: string
   beanId: string
   beanWeight: number
   beanGrind: number | null
@@ -107,6 +110,7 @@ export async function createBrew(input: CreateBrewInput): Promise<Brew> {
     const [brewRow] = await tx
       .insert(brewsTable)
       .values({
+        userId: input.userId,
         beanId: input.beanId,
         beanWeight: input.beanWeight,
         beanGrind: input.beanGrind,

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { extractorService } from '@/app/beans/extractor/service'
 import { InvalidImageError } from '@/app/beans/extractor/errors'
 import { LLMApiError, ExtractionParseError } from '@/lib/llm/errors'
+import { getCurrentUser } from '@/lib/auth/session'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -11,6 +12,9 @@ const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const
 const SERVER_MAX_SIZE = 4.5 * 1024 * 1024
 
 export async function POST(request: Request): Promise<Response> {
+  const user = await getCurrentUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   let formData: FormData
   try {
     formData = await request.formData()

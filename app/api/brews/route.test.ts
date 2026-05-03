@@ -2,8 +2,9 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { createBrewMock } = vi.hoisted(() => ({
+const { createBrewMock, getCurrentUserMock } = vi.hoisted(() => ({
   createBrewMock: vi.fn(),
+  getCurrentUserMock: vi.fn(),
 }))
 
 vi.mock('@/app/brews/service', () => ({
@@ -12,6 +13,10 @@ vi.mock('@/app/brews/service', () => ({
     getBrews: vi.fn(),
     getBrewsByBeanId: vi.fn(),
   },
+}))
+
+vi.mock('@/lib/auth/session', () => ({
+  getCurrentUser: getCurrentUserMock,
 }))
 
 import { POST } from '@/app/api/brews/route'
@@ -45,13 +50,14 @@ describe('POST /api/brews', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     createBrewMock.mockResolvedValue({ id: 'brew-1' })
+    getCurrentUserMock.mockResolvedValue({ id: 'user-1', email: 'test@example.com' })
   })
 
   it('given odd gram values when the request is valid then it stores the exact weights', async () => {
     const response = await POST(createRequest(validBody))
 
     expect(response.status).toBe(201)
-    expect(createBrewMock).toHaveBeenCalledWith({
+    expect(createBrewMock).toHaveBeenCalledWith('user-1', {
       acidity: 3,
       aroma: 4,
       beanGrind: 24,
@@ -78,7 +84,7 @@ describe('POST /api/brews', () => {
     )
 
     expect(response.status).toBe(201)
-    expect(createBrewMock).toHaveBeenCalledWith({
+    expect(createBrewMock).toHaveBeenCalledWith('user-1', {
       acidity: 3,
       aroma: 4,
       beanGrind: 24,

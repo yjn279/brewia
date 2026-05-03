@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import type { Bean } from '@/lib/types'
 import { db } from '@/lib/db/drizzle'
 import { beansTable } from '@/lib/db/schema'
@@ -13,26 +13,28 @@ function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {
   }
 }
 
-export async function getBeans(): Promise<Bean[]> {
+export async function getBeans(userId: string): Promise<Bean[]> {
   const rows = await db
     .select()
     .from(beansTable)
+    .where(eq(beansTable.userId, userId))
     .orderBy(desc(beansTable.updated))
 
   return rows.map(mapBeanRow)
 }
 
-export async function getBeanById(id: string): Promise<Bean | undefined> {
+export async function getBeanById(id: string, userId: string): Promise<Bean | undefined> {
   const [row] = await db
     .select()
     .from(beansTable)
-    .where(eq(beansTable.id, id))
+    .where(and(eq(beansTable.id, id), eq(beansTable.userId, userId)))
     .limit(1)
 
   return row ? mapBeanRow(row) : undefined
 }
 
 interface CreateBeanInput {
+  userId: string
   name: string
   country: Bean['country']
   roast: Bean['roast']

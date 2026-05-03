@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { brewsService } from '@/app/brews/service'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
+import { getCurrentUser } from '@/lib/auth/session'
 import { NewBrewForm } from '@/components/new-brew-form'
 
 interface EditBrewPageProps {
@@ -11,15 +12,18 @@ interface EditBrewPageProps {
 }
 
 export default async function EditBrewPage({ params }: EditBrewPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+
   const { id } = await params
-  const brew = await brewsService.getBrewById(id)
+  const brew = await brewsService.getBrewById(id, user.id)
 
   if (!brew) {
     notFound()
   }
 
   const [beans, flavors] = await Promise.all([
-    beansService.getBeans(),
+    beansService.getBeans(user.id),
     flavorsService.getFlavors(),
   ])
 

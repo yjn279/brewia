@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
+import { getCurrentUser } from '@/lib/auth/session'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { BrewCard } from '@/components/brew-card'
 import { RoastLevel } from '@/components/roast-level'
@@ -15,14 +16,17 @@ interface BeanDetailPageProps {
 }
 
 export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+
   const { id } = await params
-  const bean = await beansService.getBeanById(id)
+  const bean = await beansService.getBeanById(id, user.id)
 
   if (!bean) {
     notFound()
   }
 
-  const brews = await brewsService.getBrewsByBeanId(id)
+  const brews = await brewsService.getBrewsByBeanId(id, user.id)
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (

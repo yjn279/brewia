@@ -1,6 +1,7 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { brewsService } from '@/app/brews/service'
+import { getCurrentUser } from '@/lib/auth/session'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteRadar } from '@/components/taste-radar'
 import { PourChart } from '@/components/pour-chart'
@@ -14,8 +15,11 @@ interface BrewDetailPageProps {
 }
 
 export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+
   const { id } = await params
-  const brew = await brewsService.getBrewById(id)
+  const brew = await brewsService.getBrewById(id, user.id)
 
   if (!brew) {
     notFound()

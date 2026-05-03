@@ -3,18 +3,32 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
 
-const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock } = vi.hoisted(() => ({
+const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock, getCurrentUserMock } = vi.hoisted(() => ({
   getBrewByIdMock: vi.fn(),
   notFoundMock: vi.fn(),
   pourChartSpy: vi.fn(),
   pushMock: vi.fn(),
   refreshMock: vi.fn(),
+  getCurrentUserMock: vi.fn(),
 }))
 
 vi.mock('@/app/brews/service', () => ({
   brewsService: {
     getBrewById: getBrewByIdMock,
   },
+}))
+
+vi.mock('@/lib/auth/session', () => ({
+  getCurrentUser: getCurrentUserMock,
+}))
+
+vi.mock('next/navigation', () => ({
+  notFound: notFoundMock,
+  redirect: vi.fn(),
+  useRouter: () => ({
+    push: pushMock,
+    refresh: refreshMock,
+  }),
 }))
 
 vi.mock('next/link', () => ({
@@ -30,14 +44,6 @@ vi.mock('next/link', () => ({
       {children}
     </a>
   ),
-}))
-
-vi.mock('next/navigation', () => ({
-  notFound: notFoundMock,
-  useRouter: () => ({
-    push: pushMock,
-    refresh: refreshMock,
-  }),
 }))
 
 vi.mock('@/components/pour-chart', () => ({
@@ -92,6 +98,7 @@ describe('BrewDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getBrewByIdMock.mockResolvedValue(brew)
+    getCurrentUserMock.mockResolvedValue({ id: 'user-1', email: 'test@example.com' })
   })
 
   it('given stored odd gram values when the page renders then it shows the exact values and derived ratio', async () => {

@@ -39,14 +39,19 @@ import { LLMApiError, ExtractionParseError } from '@/lib/llm/errors'
 import { POST } from '@/app/api/beans/extract/route'
 
 // ExtractorService をモック化（route.ts が参照するため先にモック）
-const { extractFromImageMock } = vi.hoisted(() => ({
+const { extractFromImageMock, getCurrentUserMock } = vi.hoisted(() => ({
   extractFromImageMock: vi.fn(),
+  getCurrentUserMock: vi.fn(),
 }))
 
 vi.mock('@/app/beans/extractor/service', () => ({
   extractorService: {
     extractFromImage: extractFromImageMock,
   },
+}))
+
+vi.mock('@/lib/auth/session', () => ({
+  getCurrentUser: getCurrentUserMock,
 }))
 
 vi.mock('server-only', () => ({}))
@@ -65,6 +70,7 @@ function makeFile(sizeBytes: number, mimeType = 'image/jpeg', name = 'test.jpg')
 describe('POST /api/beans/extract — バリデーション (skip until route.ts is implemented)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getCurrentUserMock.mockResolvedValue({ id: 'user-1', email: 'test@example.com' })
   })
 
   // ---- バリデーション: ファイルなし ----
