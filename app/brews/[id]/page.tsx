@@ -83,8 +83,8 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
 
         {/* Brew Parameters */}
         <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Parameters
+          <h2 className="mb-4 text-sm font-medium tracking-wider text-muted-foreground">
+            parameters
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
@@ -93,7 +93,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.beanWeight}g</p>
-                <p className="text-xs text-muted-foreground">Coffee</p>
+                <p className="text-xs text-muted-foreground">coffee</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.waterWeight}g</p>
-                <p className="text-xs text-muted-foreground">Water</p>
+                <p className="text-xs text-muted-foreground">water</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.waterTemp == null ? '-' : brew.waterTemp}°C</p>
-                <p className="text-xs text-muted-foreground">Temperature</p>
+                <p className="text-xs text-muted-foreground">temperature</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -120,12 +120,12 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.beanGrind == null ? '-' : brew.beanGrind}</p>
-                <p className="text-xs text-muted-foreground">Grind (clicks)</p>
+                <p className="text-xs text-muted-foreground">grind (clicks)</p>
               </div>
             </div>
           </div>
           <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
-            <span className="text-sm text-muted-foreground">Brew Ratio</span>
+            <span className="text-sm text-muted-foreground">brew ratio</span>
             <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
           </div>
         </section>
@@ -141,8 +141,8 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         {/* Taste Profile */}
         {brew.overall > 0 && (
           <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Taste Profile
+            <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
+              taste profile
             </h2>
             <TasteRadar
               aroma={brew.aroma}
@@ -157,8 +157,8 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         {/* Flavors */}
         {brew.flavors.length > 0 && (
           <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Flavor Notes
+            <h2 className="mb-3 text-sm font-medium tracking-wider text-muted-foreground">
+              flavor notes
             </h2>
             <div className="flex flex-wrap gap-2">
               {brew.flavors.map((flavor) => (
@@ -176,8 +176,8 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
         {/* Notes */}
         {brew.notes && (
           <section className="rounded-xl bg-card p-4 shadow-sm">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Tasting Notes
+            <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
+              tasting notes
             </h2>
             <p className="text-sm leading-relaxed text-foreground">{brew.notes}</p>
           </section>
