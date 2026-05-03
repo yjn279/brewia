@@ -127,6 +127,55 @@ vi.mock('@/components/ui/select', async () => {
   }
 })
 
+vi.mock('@/components/ui/dropdown-menu', async () => {
+  const React = await import('react')
+
+  function DropdownMenu({ children }: { children: React.ReactNode }) {
+    return <>{children}</>
+  }
+
+  function DropdownMenuTrigger({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) {
+    if (asChild && React.isValidElement(children)) {
+      return children
+    }
+    return <>{children}</>
+  }
+
+  function DropdownMenuContent({ children }: { children: React.ReactNode }) {
+    return <div role="menu">{children}</div>
+  }
+
+  function DropdownMenuItem({
+    children,
+    onSelect,
+  }: {
+    children: React.ReactNode
+    onSelect?: (event: Event) => void
+  }) {
+    return (
+      <div
+        role="menuitem"
+        tabIndex={0}
+        onClick={() => onSelect?.(new Event('select'))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onSelect?.(new Event('select'))
+          }
+        }}
+      >
+        {children}
+      </div>
+    )
+  }
+
+  return {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+  }
+})
+
 vi.mock('@/components/ui/slider', async () => {
   const React = await import('react')
 
@@ -943,5 +992,34 @@ describe('NewBrewForm', () => {
       const toggle = screen.getByRole('switch', { name: 'あとで記録' })
       expect(toggle.getAttribute('data-state')).toBe('unchecked')
     })
+  })
+
+  // P1: Selecting a preset overwrites stepInputs with the preset's steps
+  it('P1: given the create mode form, when the user clicks "Insert preset" and selects the first preset, then step inputs are populated with that preset\'s step values', async () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Open the dropdown
+    const trigger = screen.getByRole('button', { name: 'Insert preset' })
+    fireEvent.click(trigger)
+
+    // Find and click the first preset item (Hario V60 4:6)
+    const presetItem = await screen.findByRole('menuitem', { name: /Hario V60 4:6/i })
+    fireEvent.click(presetItem)
+
+    // The first preset (v60-4-6) has 5 steps
+    // steps: [45/50, 90/100, 135/145, 180/185, 210/220]
+    const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
+    const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+    expect(step1Time.value).toBe('45')
+    expect(step1Water.value).toBe('50')
+
+    // Step 5 exists (total 5 steps)
+    const step5Time = screen.getByLabelText('Step 5 time') as HTMLInputElement
+    const step5Water = screen.getByLabelText('Step 5 water') as HTMLInputElement
+    expect(step5Time.value).toBe('210')
+    expect(step5Water.value).toBe('220')
+
+    // No step 6
+    expect(screen.queryByLabelText('Step 6 time')).toBeNull()
   })
 })

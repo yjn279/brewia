@@ -16,9 +16,16 @@ import {
 } from '@/components/ui/select'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
-import { Loader2, Plus, X } from 'lucide-react'
+import { ChevronDown, Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { BREW_PRESETS } from '@/lib/brew-presets'
 import {
   Area,
   AreaChart,
@@ -338,9 +345,51 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
       {/* Extraction Steps */}
       <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Extraction Steps
-        </h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Extraction Steps
+          </h2>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                aria-label="Insert preset"
+              >
+                Insert preset
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              {BREW_PRESETS.map((preset) => (
+                <DropdownMenuItem
+                  key={preset.id}
+                  onSelect={() => {
+                    setStepInputs(
+                      preset.steps.map((s) => ({
+                        time: String(s.time),
+                        water: String(s.water),
+                      })),
+                    )
+                    if (preset.defaultBeanWeight !== undefined) {
+                      setBeanWeight(String(preset.defaultBeanWeight))
+                    }
+                    if (preset.defaultWaterTemp !== undefined) {
+                      setWaterTemp(String(preset.defaultWaterTemp))
+                    }
+                  }}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium">{preset.name}</span>
+                    <span className="text-xs text-muted-foreground">{preset.description}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div
           className="relative mb-4 h-44 rounded-lg border border-border/60 bg-secondary/20"
