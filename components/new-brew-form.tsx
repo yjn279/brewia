@@ -113,6 +113,7 @@ function SortableStepRow({
       ref={setNodeRef}
       style={style}
       className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-2"
+      data-step-id={stepInput.id}
     >
       <button
         type="button"

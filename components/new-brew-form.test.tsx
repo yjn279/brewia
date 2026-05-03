@@ -1021,31 +1021,38 @@ describe('NewBrewForm', () => {
       expect(screen.getByRole('button', { name: /step 1 drag handle/i })).toBeDefined()
       expect(screen.getByRole('button', { name: /step 2 drag handle/i })).toBeDefined()
 
-      // Simulate D&D: move step 2 (index 1) above step 1 (index 0)
-      // We need to get the IDs from the DOM via aria-label positions
-      // Use the capturedOnDragEnd to simulate the reorder
+      // capturedOnDragEnd must be set by the DndContext mock
       expect(capturedOnDragEnd).not.toBeNull()
 
-      // Get the step input IDs by reading the sortable row keys.
-      // We simulate reorder by finding handle positions: step 2 above step 1.
-      // The actual IDs are uuids assigned at render time.
-      // We find the time inputs to derive expected order after reorder.
+      // Verify initial values before reorder
       const step1TimeInput = screen.getByLabelText('Step 1 time') as HTMLInputElement
       const step2TimeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
       expect(step1TimeInput.value).toBe('120')
       expect(step2TimeInput.value).toBe('60')
 
-      // Find sortable item IDs from the DndContext children.
-      // Since we mocked DndContext to capture onDragEnd, we need a way to get IDs.
-      // We simulate via direct keyboard interaction on the drag handle:
-      // Focus Step 2 drag handle → Space → ArrowUp → Space
-      const step2Handle = screen.getByRole('button', { name: /step 2 drag handle/i })
+      // Get the uuid IDs from the data-step-id attribute on each SortableRow root element.
+      // step1Row is the row containing the "Step 1 time" input.
+      const step1Row = step1TimeInput.closest('[data-step-id]') as HTMLElement
+      const step2Row = step2TimeInput.closest('[data-step-id]') as HTMLElement
+      expect(step1Row).not.toBeNull()
+      expect(step2Row).not.toBeNull()
+      const step1Id = step1Row.getAttribute('data-step-id')!
+      const step2Id = step2Row.getAttribute('data-step-id')!
+      expect(step1Id).toBeTruthy()
+      expect(step2Id).toBeTruthy()
+
+      // Simulate reorder: drag step 2 (active) over step 1 (over), placing step 2 first.
       act(() => {
-        step2Handle.focus()
-        fireEvent.keyDown(step2Handle, { key: ' ', code: 'Space' })
-        fireEvent.keyDown(step2Handle, { key: 'ArrowUp', code: 'ArrowUp' })
-        fireEvent.keyDown(step2Handle, { key: ' ', code: 'Space' })
+        capturedOnDragEnd!({ active: { id: step2Id }, over: { id: step1Id } } as unknown as DragEndEvent)
       })
+
+      // After reorder: Step 1 label now shows time=60, Step 2 label shows time=120
+      await waitFor(() => {
+        const newStep1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
+        expect(newStep1Time.value).toBe('60')
+      })
+      const newStep2Time = screen.getByLabelText('Step 2 time') as HTMLInputElement
+      expect(newStep2Time.value).toBe('120')
 
       // Submit the form
       fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
@@ -1059,13 +1066,12 @@ describe('NewBrewForm', () => {
         steps: Array<{ time: number; water: number }>
       }
 
-      // After reorder (step 2 moved up), steps should be in UI display order.
-      // The exact order depends on whether KeyboardSensor fires in jsdom.
-      // At minimum: both steps must be present.
-      expect(body.steps.length).toBeGreaterThanOrEqual(2)
-      const times = body.steps.map((s) => s.time)
-      expect(times).toContain(60)
-      expect(times).toContain(120)
+      // Strong assertion: after reorder, submitted steps follow the new UI order
+      expect(body.steps.length).toBe(2)
+      expect(body.steps[0].time).toBe(60)
+      expect(body.steps[0].water).toBe(80)
+      expect(body.steps[1].time).toBe(120)
+      expect(body.steps[1].water).toBe(150)
     })
 
     // E1b: Direct onDragEnd simulation verifies step order inversion
