@@ -14,6 +14,7 @@ export interface BeanMutationInput {
   farm: string
   process: string
   variety: string
+  priceJpy: number | null
   notes: string
 }
 

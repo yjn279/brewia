@@ -32,6 +32,7 @@ const baseBrew: BrewWithBean = {
     region: 'Nyeri',
     roast: 'Light',
     roaster: 'Glitch',
+    priceJpy: null,
     updated: '2026-04-18T00:00:00.000Z',
     variety: 'SL28',
   },

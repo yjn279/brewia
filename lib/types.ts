@@ -61,6 +61,7 @@ export interface Bean {
   variety: string | null
   roast: RoastLevel
   roaster: string | null
+  priceJpy: number | null
   notes: string | null
   created: string
   updated: string

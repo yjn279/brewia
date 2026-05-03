@@ -10,6 +10,10 @@ export const upsertBeanSchema = z.object({
   variety: z.string().trim().default(''),
   process: z.string().trim().default(''),
   roast: z.enum(ROAST_LEVELS),
+  priceJpy: z.preprocess(
+    (v) => (v === '' || v === undefined ? null : v),
+    z.number().int().nonnegative().nullable().default(null),
+  ),
   notes: z.string().trim().default(''),
 })
 
