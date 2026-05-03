@@ -103,16 +103,16 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <div className="flex items-center gap-3">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Region</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">region</p>
                 <p className="text-sm font-medium text-foreground">{bean.region}</p>
-                <p className="text-xs text-muted-foreground">Country: {bean.country}</p>
+                <p className="text-xs text-muted-foreground">country: {bean.country}</p>
               </div>
             </div>
             {bean.farm && (
               <div className="flex items-center gap-3">
                 <Factory className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Producer</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">producer</p>
                   <p className="text-sm text-foreground">{bean.farm}</p>
                 </div>
               </div>
@@ -120,9 +120,9 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <div className="flex items-center gap-3">
               <Leaf className="h-4 w-4 text-muted-foreground" />
               <div className="flex flex-col gap-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">variety</p>
                 <span className="text-sm text-foreground">{bean.variety}</span>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">process</p>
                 <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
               </div>
             </div>

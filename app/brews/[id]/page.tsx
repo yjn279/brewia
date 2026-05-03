@@ -93,7 +93,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.beanWeight}g</p>
-                <p className="text-xs text-muted-foreground">Coffee</p>
+                <p className="text-xs text-muted-foreground">coffee</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.waterWeight}g</p>
-                <p className="text-xs text-muted-foreground">Water</p>
+                <p className="text-xs text-muted-foreground">water</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.waterTemp == null ? '-' : brew.waterTemp}°C</p>
-                <p className="text-xs text-muted-foreground">Temperature</p>
+                <p className="text-xs text-muted-foreground">temperature</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               </div>
               <div>
                 <p className="font-mono text-lg font-medium">{brew.beanGrind == null ? '-' : brew.beanGrind}</p>
-                <p className="text-xs text-muted-foreground">Grind (clicks)</p>
+                <p className="text-xs text-muted-foreground">grind (clicks)</p>
               </div>
             </div>
           </div>
