@@ -51,3 +51,14 @@ export const brewFlavorsTable = sqliteTable('brew_flavor', {
   created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
   updated: text('updated').notNull().default(sql`CURRENT_TIMESTAMP`),
 })
+
+export const brewPresetsTable = sqliteTable('brew_preset', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  name: text('name').notNull(),
+  description: text('description'),
+  defaultBeanWeight: real('default_bean_weight'),
+  defaultWaterTemp: real('default_water_temp'),
+  steps: text('steps').notNull(),
+  created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated: text('updated').notNull().default(sql`CURRENT_TIMESTAMP`),
+})
