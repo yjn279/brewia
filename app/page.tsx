@@ -11,7 +11,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
-import { Coffee, Flame, Plus } from 'lucide-react'
+import { BookMarked, Coffee, Flame, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -34,6 +34,13 @@ export default async function HomePage() {
             <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href="/presets"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+              aria-label="Presets"
+            >
+              <BookMarked className="h-4 w-4" />
+            </Link>
             <Link
               href="/new?type=bean"
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
