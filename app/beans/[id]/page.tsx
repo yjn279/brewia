@@ -78,7 +78,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             </div>
             <div className="flex-1">
               <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
-              <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Roastery</p>
+              <p className="mt-1 text-xs tracking-wide text-muted-foreground">roastery</p>
               <p className="text-sm text-foreground">{bean.roaster}</p>
               <div className="mt-2">
                 <RoastLevel level={bean.roast} size="sm" />
@@ -89,23 +89,23 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
 
         {/* Origin Info */}
         <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Origin
+          <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
+            origin
           </h2>
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Region</p>
+                <p className="text-xs tracking-wide text-muted-foreground">region</p>
                 <p className="text-sm font-medium text-foreground">{bean.region}</p>
-                <p className="text-xs text-muted-foreground">Country: {bean.country}</p>
+                <p className="text-xs text-muted-foreground">country: {bean.country}</p>
               </div>
             </div>
             {bean.farm && (
               <div className="flex items-center gap-3">
                 <Factory className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Producer</p>
+                  <p className="text-xs tracking-wide text-muted-foreground">producer</p>
                   <p className="text-sm text-foreground">{bean.farm}</p>
                 </div>
               </div>
@@ -113,9 +113,9 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             <div className="flex items-center gap-3">
               <Leaf className="h-4 w-4 text-muted-foreground" />
               <div className="flex flex-col gap-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
+                <p className="text-xs tracking-wide text-muted-foreground">variety</p>
                 <span className="text-sm text-foreground">{bean.variety}</span>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
+                <p className="text-xs tracking-wide text-muted-foreground">process</p>
                 <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
               </div>
             </div>
@@ -125,8 +125,8 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         {/* Notes */}
         {bean.notes && (
           <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Notes
+            <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
+              notes
             </h2>
             <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
           </section>
@@ -138,8 +138,8 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         {/* Brew History */}
         {brews.length > 0 && (
           <section>
-            <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Brew History
+            <h2 className="mb-2 text-sm font-medium tracking-wider text-muted-foreground">
+              brew history
             </h2>
             <div className="flex flex-col gap-3">
               {brews.map((brew) => (

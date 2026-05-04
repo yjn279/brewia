@@ -200,7 +200,7 @@ describe('BrewDetailPage', () => {
 
     expect(screen.getByText('-°C')).toBeDefined()
     expect(screen.queryByText(/null°C/)).toBeNull()
-    expect(screen.getByText('Temperature')).toBeDefined()
+    expect(screen.getByText('temperature')).toBeDefined()
   })
 
   // C5: beanGrind null → "-" shown in grind tile, "null" not shown, Grind (clicks) label still visible
@@ -214,7 +214,7 @@ describe('BrewDetailPage', () => {
 
     render(page)
 
-    const grindLabel = screen.getByText('Grind (clicks)')
+    const grindLabel = screen.getByText('grind (clicks)')
     const grindTile = grindLabel.parentElement
     if (!grindTile) throw new Error('Grind tile not found')
     expect(within(grindTile).getByText('-')).toBeDefined()
@@ -234,8 +234,8 @@ describe('BrewDetailPage', () => {
 
     expect(screen.getByText('-°C')).toBeDefined()
     expect(screen.queryByText(/null°C/)).toBeNull()
-    expect(screen.getByText('Temperature')).toBeDefined()
-    const grindLabel = screen.getByText('Grind (clicks)')
+    expect(screen.getByText('temperature')).toBeDefined()
+    const grindLabel = screen.getByText('grind (clicks)')
     const grindTile = grindLabel.parentElement
     if (!grindTile) throw new Error('Grind tile not found')
     expect(within(grindTile).getByText('-')).toBeDefined()
