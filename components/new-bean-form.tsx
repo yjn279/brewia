@@ -101,6 +101,8 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.variety !== undefined) setVariety(fields.variety)
           if (fields.process !== undefined) setProcess(fields.process)
           if (fields.notes !== undefined) setNotes(fields.notes)
+          // LLM がパッケージから焙煎度の文字情報を読み取った場合は更新する（方針 A: 常に上書き）
+          if (fields.roast !== undefined) setRoastIndex([ROAST_LEVELS.indexOf(fields.roast)])
         }}
       />
       <Card>

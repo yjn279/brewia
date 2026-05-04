@@ -56,17 +56,25 @@ vi.mock('@/components/roast-photo-picker', () => ({
 }))
 
 // ---- PhotoImportButton モック ----
-// onExtracted を外部から制御できるようにするため、
+// onExtracted / onRoastEstimated を外部から制御できるようにするため、
 // コールバック参照をホイスト変数に保持する。
 
-const { capturedOnExtracted } = vi.hoisted(() => ({
+const { capturedOnExtracted, capturedOnRoastEstimated } = vi.hoisted(() => ({
   capturedOnExtracted: { current: null as ((fields: ExtractedBeanFields) => void) | null },
+  capturedOnRoastEstimated: { current: null as ((level: RoastLevel) => void) | null },
 }))
 
 vi.mock('@/components/photo-import-button', () => ({
-  PhotoImportButton: ({ onExtracted }: { onExtracted: (fields: ExtractedBeanFields) => void }) => {
+  PhotoImportButton: ({
+    onExtracted,
+    onRoastEstimated,
+  }: {
+    onExtracted: (fields: ExtractedBeanFields) => void
+    onRoastEstimated?: (level: RoastLevel) => void
+  }) => {
     // テスト内から呼び出せるようにキャプチャする
     capturedOnExtracted.current = onExtracted
+    capturedOnRoastEstimated.current = onRoastEstimated ?? null
     return (
       <button
         type="button"
@@ -221,6 +229,7 @@ describe('NewBeanForm', () => {
     vi.clearAllMocks()
     photoPickerState.onEstimate = null
     capturedOnExtracted.current = null
+    capturedOnRoastEstimated.current = null
   })
 
   it('T8: given the palette selection changes from Medium to French, when the form is submitted, then fetch is called with roast="French"', async () => {
@@ -472,5 +481,87 @@ describe('NewBeanForm', () => {
     })
     const roasterInput = screen.getByLabelText('Roaster') as HTMLInputElement
     expect(roasterInput.value).toBe('New LLM Roaster')
+  })
+
+  // ---- LLM 経由 焙煎度取得統合テスト (#86 follow-up) ----
+
+  it('given LLM が roast="French" を返し onExtracted が呼ばれたとき then roast combobox が "French" になる', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+
+    // Act: LLM が roast フィールドを含む結果を返した
+    capturedOnExtracted.current!({ name: 'Test Bean', roast: 'French' })
+
+    // Assert: roast combobox が更新される
+    await waitFor(() => {
+      const combobox = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
+      expect(combobox.value).toBe('French')
+    })
+  })
+
+  it('given LLM が roast="City" を返し取り込み後フォーム送信したとき then fetch body に roast="City" が含まれる', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'bean-1' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBeanForm />)
+
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ name: 'Test Bean', roast: 'City' })
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
+    fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
+    const comboboxes = screen.getAllByRole('combobox')
+    fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { roast: string }
+    expect(body.roast).toBe('City')
+  })
+
+  it('given ユーザーが手動で Roast を変更後に LLM が roast を返したとき then LLM 取り込み結果で上書きされる（方針 A）', async () => {
+    // Arrange: 競合方針 (A) — 常に上書き
+    render(<NewBeanForm />)
+
+    const roastSelect = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
+    fireEvent.change(roastSelect, { target: { value: 'Light' } })
+    expect(roastSelect.value).toBe('Light')
+
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+
+    // Act: LLM 取り込み完了（方針 A: 常に上書き）
+    capturedOnExtracted.current!({ name: 'Some Bean', roast: 'Italian' })
+
+    // Assert: LLM 取り込み結果で上書きされる
+    await waitFor(() => {
+      expect(roastSelect.value).toBe('Italian')
+    })
+  })
+
+  it('given LLM が roast を返さない場合 それまでの roast 値（手動設定）が維持される', async () => {
+    // Arrange
+    render(<NewBeanForm />)
+
+    const roastSelect = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
+    fireEvent.change(roastSelect, { target: { value: 'Cinnamon' } })
+    expect(roastSelect.value).toBe('Cinnamon')
+
+    // Act: LLM onExtracted を呼ぶ（roast は含まない）
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ name: 'Test Bean' })
+
+    // Assert: roast は Cinnamon のまま（LLM が roast を返さなければ変わらない）
+    await waitFor(() => {
+      const combobox = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
+      expect(combobox.value).toBe('Cinnamon')
+    })
   })
 })

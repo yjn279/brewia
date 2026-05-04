@@ -130,6 +130,20 @@ describe('POST /api/beans/extract — バリデーション (skip until route.ts
     expect(extractFromImageMock).toHaveBeenCalledTimes(1)
   })
 
+  // ---- 正常系: roast フィールド含む ----
+
+  it('given ExtractorService が roast を含む ExtractedBeanFields を返すとき then 200 と roast を含む JSON を返す', async () => {
+    extractFromImageMock.mockResolvedValue({
+      name: 'Kenya AA', country: 'Kenya', roast: 'City',
+    })
+    const request = makeExtractRequest(makeFile(1024, 'image/jpeg'))
+    const response = await POST(request)
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.name).toBe('Kenya AA')
+    expect(body.roast).toBe('City')
+  })
+
   // ---- 正常系: 空オブジェクト ----
 
   it('given LLM が空オブジェクトを返すとき then 200 と空 JSON オブジェクトを返す', async () => {

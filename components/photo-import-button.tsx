@@ -6,13 +6,20 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { CLIENT_MAX_IMAGE_SIZE_BYTES, ALLOWED_MEDIA_TYPES } from '@/lib/llm/constants'
 import type { ExtractedBeanFields } from '@/lib/llm/types'
+import type { RoastLevel } from '@/lib/types'
 
 interface PhotoImportButtonProps {
   /** 解析完了時に呼ばれるコールバック。親フォームがフィールドを更新する */
   onExtracted: (fields: ExtractedBeanFields) => void
+  /**
+   * LLM がパッケージの文字情報から焙煎度を読み取ったとき呼ばれるコールバック。
+   * LLM レスポンスの fields.roast が定義されているときのみ呼ばれる。
+   * 豆の色からの推定（Lab 解析）は RoastPhotoPicker の責務として別経路で扱う。
+   */
+  onRoastEstimated?: (level: RoastLevel) => void
 }
 
-export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
+export function PhotoImportButton({ onExtracted, onRoastEstimated }: PhotoImportButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -39,6 +46,7 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
         return
       }
 
+      // LLM 抽出（パッケージの文字情報を読み取る）
       const formData = new FormData()
       formData.append('file', file)
 
@@ -69,20 +77,23 @@ export function PhotoImportButton({ onExtracted }: PhotoImportButtonProps) {
 
         const fullMessage = details ? `${baseMessage}: ${details}` : baseMessage
         toast.error(fullMessage, { duration: 10000 })
-        return
-      }
-
-      const fields = (await response.json()) as ExtractedBeanFields
-      const hasAnyValue = Object.values(fields).some(
-        (v) => v !== undefined && v !== null && v !== '',
-      )
-      if (!hasAnyValue) {
-        toast.warning(
-          '写真から情報を読み取れませんでした。別の画像か手動入力をお試しください',
+      } else {
+        const fields = (await response.json()) as ExtractedBeanFields
+        const hasAnyValue = Object.values(fields).some(
+          (v) => v !== undefined && v !== null && v !== '',
         )
-        return
+        if (!hasAnyValue) {
+          toast.warning(
+            '写真から情報を読み取れませんでした。別の画像か手動入力をお試しください',
+          )
+        } else {
+          onExtracted(fields)
+          // LLM がパッケージから焙煎度の文字情報を読み取った場合のみコールバックを呼ぶ
+          if (onRoastEstimated && fields.roast !== undefined) {
+            onRoastEstimated(fields.roast)
+          }
+        }
       }
-      onExtracted(fields)
     } catch {
       toast.error('自動入力に失敗しました。手動で入力してください')
     } finally {
