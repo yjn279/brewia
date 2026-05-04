@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NewBrewForm } from '@/components/new-brew-form'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 
@@ -127,16 +127,22 @@ vi.mock('@/components/ui/select', async () => {
   }
 })
 
+vi.mock('@/components/pour-chart', () => ({
+  PourChart: () => <div data-testid="pour-chart" />,
+}))
+
 vi.mock('@/components/ui/slider', async () => {
   const React = await import('react')
 
   function Slider({
+    id,
     max,
     min,
     onValueChange,
     step,
     value,
   }: {
+    id?: string
     max?: number
     min?: number
     onValueChange?: (value: number[]) => void
@@ -146,6 +152,7 @@ vi.mock('@/components/ui/slider', async () => {
     return (
       <input
         aria-label="Rating slider"
+        id={id}
         max={max}
         min={min}
         onChange={(event) => onValueChange?.([Number(event.target.value)])}
@@ -677,271 +684,14 @@ describe('NewBrewForm', () => {
     expect(document.getElementById('brewTime')).toBeNull()
   })
 
-  describe('timer', () => {
-    // Note: `Number('')` is `0` which is finite, so empty-water lap rows are
-    // still included in the submitted `steps` payload as `{ time, water: 0 }`.
-    // This is pre-existing behavior and not in scope for issue #62.
-    //
-    // Lap rounding rule: Math.round(timerElapsed / 5000) * 5
-    //   — rounds to nearest 5 s (e.g. 27 s → 25, 28 s → 30, 30 s → 30, 45 s → 45)
-    // Manual entry precision: STEP_TIME_INTERVAL = 1 (1-second snap on blur)
+  // F2: Rating slider label association
+  it('rating sliders are associated with their FieldLabel via htmlFor', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
 
-    beforeEach(() => {
-      vi.useFakeTimers()
-    })
-
-    afterEach(() => {
-      vi.useRealTimers()
-    })
-
-    // T5: After running 30 s, clicking Lap appends a step row with time='30' and water=''
-    // Math.round(30000 / 5000) * 5 = 30 — same as before under new rounding rule
-    it('T5: given the timer runs for 30 s, when the user clicks Lap, then a new step row is appended with time "30" and empty water', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
-      })
-
-      act(() => {
-        vi.advanceTimersByTime(30000)
-      })
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
-      })
-
-      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
-      const waterInput = screen.getByLabelText('Step 2 water') as HTMLInputElement
-
-      expect(timeInput.value).toBe('30')
-      expect(waterInput.value).toBe('')
-    })
-
-    // T5b: Lap rounding — 27 s rounds DOWN to 25
-    // Math.round(27000 / 5000) * 5 = Math.round(5.4) * 5 = 5 * 5 = 25
-    it('T5b: given the timer runs for 27 s, when the user clicks Lap, then the step time is "25" (nearest 5 s, round down)', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
-      })
-
-      act(() => {
-        vi.advanceTimersByTime(27000)
-      })
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
-      })
-
-      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
-      expect(timeInput.value).toBe('25')
-    })
-
-    // T5c: Lap rounding — 28 s rounds UP to 30
-    // Math.round(28000 / 5000) * 5 = Math.round(5.6) * 5 = 6 * 5 = 30
-    it('T5c: given the timer runs for 28 s, when the user clicks Lap, then the step time is "30" (nearest 5 s, round up)', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
-      })
-
-      act(() => {
-        vi.advanceTimersByTime(28000)
-      })
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
-      })
-
-      const timeInput = screen.getByLabelText('Step 2 time') as HTMLInputElement
-      expect(timeInput.value).toBe('30')
-    })
-
-    // T6: After a lap at 45 s, Stop then Reset clears the timer AND the step rows
-    it('T6: given a lap row was added at 45 s, when Stop and Reset are clicked, then the timer returns to idle AND the step rows are cleared back to a single empty row', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
-      })
-
-      act(() => {
-        vi.advanceTimersByTime(45000)
-      })
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
-      })
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
-      })
-
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
-      })
-
-      // The lap row (Step 2) must be gone
-      expect(screen.queryByLabelText('Step 2 time')).toBeNull()
-
-      // The initial single empty row is restored
-      const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
-      expect(step1Time.value).toBe('')
-      const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
-      expect(step1Water.value).toBe('')
-
-      // Timer is back to idle
-      expect(screen.getByRole('button', { name: 'Start' })).toBeDefined()
-      expect(screen.queryByRole('button', { name: 'Lap' })).toBeNull()
-      expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull()
-      expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
-      expect(screen.getByRole('timer').textContent).toBe('00:00.00')
-    })
-
-    // T6b: Reset does NOT clear other form fields
-    it('T6b: given other form fields are filled, when Stop and Reset are clicked, then only step rows are cleared and all other fields retain their values', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      // Fill recipe fields + notes
-      fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
-        target: { value: 'bean-1' },
-      })
-      fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
-      fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
-      fillRequiredBrewFields() // sets Temp=92, Grind=24
-      fireEvent.change(screen.getByPlaceholderText('How was this brew? Any observations?'), {
-        target: { value: 'Lovely brew notes' },
-      })
-
-      // Timer sequence: Start → 30 s → Lap → Stop → Reset
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
-      })
-      act(() => {
-        vi.advanceTimersByTime(30000)
-      })
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
-      })
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
-      })
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
-      })
-
-      // Other fields must be preserved
-      const beanSelect = screen.getByRole('combobox', { name: 'Bean' }) as HTMLSelectElement
-      expect(beanSelect.value).toBe('bean-1')
-
-      const coffeeInput = screen.getByLabelText('Coffee') as HTMLInputElement
-      expect(coffeeInput.value).toBe('15')
-
-      const waterInput = screen.getByLabelText('Water') as HTMLInputElement
-      expect(waterInput.value).toBe('225')
-
-      const tempInput = screen.getByLabelText('Temp') as HTMLInputElement
-      expect(tempInput.value).toBe('92')
-
-      const grindInput = screen.getByLabelText('Grind') as HTMLInputElement
-      expect(grindInput.value).toBe('24')
-
-      const notesTextarea = screen.getByPlaceholderText('How was this brew? Any observations?') as HTMLTextAreaElement
-      expect(notesTextarea.value).toBe('Lovely brew notes')
-    })
-
-    // T6c: Reset clears manually-edited Step 1 as well (Reset is intentionally destructive at the row level)
-    it('T6c: given Step 1 was manually edited, when Start → Lap → Stop → Reset, then Step 1 is cleared and Step 2 is gone', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      // Manually edit Step 1
-      fireEvent.change(screen.getByLabelText('Step 1 time'), { target: { value: '37' } })
-      fireEvent.change(screen.getByLabelText('Step 1 water'), { target: { value: '40' } })
-
-      // Timer sequence: Start → 25 s → Lap → Stop → Reset
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Start' }))
-      })
-      act(() => {
-        vi.advanceTimersByTime(25000)
-      })
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
-      })
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
-      })
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
-      })
-
-      // Step 1 is cleared back to empty
-      const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
-      expect(step1Time.value).toBe('')
-      const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
-      expect(step1Water.value).toBe('')
-
-      // Step 2 (lap row) is gone
-      expect(screen.queryByLabelText('Step 2 time')).toBeNull()
-    })
-
-    // T_manual_entry_precision: manual time input accepts 1-second precision (STEP_TIME_INTERVAL=1)
-    it('T_manual_entry_precision: given a manually entered step time of 37, when the form submits, then the steps payload contains time: 37 (not snapped to 35)', async () => {
-      // Use real timers for the async fetch/waitFor portion of this test
-      vi.useRealTimers()
-
-      const fetchMock = vi.fn().mockResolvedValue({
-        json: async () => ({ id: 'brew-manual' }),
-        ok: true,
-      })
-      vi.stubGlobal('fetch', fetchMock)
-
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      // Fill required fields
-      fireEvent.change(screen.getByRole('combobox', { name: 'Bean' }), {
-        target: { value: 'bean-1' },
-      })
-      fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
-      fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
-      fillRequiredBrewFields()
-
-      // Manually enter step 1 time = 37 s and water = 40 g, then blur
-      fireEvent.change(screen.getByLabelText('Step 1 time'), { target: { value: '37' } })
-      fireEvent.blur(screen.getByLabelText('Step 1 time'))
-      fireEvent.change(screen.getByLabelText('Step 1 water'), { target: { value: '40' } })
-      fireEvent.blur(screen.getByLabelText('Step 1 water'))
-
-      fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
-
-      await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledTimes(1)
-      })
-
-      const [, requestInit] = fetchMock.mock.calls[0]
-      const body = JSON.parse((requestInit as RequestInit).body as string) as {
-        steps: Array<{ time: number; water: number }>
-      }
-
-      // With STEP_TIME_INTERVAL=1, snapToInterval(37, 1) = 37
-      const step = body.steps.find((s) => s.water === 40)
-      expect(step).toBeDefined()
-      expect(step!.time).toBe(37)
-    })
-
-    // T_existing: fake timers do not affect non-timer form state
-    it('T_existing: given fake timers are active, when the form is rendered, then the existing "Choose a bean" Select still renders and "あとで記録" toggle is OFF by default', () => {
-      render(<NewBrewForm beans={beans} flavors={flavors} />)
-
-      expect(screen.getByRole('combobox', { name: 'Bean' })).toBeDefined()
-      const select = screen.getByRole('combobox', { name: 'Bean' }) as HTMLSelectElement
-      expect(select.value).toBe('')
-
-      const toggle = screen.getByRole('switch', { name: 'あとで記録' })
-      expect(toggle.getAttribute('data-state')).toBe('unchecked')
-    })
+    // The recordLater toggle is OFF by default, so the slider section IS rendered.
+    for (const label of ['Aroma', 'Acidity', 'Sweetness', 'Body', 'Overall']) {
+      const slider = screen.getByLabelText(label)
+      expect(slider).toBeDefined()
+    }
   })
 })

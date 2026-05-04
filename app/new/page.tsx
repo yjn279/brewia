@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
+import { PageHeader, HeaderAction } from '@/components/page-header'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
 import { brewsService } from '@/app/brews/service'
@@ -28,20 +28,16 @@ export default async function NewPage({ searchParams }: NewPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-md items-center px-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
-            >
+      <PageHeader
+        leading={
+          <>
+            <HeaderAction href="/" aria-label="Back to home">
               <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <h1 className="font-medium">New Entry</h1>
-          </div>
-        </div>
-      </header>
+            </HeaderAction>
+            <span className="font-medium">New Entry</span>
+          </>
+        }
+      />
 
       <main className="mx-auto max-w-md px-4 py-6">
         <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-card" />}>
