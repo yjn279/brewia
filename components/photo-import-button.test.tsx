@@ -29,26 +29,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PhotoImportButton } from '@/components/photo-import-button'
 import { toast } from 'sonner'
-import { sampleImageColor } from '@/lib/color/image-sampler'
-import { srgbToLab } from '@/lib/color/srgb-to-lab'
-import { estimateRoastLevel } from '@/lib/color/roast-estimator'
 
 vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn(), warning: vi.fn() },
-}))
-
-// Lab 色解析モジュールをモック（新規テストで vi.mocked として利用）
-vi.mock('@/lib/color/image-sampler', () => ({
-  sampleImageColor: vi.fn(),
-}))
-
-vi.mock('@/lib/color/srgb-to-lab', () => ({
-  srgbToLab: vi.fn(),
-}))
-
-vi.mock('@/lib/color/roast-estimator', () => ({
-  estimateRoastLevel: vi.fn(),
-  ROAST_L_STAR: {},
 }))
 
 describe('PhotoImportButton', () => {
@@ -404,15 +387,10 @@ describe('PhotoImportButton', () => {
     expect(init.body).toBeInstanceOf(FormData)
   })
 
-  // ---- Lab 焙煎度推定統合 ----
+  // ---- LLM 経由 焙煎度取得統合 ----
 
-  it('given onRoastEstimated が渡され LLM が有効フィールドを返すとき then onRoastEstimated が呼ばれ onExtracted も呼ばれる', async () => {
-    // Lab 解析をモック（L*=50 → Medium）
-    vi.mocked(sampleImageColor).mockResolvedValue({ r: 128, g: 100, b: 80 })
-    vi.mocked(srgbToLab).mockReturnValue({ L: 50, a: 5, b: 10 })
-    vi.mocked(estimateRoastLevel).mockReturnValue('Medium')
-
-    const extractedFields = { name: 'Test Bean' }
+  it('given LLM が roast="Medium" を含むフィールドを返すとき then onRoastEstimated が "Medium" で呼ばれ onExtracted も呼ばれる', async () => {
+    const extractedFields = { name: 'Test Bean', roast: 'Medium' }
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, extractedFields)))
 
     const onExtracted = vi.fn()
@@ -426,12 +404,7 @@ describe('PhotoImportButton', () => {
     await waitFor(() => { expect(onRoastEstimated).toHaveBeenCalledWith('Medium') })
   })
 
-  it('given onRoastEstimated が渡され estimateRoastLevel が null を返すとき then onRoastEstimated は呼ばれない', async () => {
-    // L* が範囲外 → null
-    vi.mocked(sampleImageColor).mockResolvedValue({ r: 255, g: 255, b: 255 })
-    vi.mocked(srgbToLab).mockReturnValue({ L: 100, a: 0, b: 0 })
-    vi.mocked(estimateRoastLevel).mockReturnValue(null)
-
+  it('given LLM が roast フィールドを含まないレスポンスを返すとき then onRoastEstimated は呼ばれない', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, { name: 'Test Bean' })))
 
     const onRoastEstimated = vi.fn()
@@ -443,7 +416,10 @@ describe('PhotoImportButton', () => {
     await waitFor(() => {
       expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(1)
     })
-    await waitFor(() => { expect(estimateRoastLevel).toHaveBeenCalled() })
+    // fetch 完了後に onRoastEstimated が呼ばれていないことを確認
+    await waitFor(() => {
+      expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(1)
+    })
     expect(onRoastEstimated).not.toHaveBeenCalled()
   })
 
@@ -473,13 +449,9 @@ describe('PhotoImportButton', () => {
     expect(onRoastEstimated).not.toHaveBeenCalled()
   })
 
-  it('given LLM がネットワーク失敗しても Lab 解析が完了すれば onRoastEstimated が呼ばれる', async () => {
-    vi.mocked(sampleImageColor).mockResolvedValue({ r: 100, g: 80, b: 60 })
-    vi.mocked(srgbToLab).mockReturnValue({ L: 38, a: 3, b: 8 })
-    vi.mocked(estimateRoastLevel).mockReturnValue('City')
-
-    // LLM fetch は reject
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
+  it('given LLM が roast="French" を含む複数フィールドを返すとき then onRoastEstimated が "French" で呼ばれる', async () => {
+    const extractedFields = { name: 'Kenya AA', country: 'Kenya', roast: 'French' }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, extractedFields)))
 
     const onRoastEstimated = vi.fn()
     render(<PhotoImportButton onExtracted={vi.fn()} onRoastEstimated={onRoastEstimated} />)
@@ -487,6 +459,6 @@ describe('PhotoImportButton', () => {
 
     fireEvent.change(input, { target: { files: [makeFile(1024)] } })
 
-    await waitFor(() => { expect(onRoastEstimated).toHaveBeenCalledWith('City') })
+    await waitFor(() => { expect(onRoastEstimated).toHaveBeenCalledWith('French') })
   })
 })

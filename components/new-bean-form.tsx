@@ -98,10 +98,8 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.variety !== undefined) setVariety(fields.variety)
           if (fields.process !== undefined) setProcess(fields.process)
           if (fields.notes !== undefined) setNotes(fields.notes)
-        }}
-        onRoastEstimated={(level) => {
-          // 競合方針 (A): 取り込み完了時に Lab 解析結果で常に上書きする
-          setRoastIndex([ROAST_LEVELS.indexOf(level)])
+          // LLM がパッケージから焙煎度の文字情報を読み取った場合は更新する（方針 A: 常に上書き）
+          if (fields.roast !== undefined) setRoastIndex([ROAST_LEVELS.indexOf(fields.roast)])
         }}
       />
       <div className="rounded-xl bg-card p-4 shadow-sm">

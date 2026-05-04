@@ -483,16 +483,16 @@ describe('NewBeanForm', () => {
     expect(roasterInput.value).toBe('New LLM Roaster')
   })
 
-  // ---- Lab 焙煎度推定統合テスト (#86) ----
+  // ---- LLM 経由 焙煎度取得統合テスト (#86 follow-up) ----
 
-  it('given onRoastEstimated が "French" で呼ばれたとき then roast combobox が "French" になる', async () => {
+  it('given LLM が roast="French" を返し onExtracted が呼ばれたとき then roast combobox が "French" になる', async () => {
     // Arrange
     render(<NewBeanForm />)
 
-    await waitFor(() => expect(capturedOnRoastEstimated.current).not.toBeNull())
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
 
-    // Act: Lab 解析完了をシミュレート
-    capturedOnRoastEstimated.current!('French')
+    // Act: LLM が roast フィールドを含む結果を返した
+    capturedOnExtracted.current!({ name: 'Test Bean', roast: 'French' })
 
     // Assert: roast combobox が更新される
     await waitFor(() => {
@@ -501,7 +501,7 @@ describe('NewBeanForm', () => {
     })
   })
 
-  it('given onRoastEstimated で "City" に更新後フォーム送信したとき then fetch body に roast="City" が含まれる', async () => {
+  it('given LLM が roast="City" を返し取り込み後フォーム送信したとき then fetch body に roast="City" が含まれる', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       json: async () => ({ id: 'bean-1' }),
       ok: true,
@@ -510,8 +510,8 @@ describe('NewBeanForm', () => {
 
     render(<NewBeanForm />)
 
-    await waitFor(() => expect(capturedOnRoastEstimated.current).not.toBeNull())
-    capturedOnRoastEstimated.current!('City')
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
+    capturedOnExtracted.current!({ name: 'Test Bean', roast: 'City' })
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
     fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
@@ -527,7 +527,7 @@ describe('NewBeanForm', () => {
     expect(body.roast).toBe('City')
   })
 
-  it('given ユーザーが手動で Roast を変更後に onRoastEstimated が呼ばれたとき then Lab 解析結果で上書きされる（方針 A）', async () => {
+  it('given ユーザーが手動で Roast を変更後に LLM が roast を返したとき then LLM 取り込み結果で上書きされる（方針 A）', async () => {
     // Arrange: 競合方針 (A) — 常に上書き
     render(<NewBeanForm />)
 
@@ -535,36 +535,30 @@ describe('NewBeanForm', () => {
     fireEvent.change(roastSelect, { target: { value: 'Light' } })
     expect(roastSelect.value).toBe('Light')
 
-    await waitFor(() => expect(capturedOnRoastEstimated.current).not.toBeNull())
+    await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
 
-    // Act: 取り込み完了（方針 A: 常に上書き）
-    capturedOnRoastEstimated.current!('Italian')
+    // Act: LLM 取り込み完了（方針 A: 常に上書き）
+    capturedOnExtracted.current!({ name: 'Some Bean', roast: 'Italian' })
 
-    // Assert: Lab 解析結果で上書きされる
+    // Assert: LLM 取り込み結果で上書きされる
     await waitFor(() => {
       expect(roastSelect.value).toBe('Italian')
     })
   })
 
-  it('given onRoastEstimated が呼ばれても onExtracted は roast を変更しない（LLM は roast スコープ外）', async () => {
+  it('given LLM が roast を返さない場合 それまでの roast 値（手動設定）が維持される', async () => {
     // Arrange
     render(<NewBeanForm />)
 
-    await waitFor(() => expect(capturedOnRoastEstimated.current).not.toBeNull())
-
-    // まず Lab 解析で Cinnamon にセット
-    capturedOnRoastEstimated.current!('Cinnamon')
-
-    await waitFor(() => {
-      const combobox = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
-      expect(combobox.value).toBe('Cinnamon')
-    })
+    const roastSelect = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
+    fireEvent.change(roastSelect, { target: { value: 'Cinnamon' } })
+    expect(roastSelect.value).toBe('Cinnamon')
 
     // Act: LLM onExtracted を呼ぶ（roast は含まない）
     await waitFor(() => expect(capturedOnExtracted.current).not.toBeNull())
     capturedOnExtracted.current!({ name: 'Test Bean' })
 
-    // Assert: roast は Cinnamon のまま（LLM は roast を変えない）
+    // Assert: roast は Cinnamon のまま（LLM が roast を返さなければ変わらない）
     await waitFor(() => {
       const combobox = screen.getByRole('combobox', { name: 'Select roast level' }) as HTMLSelectElement
       expect(combobox.value).toBe('Cinnamon')

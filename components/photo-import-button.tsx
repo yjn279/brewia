@@ -5,9 +5,6 @@ import { Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { CLIENT_MAX_IMAGE_SIZE_BYTES, ALLOWED_MEDIA_TYPES } from '@/lib/llm/constants'
-import { sampleImageColor } from '@/lib/color/image-sampler'
-import { srgbToLab } from '@/lib/color/srgb-to-lab'
-import { estimateRoastLevel } from '@/lib/color/roast-estimator'
 import type { ExtractedBeanFields } from '@/lib/llm/types'
 import type { RoastLevel } from '@/lib/types'
 
@@ -15,8 +12,9 @@ interface PhotoImportButtonProps {
   /** 解析完了時に呼ばれるコールバック。親フォームがフィールドを更新する */
   onExtracted: (fields: ExtractedBeanFields) => void
   /**
-   * Lab 色解析による焙煎度推定が完了したとき呼ばれるコールバック。
-   * LLM 抽出と独立して実行される。estimateRoastLevel が null を返した場合は呼ばれない。
+   * LLM がパッケージの文字情報から焙煎度を読み取ったとき呼ばれるコールバック。
+   * LLM レスポンスの fields.roast が定義されているときのみ呼ばれる。
+   * 豆の色からの推定（Lab 解析）は RoastPhotoPicker の責務として別経路で扱う。
    */
   onRoastEstimated?: (level: RoastLevel) => void
 }
@@ -48,69 +46,53 @@ export function PhotoImportButton({ onExtracted, onRoastEstimated }: PhotoImport
         return
       }
 
-      // LLM 抽出と Lab 色解析を並列実行。片方が失敗してももう一方の結果は反映する。
+      // LLM 抽出（パッケージの文字情報を読み取る）
       const formData = new FormData()
       formData.append('file', file)
 
-      const [llmResult, labResult] = await Promise.allSettled([
-        fetch('/api/beans/extract', {
-          method: 'POST',
-          body: formData,
-        }),
-        onRoastEstimated
-          ? sampleImageColor(file).then((rgb) => {
-              const lab = srgbToLab(rgb.r, rgb.g, rgb.b)
-              return estimateRoastLevel(lab.L)
-            })
-          : Promise.resolve(null),
-      ])
+      const response = await fetch('/api/beans/extract', {
+        method: 'POST',
+        body: formData,
+      })
 
-      // LLM 抽出結果の処理
-      if (llmResult.status === 'fulfilled') {
-        const response = llmResult.value
+      if (!response.ok) {
+        let code: string | undefined
+        let details: string | undefined
+        try {
+          const err = await response.json()
+          code = err?.code
+          details = err?.details
+        } catch {
+          // body が読めなくても続行
+        }
 
-        if (!response.ok) {
-          let code: string | undefined
-          let details: string | undefined
-          try {
-            const err = await response.json()
-            code = err?.code
-            details = err?.details
-          } catch {
-            // body が読めなくても続行
-          }
+        const baseMessage =
+          code === 'FILE_TOO_LARGE'
+            ? 'ファイルサイズが大きすぎます（サーバー側）'
+            : code === 'INVALID_FILE'
+              ? '画像形式が不正です（JPEG / PNG のみ対応）'
+              : code === 'EXTRACTION_FAILED'
+                ? 'AI 解析に失敗しました'
+                : '自動入力に失敗しました。手動で入力してください'
 
-          const baseMessage =
-            code === 'FILE_TOO_LARGE'
-              ? 'ファイルサイズが大きすぎます（サーバー側）'
-              : code === 'INVALID_FILE'
-                ? '画像形式が不正です（JPEG / PNG のみ対応）'
-                : code === 'EXTRACTION_FAILED'
-                  ? 'AI 解析に失敗しました'
-                  : '自動入力に失敗しました。手動で入力してください'
-
-          const fullMessage = details ? `${baseMessage}: ${details}` : baseMessage
-          toast.error(fullMessage, { duration: 10000 })
-        } else {
-          const fields = (await response.json()) as ExtractedBeanFields
-          const hasAnyValue = Object.values(fields).some(
-            (v) => v !== undefined && v !== null && v !== '',
+        const fullMessage = details ? `${baseMessage}: ${details}` : baseMessage
+        toast.error(fullMessage, { duration: 10000 })
+      } else {
+        const fields = (await response.json()) as ExtractedBeanFields
+        const hasAnyValue = Object.values(fields).some(
+          (v) => v !== undefined && v !== null && v !== '',
+        )
+        if (!hasAnyValue) {
+          toast.warning(
+            '写真から情報を読み取れませんでした。別の画像か手動入力をお試しください',
           )
-          if (!hasAnyValue) {
-            toast.warning(
-              '写真から情報を読み取れませんでした。別の画像か手動入力をお試しください',
-            )
-          } else {
-            onExtracted(fields)
+        } else {
+          onExtracted(fields)
+          // LLM がパッケージから焙煎度の文字情報を読み取った場合のみコールバックを呼ぶ
+          if (onRoastEstimated && fields.roast !== undefined) {
+            onRoastEstimated(fields.roast)
           }
         }
-      } else {
-        toast.error('自動入力に失敗しました。手動で入力してください')
-      }
-
-      // Lab 色解析結果の処理（LLM 結果とは独立）
-      if (onRoastEstimated && labResult.status === 'fulfilled' && labResult.value !== null) {
-        onRoastEstimated(labResult.value)
       }
     } catch {
       toast.error('自動入力に失敗しました。手動で入力してください')
