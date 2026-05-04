@@ -11,11 +11,14 @@ import { RoastPhotoPicker } from '@/components/roast-photo-picker'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { COUNTRIES, COUNTRY_FLAGS, PROCESSES, ROAST_LEVELS, type Bean, type Country } from '@/lib/types'
+import { REGION_ORDER, countriesByRegion } from '@/lib/country-regions'
 import { Loader2 } from 'lucide-react'
 import { PhotoImportButton } from '@/components/photo-import-button'
 
@@ -126,13 +129,18 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent>
-                {COUNTRIES.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    <span className="flex items-center gap-2">
-                      <span>{COUNTRY_FLAGS[country]}</span>
-                      <span>{country}</span>
-                    </span>
-                  </SelectItem>
+                {REGION_ORDER.map((region) => (
+                  <SelectGroup key={region}>
+                    <SelectLabel>{region}</SelectLabel>
+                    {countriesByRegion(region).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        <span className="flex items-center gap-2">
+                          <span>{COUNTRY_FLAGS[c]}</span>
+                          <span>{c}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>

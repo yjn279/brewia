@@ -188,6 +188,14 @@ vi.mock('@/components/ui/select', async () => {
     return <>{children}</>
   }
 
+  function SelectGroup({ children }: { children: React.ReactNode }) {
+    return <>{children}</>
+  }
+
+  function SelectLabel({ children }: { children: React.ReactNode }) {
+    return <>{children}</>
+  }
+
   function SelectTrigger({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
@@ -205,7 +213,9 @@ vi.mock('@/components/ui/select', async () => {
   return {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
+    SelectLabel,
     SelectTrigger,
     SelectValue,
   }
