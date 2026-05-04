@@ -168,13 +168,51 @@ vi.mock('@/components/ui/dropdown-menu', async () => {
     )
   }
 
+  function DropdownMenuSeparator() {
+    return <hr />
+  }
+
   return {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
   }
 })
+
+vi.mock('@/components/ui/dialog', async () => {
+  const React = await import('react')
+
+  function Dialog({ children, open }: { children: React.ReactNode; open?: boolean }) {
+    if (!open) return null
+    return <div role="dialog">{children}</div>
+  }
+
+  function DialogContent({ children }: { children: React.ReactNode }) {
+    return <div>{children}</div>
+  }
+
+  function DialogHeader({ children }: { children: React.ReactNode }) {
+    return <div>{children}</div>
+  }
+
+  function DialogTitle({ children }: { children: React.ReactNode }) {
+    return <h2>{children}</h2>
+  }
+
+  function DialogFooter({ children }: { children: React.ReactNode }) {
+    return <div>{children}</div>
+  }
+
+  return { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter }
+})
+
+vi.mock('@/components/ui/use-toast', () => ({
+  toast: vi.fn(),
+}))
+
+vi.mock('@/app/brew-presets/repository', () => ({}))
 
 vi.mock('@/components/ui/slider', async () => {
   const React = await import('react')
@@ -245,9 +283,37 @@ function fillRequiredBrewFields() {
   })
 }
 
+// Find the RequestInit for the brew submit call (POST/PUT to /api/brews*)
+// ignoring the /api/brew-presets GET that useEffect fires on mount.
+function findBrewSubmitCall(fetchMock: ReturnType<typeof vi.fn>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const call = fetchMock.mock.calls.find((args: any[]) => {
+    const init = args[1] as RequestInit | undefined
+    return init?.method === 'POST' || init?.method === 'PUT'
+  })
+  return call ? call[1] as RequestInit : null
+}
+
 describe('NewBrewForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Mock fetch for /api/brew-presets
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      })
+    }))
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('given the weight inputs when the form renders then both fields allow decimal gram entries', () => {
@@ -285,10 +351,10 @@ describe('NewBrewForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(findBrewSubmitCall(fetchMock)).not.toBeNull()
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0]
+    const requestInit = findBrewSubmitCall(fetchMock)!
     const body = JSON.parse((requestInit as RequestInit).body as string) as {
       beanId: string
       beanWeight: number
@@ -326,10 +392,10 @@ describe('NewBrewForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(findBrewSubmitCall(fetchMock)).not.toBeNull()
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0]
+    const requestInit = findBrewSubmitCall(fetchMock)!
     const body = JSON.parse((requestInit as RequestInit).body as string) as {
       beanWeight: number
       waterWeight: number
@@ -405,10 +471,10 @@ describe('NewBrewForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(findBrewSubmitCall(fetchMock)).not.toBeNull()
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0]
+    const requestInit = findBrewSubmitCall(fetchMock)!
     const body = JSON.parse((requestInit as RequestInit).body as string) as {
       aroma: number
       acidity: number
@@ -452,10 +518,10 @@ describe('NewBrewForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(findBrewSubmitCall(fetchMock)).not.toBeNull()
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0]
+    const requestInit = findBrewSubmitCall(fetchMock)!
     const body = JSON.parse((requestInit as RequestInit).body as string) as {
       aroma: number
       acidity: number
@@ -614,10 +680,10 @@ describe('NewBrewForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Brew' }))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(findBrewSubmitCall(fetchMock)).not.toBeNull()
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0]
+    const requestInit = findBrewSubmitCall(fetchMock)!
     const body = JSON.parse((requestInit as RequestInit).body as string) as {
       aroma: number
       acidity: number
@@ -967,10 +1033,10 @@ describe('NewBrewForm', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Log Brew' }))
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledTimes(1)
+        expect(findBrewSubmitCall(fetchMock)).not.toBeNull()
       })
 
-      const [, requestInit] = fetchMock.mock.calls[0]
+      const requestInit = findBrewSubmitCall(fetchMock)!
       const body = JSON.parse((requestInit as RequestInit).body as string) as {
         steps: Array<{ time: number; water: number }>
       }
@@ -1021,5 +1087,127 @@ describe('NewBrewForm', () => {
 
     // No step 6
     expect(screen.queryByLabelText('Step 6 time')).toBeNull()
+  })
+
+  // P2: User presets appear in the dropdown when API returns data, separated from built-in presets
+  it('P2: given a user preset is returned by the API, when the dropdown is opened, then both built-in and user presets appear with a separator between them', async () => {
+    const userPreset = {
+      id: 'user-preset-1',
+      name: 'My Custom Recipe',
+      description: 'Great for light roast',
+      defaultBeanWeight: 18,
+      defaultWaterTemp: 90,
+      steps: [{ time: 30, water: 60 }, { time: 90, water: 200 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([userPreset]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Wait for user presets to load
+    await waitFor(() => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      expect(screen.getByRole('menuitem', { name: /My Custom Recipe/i })).toBeDefined()
+    })
+
+    // Both built-in and user preset exist in the same menu
+    expect(screen.getByRole('menuitem', { name: /Hario V60 4:6/i })).toBeDefined()
+    expect(screen.getByRole('menuitem', { name: /My Custom Recipe/i })).toBeDefined()
+    // Separator exists (rendered as <hr>)
+    expect(document.querySelector('hr')).not.toBeNull()
+  })
+
+  // P3: Selecting a user preset applies its step values
+  it('P3: given a user preset is loaded, when the user selects it from the dropdown, then step inputs are populated with that preset\'s steps', async () => {
+    const userPreset = {
+      id: 'user-preset-2',
+      name: 'My Pour Over',
+      description: null,
+      defaultBeanWeight: 15,
+      defaultWaterTemp: 92,
+      steps: [{ time: 30, water: 50 }, { time: 60, water: 150 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([userPreset]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Wait for user presets to load and open dropdown
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      expect(screen.getByRole('menuitem', { name: /My Pour Over/i })).toBeDefined()
+    })
+
+    // Select the user preset
+    fireEvent.click(screen.getByRole('menuitem', { name: /My Pour Over/i }))
+
+    // Verify step inputs are populated
+    const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
+    const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+    expect(step1Time.value).toBe('30')
+    expect(step1Water.value).toBe('50')
+  })
+
+  // P4: "Save as preset" button exists; clicking it opens a dialog; submitting calls POST /api/brew-presets
+  it('P4: given valid step inputs, when "Save current as preset" is clicked and name is entered, then POST /api/brew-presets is called with the correct body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([]),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Fill required brew fields
+    fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '20' } })
+    fireEvent.change(screen.getByLabelText('Water'), { target: { value: '300' } })
+    fireEvent.change(screen.getByLabelText('Temp'), { target: { value: '93' } })
+    fireEvent.change(screen.getByLabelText('Step 1 time'), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText('Step 1 water'), { target: { value: '50' } })
+    fireEvent.blur(screen.getByLabelText('Step 1 water'))
+
+    // Click "Save current as preset"
+    const saveButton = screen.getByRole('button', { name: /save.*preset/i })
+    expect(saveButton).toBeDefined()
+    fireEvent.click(saveButton)
+
+    // Dialog should open
+    expect(screen.getByRole('dialog')).toBeDefined()
+
+    // Enter preset name
+    const nameInput = screen.getByLabelText('Name') as HTMLInputElement
+    fireEvent.change(nameInput, { target: { value: 'My New Preset' } })
+
+    // Click Save Preset button in dialog
+    const savePresetButton = screen.getByRole('button', { name: /Save Preset/i })
+    fireEvent.click(savePresetButton)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const findPostCall = () => fetchMock.mock.calls.find((args: any[]) => args[0] === '/api/brew-presets' && (args[1] as RequestInit)?.method === 'POST')
+
+    await waitFor(() => {
+      expect(findPostCall()).toBeDefined()
+    })
+
+    const postCall = findPostCall()!
+    const postBody = JSON.parse((postCall[1] as RequestInit).body as string) as { name: string; steps: Array<{ time: number; water: number }> }
+    expect(postBody.name).toBe('My New Preset')
+    expect(postBody.steps.length).toBeGreaterThan(0)
   })
 })
