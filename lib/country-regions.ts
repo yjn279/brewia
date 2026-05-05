@@ -14,39 +14,26 @@ export const REGION_ORDER: readonly Region[] = REGIONS
 export const COUNTRY_REGIONS: Record<Country, Region> = {
   // Africa
   Burundi: 'Africa',
-  'DR Congo': 'Africa',
   Ethiopia: 'Africa',
   Kenya: 'Africa',
   Rwanda: 'Africa',
   Tanzania: 'Africa',
-  Uganda: 'Africa',
   Yemen: 'Africa', // industry convention: Yemen treated as African-style coffee
-  Zambia: 'Africa',
-  Zimbabwe: 'Africa',
 
   // Latin America
-  Bolivia: 'Latin America',
   Brazil: 'Latin America',
   Colombia: 'Latin America',
   'Costa Rica': 'Latin America',
-  Ecuador: 'Latin America',
   'El Salvador': 'Latin America',
   Guatemala: 'Latin America',
   Honduras: 'Latin America',
   Jamaica: 'Latin America',
-  Mexico: 'Latin America',
   Nicaragua: 'Latin America',
   Panama: 'Latin America',
-  Peru: 'Latin America',
 
   // Asia & Pacific
-  'China (Yunnan)': 'Asia & Pacific',
-  India: 'Asia & Pacific',
   Indonesia: 'Asia & Pacific',
-  Myanmar: 'Asia & Pacific',
   'Papua New Guinea': 'Asia & Pacific',
-  Thailand: 'Asia & Pacific',
-  'Timor-Leste': 'Asia & Pacific',
   Vietnam: 'Asia & Pacific',
 
   // Other

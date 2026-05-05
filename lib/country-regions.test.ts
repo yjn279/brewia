@@ -55,8 +55,7 @@ describe('countriesByRegion', () => {
   it('Africa contains the expected countries', () => {
     const africa = countriesByRegion('Africa')
     const expected = [
-      'Burundi', 'DR Congo', 'Ethiopia', 'Kenya', 'Rwanda',
-      'Tanzania', 'Uganda', 'Yemen', 'Zambia', 'Zimbabwe',
+      'Burundi', 'Ethiopia', 'Kenya', 'Rwanda', 'Tanzania', 'Yemen',
     ].sort((a, b) => a.localeCompare(b))
     expect(africa).toEqual(expected)
   })
@@ -64,9 +63,8 @@ describe('countriesByRegion', () => {
   it('Latin America contains the expected countries', () => {
     const latam = countriesByRegion('Latin America')
     const expected = [
-      'Bolivia', 'Brazil', 'Colombia', 'Costa Rica', 'Ecuador',
-      'El Salvador', 'Guatemala', 'Honduras', 'Jamaica', 'Mexico',
-      'Nicaragua', 'Panama', 'Peru',
+      'Brazil', 'Colombia', 'Costa Rica', 'El Salvador', 'Guatemala',
+      'Honduras', 'Jamaica', 'Nicaragua', 'Panama',
     ].sort((a, b) => a.localeCompare(b))
     expect(latam).toEqual(expected)
   })
@@ -74,8 +72,7 @@ describe('countriesByRegion', () => {
   it('Asia & Pacific contains the expected countries', () => {
     const asia = countriesByRegion('Asia & Pacific')
     const expected = [
-      'China (Yunnan)', 'India', 'Indonesia', 'Myanmar',
-      'Papua New Guinea', 'Thailand', 'Timor-Leste', 'Vietnam',
+      'Indonesia', 'Papua New Guinea', 'Vietnam',
     ].sort((a, b) => a.localeCompare(b))
     expect(asia).toEqual(expected)
   })
