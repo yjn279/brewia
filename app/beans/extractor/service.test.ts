@@ -58,8 +58,8 @@ describe('ExtractorService.extractFromImage — 正規化ロジック', () => {
       expect(result.country).toBe('Kenya')
     })
 
-    it('given country が COUNTRIES 外の "Mexico" のとき then country フィールドは省略される', async () => {
-      const client = makeMockClient({ country: 'Mexico' })
+    it('given country が COUNTRIES 外の "Atlantis" のとき then country フィールドは省略される', async () => {
+      const client = makeMockClient({ country: 'Atlantis' })
       const service = new ExtractorService(client)
       const result = await service.extractFromImage(makeJpegFile())
       expect(result.country).toBeUndefined()
