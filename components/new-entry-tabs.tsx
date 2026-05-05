@@ -39,6 +39,7 @@ export function NewEntryTabs({ beans, flavors, initialBean: initialBeanData, ini
 
   return (
     <div>
+      <h1 className="sr-only">New Entry</h1>
       {/* Tab Switcher */}
       <div className="mb-6 flex rounded-xl bg-secondary p-1">
         <button

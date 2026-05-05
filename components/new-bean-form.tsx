@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { RoastPalette } from '@/components/roast-palette'
@@ -19,8 +18,12 @@ import {
 } from '@/components/ui/select'
 import { COUNTRIES, COUNTRY_FLAGS, PROCESSES, ROAST_LEVELS, type Bean, type Country } from '@/lib/types'
 import { REGION_ORDER, countriesByRegion } from '@/lib/country-regions'
+import { DEFAULT_ROAST_INDEX } from '@/lib/constants'
 import { Loader2 } from 'lucide-react'
 import { PhotoImportButton } from '@/components/photo-import-button'
+import { Card } from '@/components/ui/card'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { SectionHeading } from '@/components/section-heading'
 
 const NO_PROCESS_VALUE = '__none__'
 
@@ -32,7 +35,7 @@ interface NewBeanFormProps {
 export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const initialRoastIndex = initialBean ? Math.max(0, ROAST_LEVELS.indexOf(initialBean.roast)) : 2
+  const initialRoastIndex = initialBean ? Math.max(0, ROAST_LEVELS.indexOf(initialBean.roast)) : DEFAULT_ROAST_INDEX
   const [roastIndex, setRoastIndex] = useState([initialRoastIndex])
   const [name, setName] = useState(initialBean?.name ?? '')
   const [roaster, setRoaster] = useState(initialBean?.roaster ?? '')
@@ -101,31 +104,31 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.variety !== undefined) setVariety(fields.variety)
           if (fields.process !== undefined) setProcess(fields.process)
           if (fields.notes !== undefined) setNotes(fields.notes)
+          // LLM がパッケージから焙煎度の文字情報を読み取った場合は更新する（方針 A: 常に上書き）
+          if (fields.roast !== undefined) setRoastIndex([ROAST_LEVELS.indexOf(fields.roast)])
         }}
       />
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Bean Info
-        </h2>
+      <Card>
+        <SectionHeading>Bean Info</SectionHeading>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Name</Label>
+          <Field>
+            <FieldLabel htmlFor="name">Name</FieldLabel>
             <Input id="name" placeholder="Yirgacheffe Kochere" value={name} onChange={(event) => setName(event.target.value)} required />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="roaster">Roaster</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="roaster">Roaster</FieldLabel>
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
-          </div>
+          </Field>
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">Origin</h2>
+      <Card>
+        <SectionHeading>Origin</SectionHeading>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="country">Country</Label>
+          <Field>
+            <FieldLabel htmlFor="country">Country</FieldLabel>
             <Select value={country} onValueChange={(value) => setCountry(value as (typeof COUNTRIES)[number])} required>
-              <SelectTrigger>
+              <SelectTrigger id="country">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent>
@@ -144,29 +147,29 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="region">Region</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="region">Region</FieldLabel>
             <Input id="region" placeholder="Yirgacheffe" value={region} onChange={(event) => setRegion(event.target.value)} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="farm">Farm / Station</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="farm">Farm / Station</FieldLabel>
             <Input id="farm" placeholder="Kochere Washing Station" value={farm} onChange={(event) => setFarm(event.target.value)} />
-          </div>
+          </Field>
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">Characteristics</h2>
+      <Card>
+        <SectionHeading>Characteristics</SectionHeading>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="variety">Variety</Label>
+          <Field>
+            <FieldLabel htmlFor="variety">Variety</FieldLabel>
             <Input id="variety" placeholder="Heirloom" value={variety} onChange={(event) => setVariety(event.target.value)} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="process">Process</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="process">Process</FieldLabel>
             <Select value={process || undefined} onValueChange={(value) => setProcess(value === NO_PROCESS_VALUE ? '' : value)}>
-              <SelectTrigger>
+              <SelectTrigger id="process">
                 <SelectValue placeholder="Optional" />
               </SelectTrigger>
               <SelectContent>
@@ -178,9 +181,9 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Label>Roast Level</Label>
+          </Field>
+          <Field>
+            <FieldLabel>Roast Level</FieldLabel>
             <div className="grid grid-cols-2 gap-2">
               <RoastPalette
                 value={ROAST_LEVELS[roastIndex[0]]}
@@ -190,14 +193,14 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
                 onEstimate={(level) => setRoastIndex([ROAST_LEVELS.indexOf(level)])}
               />
             </div>
-          </div>
+          </Field>
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">Notes</h2>
+      <Card>
+        <SectionHeading>Notes</SectionHeading>
         <Textarea placeholder="Tasting notes, purchase info, etc." rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
-      </div>
+      </Card>
 
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (

@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
 import { COUNTRY_FLAGS } from '@/lib/types'
+import { ROAST_COLORS } from '@/lib/roast-colors'
 import { BrewCard } from '@/components/brew-card'
-import { RoastLevel } from '@/components/roast-level'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
-import { ArrowLeft, Plus, CopyPlus, MapPin, Factory, Leaf, Pencil } from 'lucide-react'
+import { PageHeader, HeaderAction } from '@/components/page-header'
+import { SectionHeading } from '@/components/section-heading'
+import { Card } from '@/components/ui/card'
+import { DataField } from '@/components/data-field'
+import { ArrowLeft, Plus, CopyPlus, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,31 +30,31 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <Link 
-              href="/" 
-              className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
-            >
+      <PageHeader
+        leading={
+          <>
+            <HeaderAction href="/" aria-label="Back to home">
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </HeaderAction>
             <span className="font-medium">Bean Details</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
+          </>
+        }
+        actions={
+          <>
+            <HeaderAction
               href={`/new?type=bean&copyBean=${id}`}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+              variant="secondary"
+              aria-label="Copy bean"
             >
               <CopyPlus className="h-4 w-4" />
-            </Link>
-            <Link
+            </HeaderAction>
+            <HeaderAction
               href={`/beans/${id}/edit`}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary"
+              variant="secondary"
+              aria-label="Edit bean"
             >
               <Pencil className="h-4 w-4" />
-            </Link>
+            </HeaderAction>
             <DeleteResourceButton
               endpoint={`/api/beans/${id}`}
               redirectTo="/"
@@ -59,77 +62,65 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               showLabel={false}
               className="h-8 w-8 px-0"
             />
-            <Link
+            <HeaderAction
               href={`/new?type=brew&bean=${id}`}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+              variant="primary"
+              aria-label="Add brew"
             >
               <Plus className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </header>
+            </HeaderAction>
+          </>
+        }
+      />
 
       <main className="mx-auto max-w-md px-4 py-6">
-        {/* Bean Hero */}
-        <section className="mb-6 rounded-xl bg-card p-5 shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
-              {flag}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
-              <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Roastery</p>
-              <p className="text-sm text-foreground">{bean.roaster}</p>
-              <div className="mt-2">
-                <RoastLevel level={bean.roast} size="sm" />
+        {/* Bean Info (one card, full width) */}
+        <Card asChild className="mb-6">
+          <section>
+            {/* Hero row: flag + name + roaster */}
+            <div className="mb-4 flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-secondary text-3xl">
+                {flag}
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <h1 className="text-xl font-semibold text-foreground">{bean.name}</h1>
+                <p className="text-sm text-muted-foreground">{bean.roaster}</p>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* Origin Info */}
-        <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Origin
-          </h2>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Region</p>
-                <p className="text-sm font-medium text-foreground">{bean.region}</p>
-                <p className="text-xs text-muted-foreground">Country: {bean.country}</p>
-              </div>
+            {/* 2-column grid of DataFields */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+              <DataField label="Country" valueClassName="font-normal">{bean.country}</DataField>
+              <DataField label="Region" valueClassName="font-normal">{bean.region || '—'}</DataField>
+              <DataField label="Farm / Station" valueClassName="font-normal">{bean.farm || '—'}</DataField>
+              <DataField label="Variety" valueClassName="font-normal">{bean.variety || '—'}</DataField>
+              <DataField label="Process" valueClassName="font-normal">{bean.process || '—'}</DataField>
             </div>
-            {bean.farm && (
-              <div className="flex items-center gap-3">
-                <Factory className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Producer</p>
-                  <p className="text-sm text-foreground">{bean.farm}</p>
-                </div>
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              <Leaf className="h-4 w-4 text-muted-foreground" />
-              <div className="flex flex-col gap-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Variety</p>
-                <span className="text-sm text-foreground">{bean.variety}</span>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Process</p>
-                <span className="text-sm text-foreground">{bean.process ?? '—'}</span>
-              </div>
+
+            {/* Roast row — full width below the grid */}
+            <div className="mt-4">
+              <DataField label="Roast" valueClassName="font-normal">
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 flex-shrink-0 rounded-full border border-border"
+                    style={{ backgroundColor: ROAST_COLORS[bean.roast] }}
+                    aria-hidden="true"
+                  />
+                  <span>{bean.roast}</span>
+                </span>
+              </DataField>
             </div>
-          </div>
-        </section>
+          </section>
+        </Card>
 
         {/* Notes */}
-        {bean.notes && (
-          <section className="mb-6 rounded-xl bg-card p-4 shadow-sm">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Notes
-            </h2>
-            <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
-          </section>
+        {bean.notes && bean.notes.trim().length > 0 && (
+          <Card asChild className="mb-6">
+            <section>
+              <SectionHeading>Notes</SectionHeading>
+              <p className="text-sm leading-relaxed text-foreground">{bean.notes}</p>
+            </section>
+          </Card>
         )}
 
 
@@ -138,9 +129,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
         {/* Brew History */}
         {brews.length > 0 && (
           <section>
-            <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Brew History
-            </h2>
+            <SectionHeading>Brew History</SectionHeading>
             <div className="flex flex-col gap-3">
               {brews.map((brew) => (
                 <BrewCard key={brew.id} brew={brew} showBeanInfo={false} />

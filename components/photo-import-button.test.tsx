@@ -386,4 +386,79 @@ describe('PhotoImportButton', () => {
     expect(init.method).toBe('POST')
     expect(init.body).toBeInstanceOf(FormData)
   })
+
+  // ---- LLM 経由 焙煎度取得統合 ----
+
+  it('given LLM が roast="Medium" を含むフィールドを返すとき then onRoastEstimated が "Medium" で呼ばれ onExtracted も呼ばれる', async () => {
+    const extractedFields = { name: 'Test Bean', roast: 'Medium' }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, extractedFields)))
+
+    const onExtracted = vi.fn()
+    const onRoastEstimated = vi.fn()
+    render(<PhotoImportButton onExtracted={onExtracted} onRoastEstimated={onRoastEstimated} />)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+
+    await waitFor(() => { expect(onExtracted).toHaveBeenCalledTimes(1) })
+    await waitFor(() => { expect(onRoastEstimated).toHaveBeenCalledWith('Medium') })
+  })
+
+  it('given LLM が roast フィールドを含まないレスポンスを返すとき then onRoastEstimated は呼ばれない', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, { name: 'Test Bean' })))
+
+    const onRoastEstimated = vi.fn()
+    render(<PhotoImportButton onExtracted={vi.fn()} onRoastEstimated={onRoastEstimated} />)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+
+    await waitFor(() => {
+      expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(1)
+    })
+    // fetch 完了後に onRoastEstimated が呼ばれていないことを確認
+    await waitFor(() => {
+      expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(1)
+    })
+    expect(onRoastEstimated).not.toHaveBeenCalled()
+  })
+
+  it('given サイズ超過で早期リターンするとき then onRoastEstimated は呼ばれない', async () => {
+    const oversizeFile = makeFile(4 * 1024 * 1024 + 1)
+    vi.stubGlobal('fetch', vi.fn())
+    const onRoastEstimated = vi.fn()
+    render(<PhotoImportButton onExtracted={vi.fn()} onRoastEstimated={onRoastEstimated} />)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+
+    fireEvent.change(input, { target: { files: [oversizeFile] } })
+
+    await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
+    expect(onRoastEstimated).not.toHaveBeenCalled()
+  })
+
+  it('given MIME 不正で早期リターンするとき then onRoastEstimated は呼ばれない', async () => {
+    const gifFile = new File(['gif data'], 'test.gif', { type: 'image/gif' })
+    vi.stubGlobal('fetch', vi.fn())
+    const onRoastEstimated = vi.fn()
+    render(<PhotoImportButton onExtracted={vi.fn()} onRoastEstimated={onRoastEstimated} />)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+
+    fireEvent.change(input, { target: { files: [gifFile] } })
+
+    await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
+    expect(onRoastEstimated).not.toHaveBeenCalled()
+  })
+
+  it('given LLM が roast="French" を含む複数フィールドを返すとき then onRoastEstimated が "French" で呼ばれる', async () => {
+    const extractedFields = { name: 'Kenya AA', country: 'Kenya', roast: 'French' }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeFetchResponse(true, 200, extractedFields)))
+
+    const onRoastEstimated = vi.fn()
+    render(<PhotoImportButton onExtracted={vi.fn()} onRoastEstimated={onRoastEstimated} />)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+
+    fireEvent.change(input, { target: { files: [makeFile(1024)] } })
+
+    await waitFor(() => { expect(onRoastEstimated).toHaveBeenCalledWith('French') })
+  })
 })
