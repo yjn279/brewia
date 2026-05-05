@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { brewPresetsService } from '@/app/brew-presets/service'
-import { BREW_PRESETS } from '@/lib/brew-presets'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PresetEditDialog } from '@/app/presets/preset-edit-dialog'
 import {
@@ -37,35 +36,6 @@ export default async function PresetsPage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 py-6">
-        {/* Built-in presets */}
-        <section className="mb-8">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Built-in
-          </h2>
-          <div className="flex flex-col gap-3">
-            {BREW_PRESETS.map((preset) => (
-              <div
-                key={preset.id}
-                className="rounded-xl bg-card p-4 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-medium">{preset.name}</p>
-                    {preset.description && (
-                      <p className="mt-0.5 text-sm text-muted-foreground">{preset.description}</p>
-                    )}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {preset.steps.length} steps
-                      {preset.defaultBeanWeight != null && ` · ${preset.defaultBeanWeight}g bean`}
-                      {preset.defaultWaterTemp != null && ` · ${preset.defaultWaterTemp}°C`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* User presets */}
         <section>
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">

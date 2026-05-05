@@ -23,7 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -33,7 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { BREW_PRESETS } from '@/lib/brew-presets'
 import type { BrewPresetRecord } from '@/app/brew-presets/repository'
 import { toast } from '@/components/ui/use-toast'
 import {
@@ -432,6 +430,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Extraction Steps
           </h2>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              disabled={steps.length === 0}
+              onClick={() => setIsSaveDialogOpen(true)}
+            >
+              Save as preset
+            </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -446,18 +455,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              {BREW_PRESETS.map((preset) => (
-                <DropdownMenuItem
-                  key={preset.id}
-                  onSelect={() => applyPreset(preset)}
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium">{preset.name}</span>
-                    <span className="text-xs text-muted-foreground">{preset.description}</span>
-                  </div>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
               {userPresets.length === 0 ? (
                 <DropdownMenuItem disabled>
                   No saved presets yet
@@ -479,6 +476,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
 
         <div
@@ -703,22 +701,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
         />
-      </div>
-
-      {/* Save as preset */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Save as Preset
-        </h2>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          disabled={steps.length === 0}
-          onClick={() => setIsSaveDialogOpen(true)}
-        >
-          Save current as preset
-        </Button>
       </div>
 
       {/* Submit */}
