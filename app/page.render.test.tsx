@@ -38,6 +38,7 @@ vi.mock('lucide-react', () => ({
   Plus: () => null,
   Coffee: () => null,
   Flame: () => null,
+  BookMarked: () => null,
 }))
 
 // next/link をモック

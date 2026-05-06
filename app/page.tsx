@@ -15,7 +15,7 @@ import {
 import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
 import { Button } from '@/components/ui/button'
-import { Coffee, Flame, Plus } from 'lucide-react'
+import { BookMarked, Coffee, Flame, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -38,9 +38,14 @@ export default async function HomePage() {
           <span className="text-xl font-semibold tracking-tight text-foreground">Brewia</span>
         }
         actions={
-          <HeaderAction href="/new?type=bean" variant="primary" aria-label="Add bean">
-            <Plus className="h-4 w-4" />
-          </HeaderAction>
+          <>
+            <HeaderAction href="/presets" variant="secondary" aria-label="Presets">
+              <BookMarked className="h-4 w-4" />
+            </HeaderAction>
+            <HeaderAction href="/new?type=bean" variant="primary" aria-label="Add bean">
+              <Plus className="h-4 w-4" />
+            </HeaderAction>
+          </>
         }
       />
 
