@@ -576,4 +576,74 @@ describe('NewBeanForm', () => {
       expect(combobox.value).toBe('Cinnamon')
     })
   })
+
+  // ---- 価格入力フォーマットテスト (D) ----
+  // jsdom の Intl.NumberFormat が返す円記号は環境によって異なる場合があるため、
+  // 実際のフォーマッターで生成した値を期待値として使う
+  const priceFormatter = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' })
+  const pricePlaceholder = priceFormatter.format(1500)
+
+  it('D-T1: price 入力欄のプレースホルダーが JPY フォーマット（1500 相当）である', () => {
+    render(<NewBeanForm />)
+    const priceInput = screen.getByPlaceholderText(pricePlaceholder) as HTMLInputElement
+    expect(priceInput).toBeDefined()
+  })
+
+  it('D-T2: 12000 と入力すると表示値が通貨フォーマット（12000 相当）になる', async () => {
+    const expected = priceFormatter.format(12000)
+    render(<NewBeanForm />)
+    const priceInput = screen.getByPlaceholderText(pricePlaceholder) as HTMLInputElement
+    fireEvent.change(priceInput, { target: { value: '12000' } })
+    await waitFor(() => {
+      expect(priceInput.value).toBe(expected)
+    })
+  })
+
+  it('D-T3: 12000 と入力してフォームを送信すると priceJpy が整数 12000 で送られる', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'bean-1' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBeanForm />)
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
+    fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
+    const comboboxes = screen.getAllByRole('combobox')
+    fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
+    fireEvent.change(screen.getByPlaceholderText(pricePlaceholder), { target: { value: '12000' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: number | null }
+    expect(body.priceJpy).toBe(12000)
+  })
+
+  it('D-T4: price 入力欄が空のままフォームを送信すると priceJpy が null で送られる', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ id: 'bean-1' }),
+      ok: true,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<NewBeanForm />)
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Test Bean' } })
+    fireEvent.change(screen.getByLabelText('Roaster'), { target: { value: 'Test Roaster' } })
+    const comboboxes = screen.getAllByRole('combobox')
+    fireEvent.change(comboboxes[0], { target: { value: 'Ethiopia' } })
+    // price は空のまま送信
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Bean' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const [, requestInit] = fetchMock.mock.calls[0]
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: number | null }
+    expect(body.priceJpy).toBeNull()
+  })
 })

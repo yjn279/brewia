@@ -2,11 +2,13 @@ import { notFound } from 'next/navigation'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
 import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { ROAST_COLORS } from '@/lib/roast-colors'
 import { BrewCard } from '@/components/brew-card'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
+import { UserMenu } from '@/components/user-menu'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { DataField } from '@/components/data-field'
@@ -71,6 +73,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             >
               <Plus className="h-4 w-4" />
             </HeaderAction>
+            <UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />
           </>
         }
       />

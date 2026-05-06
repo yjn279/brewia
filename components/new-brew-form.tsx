@@ -243,6 +243,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
   const handleSaveAsPreset = async () => {
     if (!presetName.trim()) return
+    if (steps.length === 0) {
+      toast({ title: 'Add at least one step before saving as preset', variant: 'destructive' })
+      return
+    }
     setIsSavingPreset(true)
     try {
       const response = await fetch('/api/brew-presets', {
@@ -700,7 +704,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           type="button"
           variant="outline"
           className="w-full"
-          disabled={steps.length === 0}
           onClick={() => setIsSaveDialogOpen(true)}
         >
           Save current as preset

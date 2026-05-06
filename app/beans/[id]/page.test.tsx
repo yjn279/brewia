@@ -18,6 +18,14 @@ vi.mock('@/lib/auth/require-user', () => ({
   requireUser: requireUserMock,
 }))
 
+vi.mock('@/lib/auth/actions', () => ({
+  signOutAction: vi.fn(),
+}))
+
+vi.mock('@/components/user-menu', () => ({
+  UserMenu: () => <div data-testid="user-menu" />,
+}))
+
 vi.mock('@/app/beans/service', () => ({
   beansService: {
     getBeanById: getBeanByIdMock,

@@ -1,6 +1,7 @@
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
 import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
@@ -15,6 +16,7 @@ import {
 import { PageHeader, HeaderAction } from '@/components/page-header'
 import { SectionHeading } from '@/components/section-heading'
 import { Button } from '@/components/ui/button'
+import { UserMenu } from '@/components/user-menu'
 import { BookMarked, Coffee, Flame, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -45,6 +47,7 @@ export default async function HomePage() {
             <HeaderAction href="/new?type=bean" variant="primary" aria-label="Add bean">
               <Plus className="h-4 w-4" />
             </HeaderAction>
+            <UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />
           </>
         }
       />

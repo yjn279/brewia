@@ -39,6 +39,18 @@ vi.mock('lucide-react', () => ({
   Coffee: () => null,
   Flame: () => null,
   BookMarked: () => null,
+  LogOut: () => null,
+  User: () => null,
+}))
+
+// auth アクションをモック
+vi.mock('@/lib/auth/actions', () => ({
+  signOutAction: vi.fn(),
+}))
+
+// UserMenu をモック
+vi.mock('@/components/user-menu', () => ({
+  UserMenu: () => <div data-testid="user-menu" />,
 }))
 
 // next/link をモック

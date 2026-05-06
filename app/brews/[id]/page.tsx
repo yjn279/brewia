@@ -2,11 +2,13 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { brewsService } from '@/app/brews/service'
 import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteBars } from '@/components/taste-bars'
 import { PourChart } from '@/components/pour-chart'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
+import { UserMenu } from '@/components/user-menu'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
@@ -66,6 +68,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               showLabel={false}
               className="h-8 w-8 px-0"
             />
+            <UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />
           </>
         }
       />

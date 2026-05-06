@@ -1,9 +1,12 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, BookMarked } from 'lucide-react'
 import { brewPresetsService } from '@/app/brew-presets/service'
 import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PresetEditDialog } from '@/app/presets/preset-edit-dialog'
+import { PageHeader, HeaderAction } from '@/components/page-header'
+import { UserMenu } from '@/components/user-menu'
 import {
   Empty,
   EmptyContent,
@@ -12,7 +15,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
-import { BookMarked } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,20 +24,17 @@ export default async function PresetsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
-            >
+      <PageHeader
+        leading={
+          <>
+            <HeaderAction href="/" aria-label="Back to home">
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </HeaderAction>
             <span className="font-medium">Presets</span>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+        actions={<UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />}
+      />
 
       <main className="mx-auto max-w-md px-4 py-6">
         {/* User presets */}
