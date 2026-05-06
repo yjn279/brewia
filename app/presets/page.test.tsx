@@ -47,17 +47,15 @@ vi.mock('@/components/delete-resource-button', () => ({
 import PresetsPage from './page'
 
 describe('PresetsPage', () => {
-  it('renders without throwing and shows built-in presets section', async () => {
+  it('renders without throwing and shows Your Presets section (no Built-in)', async () => {
     getBrewPresetsMock.mockResolvedValue([])
 
     const page = await PresetsPage()
     expect(() => render(page)).not.toThrow()
 
-    expect(screen.getByText('Built-in')).toBeDefined()
-    expect(screen.getByText('Hario V60 4:6')).toBeDefined()
-    expect(screen.getByText('Aeropress Standard')).toBeDefined()
-    expect(screen.getByText('French Press')).toBeDefined()
-    expect(screen.getByText('Kalita Wave 3 Pours')).toBeDefined()
+    expect(screen.getByText('Your Presets')).toBeDefined()
+    expect(screen.queryByText('Built-in')).toBeNull()
+    expect(screen.queryByText('Hario V60 4:6')).toBeNull()
   })
 
   it('shows "Your Presets" section heading', async () => {
@@ -81,6 +79,7 @@ describe('PresetsPage', () => {
   it('shows user preset with edit and delete controls when presets exist', async () => {
     const userPreset = {
       id: 'preset-1',
+      userId: 'user-1',
       name: 'My Custom Preset',
       description: 'A great recipe',
       defaultBeanWeight: 20,

@@ -1071,26 +1071,49 @@ describe('NewBrewForm', () => {
     })
   })
 
-  // P1: Selecting a preset overwrites stepInputs with the preset's steps
-  it('P1: given the create mode form, when the user clicks "Insert preset" and selects the first preset, then step inputs are populated with that preset\'s step values', async () => {
+  // P1: Selecting a user preset overwrites stepInputs with the preset's steps (built-in presets removed in PR #97)
+  it('P1: given a user preset is loaded, when the user clicks "Insert preset" and selects it, then step inputs are populated with that preset\'s step values', async () => {
+    const userPreset = {
+      id: 'user-preset-p1',
+      name: 'My V60',
+      description: 'My recipe',
+      defaultBeanWeight: 30,
+      defaultWaterTemp: 93,
+      steps: [
+        { time: 45, water: 50 },
+        { time: 90, water: 100 },
+        { time: 135, water: 145 },
+        { time: 180, water: 185 },
+        { time: 210, water: 220 },
+      ],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([userPreset]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
     render(<NewBrewForm beans={beans} flavors={flavors} />)
 
-    // Open the dropdown
-    const trigger = screen.getByRole('button', { name: 'Insert preset' })
-    fireEvent.click(trigger)
+    // Wait for user presets to load, then open dropdown and select
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /My V60/i })
+      fireEvent.click(presetItem)
+    })
 
-    // Find and click the first preset item (Hario V60 4:6)
-    const presetItem = await screen.findByRole('menuitem', { name: /Hario V60 4:6/i })
-    fireEvent.click(presetItem)
-
-    // The first preset (v60-4-6) has 5 steps
-    // steps: [45/50, 90/100, 135/145, 180/185, 210/220]
+    // The preset has 5 steps
     const step1Time = screen.getByLabelText('Step 1 time') as HTMLInputElement
     const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
     expect(step1Time.value).toBe('45')
     expect(step1Water.value).toBe('50')
 
-    // Step 5 exists (total 5 steps)
+    // Step 5 exists
     const step5Time = screen.getByLabelText('Step 5 time') as HTMLInputElement
     const step5Water = screen.getByLabelText('Step 5 water') as HTMLInputElement
     expect(step5Time.value).toBe('210')
@@ -1100,8 +1123,8 @@ describe('NewBrewForm', () => {
     expect(screen.queryByLabelText('Step 6 time')).toBeNull()
   })
 
-  // P2: User presets appear in the dropdown when API returns data, separated from built-in presets
-  it('P2: given a user preset is returned by the API, when the dropdown is opened, then both built-in and user presets appear with a separator between them', async () => {
+  // P2: Only user presets appear (no built-in presets, PR #97 removed them)
+  it('P2: given a user preset is returned by the API, when the dropdown is opened, then only user presets appear (no built-in)', async () => {
     const userPreset = {
       id: 'user-preset-1',
       name: 'My Custom Recipe',
@@ -1129,11 +1152,9 @@ describe('NewBrewForm', () => {
       expect(screen.getByRole('menuitem', { name: /My Custom Recipe/i })).toBeDefined()
     })
 
-    // Both built-in and user preset exist in the same menu
-    expect(screen.getByRole('menuitem', { name: /Hario V60 4:6/i })).toBeDefined()
+    // User preset appears; no built-in presets
     expect(screen.getByRole('menuitem', { name: /My Custom Recipe/i })).toBeDefined()
-    // Separator exists (rendered as <hr>)
-    expect(document.querySelector('hr')).not.toBeNull()
+    expect(screen.queryByRole('menuitem', { name: /Hario V60 4:6/i })).toBeNull()
   })
 
   // P3: Selecting a user preset applies its step values

@@ -23,7 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -33,7 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { BREW_PRESETS } from '@/lib/brew-presets'
 import type { BrewPresetRecord } from '@/app/brew-presets/repository'
 import { toast } from '@/components/ui/use-toast'
 import {
@@ -446,18 +444,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              {BREW_PRESETS.map((preset) => (
-                <DropdownMenuItem
-                  key={preset.id}
-                  onSelect={() => applyPreset(preset)}
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium">{preset.name}</span>
-                    <span className="text-xs text-muted-foreground">{preset.description}</span>
-                  </div>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
               {userPresets.length === 0 ? (
                 <DropdownMenuItem disabled>
                   No saved presets yet
