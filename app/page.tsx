@@ -1,5 +1,6 @@
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
 import { StatsCard } from '@/components/stats-card'
 import { BeanCard } from '@/components/bean-card'
 import { Greeting } from '@/components/greeting'
@@ -20,9 +21,11 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
+  const user = await requireUser()
+
   const [beans, brews] = await Promise.all([
-    beansService.getBeans(),
-    brewsService.getBrews(),
+    beansService.getBeans(user.id),
+    brewsService.getBrews(user.id),
   ])
 
   // Calculate stats

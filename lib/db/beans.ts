@@ -8,6 +8,8 @@ import { beansTable } from '@/lib/db/schema'
 function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {
   return {
     ...row,
+    userId: row.userId ?? null,
+    priceJpy: row.priceJpy ?? null,
     country: row.country as Bean['country'],
     roast: row.roast as Bean['roast'],
   }
@@ -41,7 +43,9 @@ interface CreateBeanInput {
   farm: string | null
   process: string | null
   variety: string | null
+  priceJpy: number | null
   notes: string | null
+  userId?: string | null
 }
 
 export async function createBean(input: CreateBeanInput): Promise<Bean> {

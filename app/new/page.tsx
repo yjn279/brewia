@@ -5,6 +5,7 @@ import { PageHeader, HeaderAction } from '@/components/page-header'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,12 +19,13 @@ interface NewPageProps {
 }
 
 export default async function NewPage({ searchParams }: NewPageProps) {
+  const user = await requireUser()
   const params = await searchParams
   const [beans, flavors, initialBean, initialBrew] = await Promise.all([
-    beansService.getBeans(),
+    beansService.getBeans(user.id),
     flavorsService.getFlavors(),
-    params.copyBean ? beansService.getBeanById(params.copyBean) : Promise.resolve(undefined),
-    params.copyBrew ? brewsService.getBrewById(params.copyBrew) : Promise.resolve(undefined),
+    params.copyBean ? beansService.getBeanById(user.id, params.copyBean) : Promise.resolve(undefined),
+    params.copyBrew ? brewsService.getBrewById(user.id, params.copyBrew) : Promise.resolve(undefined),
   ])
 
   return (

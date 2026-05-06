@@ -1,9 +1,58 @@
 import { sql } from 'drizzle-orm'
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { v7 as uuidv7 } from 'uuid'
+
+// --- Auth.js テーブル群（@auth/drizzle-adapter sqlite 最新仕様準拠）---
+
+export const usersTable = sqliteTable('user', {
+  id: text('id').notNull().primaryKey(),
+  name: text('name'),
+  email: text('email').notNull().unique(),
+  emailVerified: integer('emailVerified', { mode: 'timestamp_ms' }),
+  image: text('image'),
+})
+
+export const accountsTable = sqliteTable(
+  'account',
+  {
+    userId: text('userId')
+      .notNull()
+      .references(() => usersTable.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    provider: text('provider').notNull(),
+    providerAccountId: text('providerAccountId').notNull(),
+    refresh_token: text('refresh_token'),
+    access_token: text('access_token'),
+    expires_at: integer('expires_at'),
+    token_type: text('token_type'),
+    scope: text('scope'),
+    id_token: text('id_token'),
+    session_state: text('session_state'),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.provider, t.providerAccountId] }) }),
+)
+
+export const sessionsTable = sqliteTable('session', {
+  sessionToken: text('sessionToken').notNull().primaryKey(),
+  userId: text('userId')
+    .notNull()
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
+  expires: integer('expires', { mode: 'timestamp_ms' }).notNull(),
+})
+
+export const verificationTokensTable = sqliteTable(
+  'verificationToken',
+  {
+    identifier: text('identifier').notNull(),
+    token: text('token').notNull(),
+    expires: integer('expires', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.identifier, t.token] }) }),
+)
 
 export const beansTable = sqliteTable('bean', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  userId: text('user_id').references(() => usersTable.id),
   name: text('name').notNull(),
   country: text('country').notNull(),
   region: text('region'),
@@ -20,6 +69,7 @@ export const beansTable = sqliteTable('bean', {
 
 export const brewsTable = sqliteTable('brew', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
+  userId: text('user_id').references(() => usersTable.id),
   beanId: text('bean_id').notNull().references(() => beansTable.id),
   beanWeight: real('bean_weight').notNull(),
   beanGrind: real('bean_grind'),

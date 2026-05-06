@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteBars } from '@/components/taste-bars'
 import { PourChart } from '@/components/pour-chart'
@@ -20,8 +21,9 @@ interface BrewDetailPageProps {
 }
 
 export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
+  const user = await requireUser()
   const { id } = await params
-  const brew = await brewsService.getBrewById(id)
+  const brew = await brewsService.getBrewById(user.id, id)
 
   if (!brew) {
     notFound()

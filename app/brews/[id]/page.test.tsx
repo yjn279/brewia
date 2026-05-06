@@ -3,12 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
 
-const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock } = vi.hoisted(() => ({
+const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock, requireUserMock } = vi.hoisted(() => ({
   getBrewByIdMock: vi.fn(),
   notFoundMock: vi.fn(),
   pourChartSpy: vi.fn(),
   pushMock: vi.fn(),
   refreshMock: vi.fn(),
+  requireUserMock: vi.fn().mockResolvedValue({ id: 'user-1', email: 'a@example.com', name: null }),
+}))
+
+vi.mock('@/lib/auth/require-user', () => ({
+  requireUser: requireUserMock,
 }))
 
 vi.mock('@/app/brews/service', () => ({
@@ -65,9 +70,12 @@ const brew: BrewWithBean = {
     region: 'Nyeri',
     roast: 'Light',
     roaster: 'Glitch',
+    userId: null,
+    priceJpy: null,
     updated: '2026-04-18T00:00:00.000Z',
     variety: 'SL28',
   },
+  userId: null,
   beanGrind: 24,
   beanId: 'bean-1',
   beanWeight: 7,
