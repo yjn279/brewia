@@ -8,6 +8,34 @@
       "when": 1774771142137,
       "tag": "0000_heavy_gladiator",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1746585600000,
+      "tag": "0001_add_price_jpy",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1746585700000,
+      "tag": "0002_auth_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1746585800000,
+      "tag": "0003_add_user_id_to_bean_brew",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1746585900000,
+      "tag": "0004_add_brew_preset",
+      "breakpoints": true
     }
   ]
 }
