@@ -40,4 +40,6 @@ export default auth((req) => {
   return handleMiddlewareRequest(req, isLoggedIn)
 })
 
-export const config = middlewareConfig
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|icon|manifest|sw\\.js|favicon).*)'],
+}
