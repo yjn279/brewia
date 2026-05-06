@@ -95,6 +95,11 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               <DataField label="Farm / Station" valueClassName="font-normal">{bean.farm || '—'}</DataField>
               <DataField label="Variety" valueClassName="font-normal">{bean.variety || '—'}</DataField>
               <DataField label="Process" valueClassName="font-normal">{bean.process || '—'}</DataField>
+              {bean.priceJpy != null && (
+                <DataField label="Price" valueClassName="font-normal">
+                  {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(bean.priceJpy)}
+                </DataField>
+              )}
             </div>
 
             {/* Roast row — full width below the grid */}

@@ -28,6 +28,7 @@ const baseBean: Bean = {
   process: 'Natural',
   roast: 'Light',
   farm: null,
+  priceJpy: null,
   notes: null,
   created: '2026-04-01T00:00:00.000Z',
   updated: '2026-04-01T00:00:00.000Z',

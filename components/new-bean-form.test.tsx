@@ -331,7 +331,7 @@ describe('NewBeanForm', () => {
     const bean = {
       id: 'b1', name: 'Test', country: 'Ethiopia' as const, region: null, farm: null,
       process: null, variety: null, roast: 'Medium' as const, roaster: 'R',
-      notes: null, created: '', updated: '',
+      priceJpy: null, notes: null, created: '', updated: '',
     }
     render(<NewBeanForm mode="edit" initialBean={bean} />)
     expect(screen.getByTestId('mock-photo-picker')).toBeDefined()
@@ -474,6 +474,7 @@ describe('NewBeanForm', () => {
       variety: 'SL28',
       process: 'Washed',
       roast: 'Light' as const,
+      priceJpy: null,
       notes: null,
       created: '2026-04-18T00:00:00.000Z',
       updated: '2026-04-18T00:00:00.000Z',
