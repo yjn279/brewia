@@ -2,6 +2,17 @@
 
 import type { ReactElement } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Flag, Play, RotateCcw, Square } from 'lucide-react'
 import type { BrewTimerStatus } from '@/hooks/use-brew-timer'
 
@@ -68,10 +79,26 @@ export function BrewTimer({
           </>
         )}
         {status === 'stopped' && (
-          <Button type="button" variant="outline" className="flex-1" onClick={onReset}>
-            <RotateCcw aria-hidden className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="outline" className="flex-1">
+                <RotateCcw aria-hidden className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>タイマーをリセット</AlertDialogTitle>
+                <AlertDialogDescription>
+                  リセットすると抽出ステップがクリアされます。続行しますか？
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                <AlertDialogAction onClick={onReset}>リセット</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>

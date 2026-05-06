@@ -157,8 +157,8 @@ describe('BrewTimer', () => {
     expect(onStop).toHaveBeenCalledTimes(1)
   })
 
-  // Click wiring — stopped
-  it('click wiring: clicking Reset in stopped state calls onReset', () => {
+  // Click wiring — stopped (新仕様: Reset 押下では onReset を呼ばず確認ダイアログを開く)
+  it('click wiring: clicking Reset in stopped state does NOT call onReset and shows confirm dialog', () => {
     const onReset = vi.fn()
     const noop = vi.fn()
     render(
@@ -173,7 +173,48 @@ describe('BrewTimer', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(onReset).not.toHaveBeenCalled()
+    expect(screen.getByText('リセットすると抽出ステップがクリアされます。続行しますか？')).toBeDefined()
+  })
+
+  // Confirm dialog — Confirm calls onReset exactly once
+  it('confirm dialog: clicking Confirm (リセット) calls onReset exactly once', () => {
+    const onReset = vi.fn()
+    const noop = vi.fn()
+    render(
+      <BrewTimer
+        status="stopped"
+        elapsed={10000}
+        onStart={noop}
+        onLap={noop}
+        onStop={noop}
+        onReset={onReset}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    fireEvent.click(screen.getByRole('button', { name: 'リセット' }))
     expect(onReset).toHaveBeenCalledTimes(1)
+  })
+
+  // Confirm dialog — Cancel does not call onReset
+  it('confirm dialog: clicking Cancel (キャンセル) does not call onReset', () => {
+    const onReset = vi.fn()
+    const noop = vi.fn()
+    render(
+      <BrewTimer
+        status="stopped"
+        elapsed={10000}
+        onStart={noop}
+        onLap={noop}
+        onStop={noop}
+        onReset={onReset}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    fireEvent.click(screen.getByRole('button', { name: 'キャンセル' }))
+    expect(onReset).not.toHaveBeenCalled()
   })
 
   // T_buttons_full_width: each button gets flex-1 so buttons fill the available row width
