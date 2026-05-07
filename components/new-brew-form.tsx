@@ -75,8 +75,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   // Brew parameters
   const [beanWeight, setBeanWeight] = useState(initialBrew ? String(initialBrew.beanWeight) : '')
   const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
-  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null ? String(initialBrew.waterTemp) : '')
-  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null ? String(initialBrew.beanGrind) : '')
+  // 0 は未入力扱いとして空欄表示にする
+  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null && initialBrew.waterTemp > 0 ? String(initialBrew.waterTemp) : '')
+  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null && initialBrew.beanGrind > 0 ? String(initialBrew.beanGrind) : '')
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
     initialBrew && initialBrew.steps.length > 0
       ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
@@ -135,9 +136,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         body: JSON.stringify({
           beanId: selectedBean,
           beanWeight: parseFloat(beanWeight),
-          beanGrind: grindSize ? parseFloat(grindSize) : '',
+          beanGrind: grindSize ? parseFloat(grindSize) : 0,
           waterWeight: parseFloat(waterWeight),
-          waterTemp: waterTemp ? parseFloat(waterTemp) : '',
+          waterTemp: waterTemp ? parseFloat(waterTemp) : 0,
           steps,
           aroma: recordLater ? 0 : aroma[0],
           acidity: recordLater ? 0 : acidity[0],
@@ -226,17 +227,18 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       })
   }, [])
 
-  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; defaultBeanWeight?: number | null; defaultWaterTemp?: number | null }) => {
+  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; defaultBeanWeight?: number; defaultWaterTemp?: number }) => {
     setStepInputs(
       preset.steps.map((s) => ({
         time: String(s.time),
         water: String(s.water),
       })),
     )
-    if (preset.defaultBeanWeight != null) {
+    // 0 は未入力扱いなので空欄にする
+    if (preset.defaultBeanWeight != null && preset.defaultBeanWeight > 0) {
       setBeanWeight(String(preset.defaultBeanWeight))
     }
-    if (preset.defaultWaterTemp != null) {
+    if (preset.defaultWaterTemp != null && preset.defaultWaterTemp > 0) {
       setWaterTemp(String(preset.defaultWaterTemp))
     }
   }
@@ -255,8 +257,8 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         body: JSON.stringify({
           name: presetName.trim(),
           description: presetDescription.trim(),
-          defaultBeanWeight: beanWeight ? parseFloat(beanWeight) : '',
-          defaultWaterTemp: waterTemp ? parseFloat(waterTemp) : '',
+          defaultBeanWeight: beanWeight ? parseFloat(beanWeight) : 0,
+          defaultWaterTemp: waterTemp ? parseFloat(waterTemp) : 0,
           steps,
         }),
       })

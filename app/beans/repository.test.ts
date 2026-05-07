@@ -106,7 +106,7 @@ const validBeanInput = {
   farm: '',
   process: 'Washed',
   variety: 'Heirloom',
-  priceJpy: null,
+  priceJpy: 0,
   notes: '',
 }
 
@@ -119,7 +119,7 @@ const updatedBeanInput = {
   farm: 'Kieni',
   process: 'Washed',
   variety: 'SL28',
-  priceJpy: null,
+  priceJpy: 0,
   notes: 'Updated notes',
 }
 

@@ -42,8 +42,9 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   const [name, setName] = useState(initialBean?.name ?? '')
   const [roaster, setRoaster] = useState(initialBean?.roaster ?? '')
   // priceRaw は整数文字列（送信用）、priceDisplay はフォーマット済み文字列（表示用）
+  // 0 は未入力扱いとして空欄表示にする
   const [priceRaw, setPriceRaw] = useState<string>(
-    initialBean?.priceJpy != null ? String(initialBean.priceJpy) : '',
+    initialBean?.priceJpy != null && initialBean.priceJpy > 0 ? String(initialBean.priceJpy) : '',
   )
 
   function formatPriceDisplay(raw: string): string {
@@ -54,7 +55,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   }
 
   const [priceDisplay, setPriceDisplay] = useState<string>(
-    initialBean?.priceJpy != null
+    initialBean?.priceJpy != null && initialBean.priceJpy > 0
       ? formatPriceDisplay(String(initialBean.priceJpy))
       : '',
   )
@@ -96,7 +97,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           variety,
           process,
           roast: ROAST_LEVELS[roastIndex[0]],
-          priceJpy: priceRaw === '' ? null : Number(priceRaw),
+          priceJpy: priceRaw === '' ? 0 : Number(priceRaw),
           notes,
         }),
       })

@@ -77,8 +77,8 @@ export default async function PresetsPage() {
                       )}
                       <p className="mt-1 text-xs text-muted-foreground">
                         {preset.steps.length} steps
-                        {preset.defaultBeanWeight != null && ` · ${preset.defaultBeanWeight}g bean`}
-                        {preset.defaultWaterTemp != null && ` · ${preset.defaultWaterTemp}°C`}
+                        {preset.defaultBeanWeight > 0 && ` · ${preset.defaultBeanWeight}g bean`}
+                        {preset.defaultWaterTemp > 0 && ` · ${preset.defaultWaterTemp}°C`}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">

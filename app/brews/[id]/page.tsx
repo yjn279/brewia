@@ -104,12 +104,12 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             />
             <MetricTile
               icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
-              value={brew.waterTemp == null ? '-' : `${brew.waterTemp}°C`}
+              value={brew.waterTemp === 0 ? '-' : `${brew.waterTemp}°C`}
               label="Temperature"
             />
             <MetricTile
               icon={<Cog className="h-4 w-4 text-muted-foreground" />}
-              value={brew.beanGrind == null ? '-' : `${brew.beanGrind} clicks`}
+              value={brew.beanGrind === 0 ? '-' : `${brew.beanGrind} clicks`}
               label="Grind"
             />
           </div>

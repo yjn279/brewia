@@ -11,9 +11,9 @@ import { FlavorsRepository } from '@/app/flavors/repository'
 export interface BrewMutationInput {
   beanId: string
   beanWeight: number
-  beanGrind: number | null
+  beanGrind: number
   waterWeight: number
-  waterTemp: number | null
+  waterTemp: number
   steps: BrewStep[]
   aroma: number
   acidity: number
@@ -27,19 +27,19 @@ export interface BrewMutationInput {
 function mapBrewRow(row: typeof brewsTable.$inferSelect): Brew {
   return {
     id: row.id,
-    userId: row.userId ?? null,
+    userId: row.userId,
     beanId: row.beanId,
     beanWeight: row.beanWeight,
-    beanGrind: row.beanGrind ?? null,
+    beanGrind: row.beanGrind,
     waterWeight: row.waterWeight,
-    waterTemp: row.waterTemp ?? null,
+    waterTemp: row.waterTemp,
     steps: parseSteps(row.steps),
     aroma: row.aroma,
     acidity: row.acidity,
     sweetness: row.sweetness,
     body: row.body,
     overall: row.overall,
-    notes: row.notes ?? null,
+    notes: row.notes,
     created: row.created,
     updated: row.updated,
   }

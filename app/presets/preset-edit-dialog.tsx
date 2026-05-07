@@ -27,12 +27,13 @@ export function PresetEditDialog({ preset }: PresetEditDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [name, setName] = useState(preset.name)
-  const [description, setDescription] = useState(preset.description ?? '')
+  const [description, setDescription] = useState(preset.description)
+  // 0 は未入力扱いとして空欄表示にする
   const [defaultBeanWeight, setDefaultBeanWeight] = useState(
-    preset.defaultBeanWeight != null ? String(preset.defaultBeanWeight) : ''
+    preset.defaultBeanWeight > 0 ? String(preset.defaultBeanWeight) : ''
   )
   const [defaultWaterTemp, setDefaultWaterTemp] = useState(
-    preset.defaultWaterTemp != null ? String(preset.defaultWaterTemp) : ''
+    preset.defaultWaterTemp > 0 ? String(preset.defaultWaterTemp) : ''
   )
   const [stepsText, setStepsText] = useState(
     preset.steps.map((s) => `${s.time}s / ${s.water}g`).join('\n')
@@ -65,8 +66,8 @@ export function PresetEditDialog({ preset }: PresetEditDialogProps) {
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim(),
-          defaultBeanWeight: defaultBeanWeight ? parseFloat(defaultBeanWeight) : '',
-          defaultWaterTemp: defaultWaterTemp ? parseFloat(defaultWaterTemp) : '',
+          defaultBeanWeight: defaultBeanWeight ? parseFloat(defaultBeanWeight) : 0,
+          defaultWaterTemp: defaultWaterTemp ? parseFloat(defaultWaterTemp) : 0,
           steps,
         }),
       })

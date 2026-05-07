@@ -111,8 +111,8 @@ describe('BrewPresetsRepository', () => {
     const result = await repo.update('user-1', 'nonexistent', {
       name: 'X',
       description: '',
-      defaultBeanWeight: null,
-      defaultWaterTemp: null,
+      defaultBeanWeight: 0,
+      defaultWaterTemp: 0,
       steps: [{ time: 10, water: 20 }],
     })
 

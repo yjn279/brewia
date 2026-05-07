@@ -7,11 +7,11 @@ import type { BrewStep } from '@/lib/types'
 
 export interface BrewPresetRecord {
   id: string
-  userId: string | null
+  userId: string
   name: string
-  description: string | null
-  defaultBeanWeight: number | null
-  defaultWaterTemp: number | null
+  description: string
+  defaultBeanWeight: number
+  defaultWaterTemp: number
   steps: BrewStep[]
   created: string
   updated: string
@@ -20,19 +20,19 @@ export interface BrewPresetRecord {
 export interface BrewPresetMutationInput {
   name: string
   description: string
-  defaultBeanWeight: number | null
-  defaultWaterTemp: number | null
+  defaultBeanWeight: number
+  defaultWaterTemp: number
   steps: BrewStep[]
 }
 
 function mapRow(row: typeof brewPresetsTable.$inferSelect): BrewPresetRecord {
   return {
     id: row.id,
-    userId: row.userId ?? null,
+    userId: row.userId,
     name: row.name,
-    description: row.description ?? null,
-    defaultBeanWeight: row.defaultBeanWeight ?? null,
-    defaultWaterTemp: row.defaultWaterTemp ?? null,
+    description: row.description,
+    defaultBeanWeight: row.defaultBeanWeight,
+    defaultWaterTemp: row.defaultWaterTemp,
     steps: JSON.parse(row.steps) as BrewStep[],
     created: row.created,
     updated: row.updated,
@@ -66,7 +66,7 @@ export class BrewPresetsRepository {
       .values({
         userId,
         name: input.name,
-        description: input.description || null,
+        description: input.description ?? '',
         defaultBeanWeight: input.defaultBeanWeight,
         defaultWaterTemp: input.defaultWaterTemp,
         steps: JSON.stringify(input.steps),
@@ -81,7 +81,7 @@ export class BrewPresetsRepository {
       .update(brewPresetsTable)
       .set({
         name: input.name,
-        description: input.description || null,
+        description: input.description ?? '',
         defaultBeanWeight: input.defaultBeanWeight,
         defaultWaterTemp: input.defaultWaterTemp,
         steps: JSON.stringify(input.steps),

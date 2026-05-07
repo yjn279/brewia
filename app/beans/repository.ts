@@ -14,24 +14,24 @@ export interface BeanMutationInput {
   farm: string
   process: string
   variety: string
-  priceJpy: number | null
+  priceJpy: number
   notes: string
 }
 
 function mapBeanRow(row: typeof beansTable.$inferSelect): Bean {
   return {
     id: row.id,
-    userId: row.userId ?? null,
+    userId: row.userId,
     name: row.name,
     country: row.country as Bean['country'],
-    region: row.region ?? null,
-    farm: row.farm ?? null,
-    process: row.process ?? null,
-    variety: row.variety ?? null,
+    region: row.region,
+    farm: row.farm,
+    process: row.process,
+    variety: row.variety,
     roast: row.roast as Bean['roast'],
-    roaster: row.roaster ?? null,
-    priceJpy: row.priceJpy ?? null,
-    notes: row.notes ?? null,
+    roaster: row.roaster,
+    priceJpy: row.priceJpy,
+    notes: row.notes,
     created: row.created,
     updated: row.updated,
   }

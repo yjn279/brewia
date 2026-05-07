@@ -329,9 +329,9 @@ describe('NewBeanForm', () => {
 
   it('S5-T5: given NewBeanForm with mode="edit" and an initialBean, when rendered, then the RoastPhotoPicker mock is present', () => {
     const bean = {
-      id: 'b1', name: 'Test', country: 'Ethiopia' as const, region: null, farm: null,
-      process: null, variety: null, roast: 'Medium' as const, roaster: 'R',
-      userId: null, priceJpy: null, notes: null, created: '', updated: '',
+      id: 'b1', name: 'Test', country: 'Ethiopia' as const, region: '', farm: '',
+      process: '', variety: '', roast: 'Medium' as const, roaster: 'R',
+      userId: 'user-1', priceJpy: 0, notes: '', created: '', updated: '',
     }
     render(<NewBeanForm mode="edit" initialBean={bean} />)
     expect(screen.getByTestId('mock-photo-picker')).toBeDefined()
@@ -474,9 +474,9 @@ describe('NewBeanForm', () => {
       variety: 'SL28',
       process: 'Washed',
       roast: 'Light' as const,
-      userId: null,
-      priceJpy: null,
-      notes: null,
+      userId: 'user-1',
+      priceJpy: 0,
+      notes: '',
       created: '2026-04-18T00:00:00.000Z',
       updated: '2026-04-18T00:00:00.000Z',
     }
@@ -623,7 +623,7 @@ describe('NewBeanForm', () => {
     expect(body.priceJpy).toBe(12000)
   })
 
-  it('D-T4: price 入力欄が空のままフォームを送信すると priceJpy が null で送られる', async () => {
+  it('D-T4: price 入力欄が空のままフォームを送信すると priceJpy が 0 で送られる（0 = 未入力扱い）', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       json: async () => ({ id: 'bean-1' }),
       ok: true,
@@ -643,7 +643,7 @@ describe('NewBeanForm', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
 
     const [, requestInit] = fetchMock.mock.calls[0]
-    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: number | null }
-    expect(body.priceJpy).toBeNull()
+    const body = JSON.parse((requestInit as RequestInit).body as string) as { priceJpy: number }
+    expect(body.priceJpy).toBe(0)
   })
 })
