@@ -694,4 +694,85 @@ describe('NewBrewForm', () => {
       expect(slider).toBeDefined()
     }
   })
+
+  // T-timer-render: role="timer" が 1 つ存在し、初期表示は 00:00.00
+  it('T-timer-render: BrewTimer is rendered with role="timer" showing 00:00.00 initially', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    const timers = screen.getAllByRole('timer')
+    expect(timers).toHaveLength(1)
+    expect(timers[0].textContent).toBe('00:00.00')
+  })
+
+  // T-timer-lap: Start → Lap で stepInputs の行数が増える
+  it('T-timer-lap: clicking Start then Lap adds a new step row', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Initially 1 step row
+    const initialRows = screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })
+    expect(initialRows).toHaveLength(1)
+
+    // Start the timer
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+
+    // Lap
+    fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+
+    // Should now have 2 step rows
+    const rowsAfterLap = screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })
+    expect(rowsAfterLap).toHaveLength(2)
+  })
+
+  // T-timer-reset-confirm: Stop → Reset → 「リセット」 → step 行が 1 行に戻り、タイマーが 00:00.00
+  it('T-timer-reset-confirm: after Stop → Reset dialog Confirm, stepInputs reset to 1 row and timer shows 00:00.00', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Start, Lap (adds a row), Stop
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+
+    // Should have 2 step rows now
+    expect(screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })).toHaveLength(2)
+
+    // Open reset dialog
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    // Confirm reset
+    fireEvent.click(screen.getByRole('button', { name: 'リセット' }))
+
+    // stepInputs should be reset to 1 row
+    expect(screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })).toHaveLength(1)
+
+    // Timer display should be 00:00.00
+    expect(screen.getByRole('timer').textContent).toBe('00:00.00')
+  })
+
+  // T-timer-reset-cancel: Stop → Reset → 「キャンセル」 → step 行は変化せず
+  it('T-timer-reset-cancel: after Stop → Reset dialog Cancel, stepInputs and timer are unchanged', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Start, Lap (adds a row), Stop
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+
+    // Should have 2 step rows now
+    expect(screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })).toHaveLength(2)
+
+    // Capture elapsed text (should be non-zero since timer ran)
+    const timerBeforeCancel = screen.getByRole('timer').textContent
+
+    // Open reset dialog
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    // Cancel
+    fireEvent.click(screen.getByRole('button', { name: 'キャンセル' }))
+
+    // stepInputs should still be 2 rows
+    expect(screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })).toHaveLength(2)
+
+    // Timer display should not have changed (still showing frozen time)
+    expect(screen.getByRole('timer').textContent).toBe(timerBeforeCancel)
+  })
 })

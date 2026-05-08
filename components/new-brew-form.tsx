@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useBrewTimer } from '@/hooks/use-brew-timer'
+import { BrewTimer } from '@/components/brew-timer'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,6 +39,7 @@ interface NewBrewFormProps {
 
 export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
+  const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, stop: stopTimer, reset: resetTimer } = useBrewTimer()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBean, setSelectedBean] = useState(initialBrew?.beanId ?? initialBeanId)
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>(initialBrew?.flavors.map((flavor) => flavor.id) ?? [])
@@ -173,6 +176,18 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         ),
     [stepInputs, totalTime, totalWater]
   )
+
+  const handleLap = () => {
+    // Round to nearest 5 seconds
+    const seconds = Math.round(timerElapsed / 5000) * 5
+    setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
+    lapTimer()
+  }
+
+  const handleReset = () => {
+    resetTimer()
+    setStepInputs([{ time: '', water: '' }])
+  }
 
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
@@ -312,6 +327,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
         <div className="mb-4">
           <PourChart steps={steps} totalWater={totalWater} variant="chart-only" />
+        </div>
+
+        <div className="mb-4">
+          <BrewTimer
+            status={timerStatus}
+            elapsed={timerElapsed}
+            onStart={startTimer}
+            onLap={handleLap}
+            onStop={stopTimer}
+            onReset={handleReset}
+          />
         </div>
 
         <div className="space-y-2">
