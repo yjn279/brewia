@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NewBrewForm } from '@/components/new-brew-form'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 
@@ -693,5 +693,141 @@ describe('NewBrewForm', () => {
       const slider = screen.getByLabelText(label)
       expect(slider).toBeDefined()
     }
+  })
+
+  // Timer integration tests
+  describe('BrewTimer integration', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('T1: role="timer" element is present with initial display 00:00.00', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+      const timers = screen.getAllByRole('timer')
+      expect(timers).toHaveLength(1)
+      expect(timers[0].textContent).toBe('00:00.00')
+    })
+
+    it('T2: BrewTimer appears after PourChart and before Step 1 time input in DOM order', () => {
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+      const pourChart = screen.getByTestId('pour-chart')
+      const timer = screen.getByRole('timer')
+      const step1TimeInput = screen.getByLabelText('Step 1 time')
+
+      // Compare DOM positions using compareDocumentPosition
+      // DOCUMENT_POSITION_FOLLOWING = 4 means timer follows pourChart
+      expect(pourChart.compareDocumentPosition(timer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      // timer precedes step1TimeInput
+      expect(timer.compareDocumentPosition(step1TimeInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('T3: Start → Lap adds a row with correct time and empty water', () => {
+      vi.useFakeTimers()
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      // Initially 1 step row
+      expect(screen.getAllByLabelText(/Step \d+ time/).length).toBe(1)
+
+      // Start timer
+      fireEvent.click(screen.getByRole('button', { name: /start/i }))
+
+      // Advance 10 seconds (10000ms)
+      act(() => {
+        vi.advanceTimersByTime(10000)
+      })
+
+      // Lap
+      fireEvent.click(screen.getByRole('button', { name: /lap/i }))
+
+      // Now 2 rows
+      const timeInputs = screen.getAllByLabelText(/Step \d+ time/)
+      expect(timeInputs.length).toBe(2)
+      // 10000ms → Math.round(10000/5000)*5 = 10 seconds
+      expect((timeInputs[1] as HTMLInputElement).value).toBe('10')
+      const waterInputs = screen.getAllByLabelText(/Step \d+ water/)
+      expect((waterInputs[1] as HTMLInputElement).value).toBe('')
+    })
+
+    it('T4: Start → Lap → Lap does not crash and step rows go 1 → 3', () => {
+      vi.useFakeTimers()
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /start/i }))
+
+      act(() => { vi.advanceTimersByTime(5000) })
+      fireEvent.click(screen.getByRole('button', { name: /lap/i }))
+
+      act(() => { vi.advanceTimersByTime(5000) })
+      fireEvent.click(screen.getByRole('button', { name: /lap/i }))
+
+      expect(screen.getAllByLabelText(/Step \d+ time/).length).toBe(3)
+    })
+
+    it('T5: Start → Stop → Reset → Confirm resets timer and step rows to 1', () => {
+      vi.useFakeTimers()
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /start/i }))
+
+      act(() => { vi.advanceTimersByTime(5000) })
+      fireEvent.click(screen.getByRole('button', { name: /lap/i }))
+      expect(screen.getAllByLabelText(/Step \d+ time/).length).toBe(2)
+
+      fireEvent.click(screen.getByRole('button', { name: /stop/i }))
+      fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+      // Confirm
+      fireEvent.click(screen.getByText('リセット', { selector: 'button' }))
+
+      expect(screen.getAllByLabelText(/Step \d+ time/).length).toBe(1)
+      expect(screen.getByRole('timer').textContent).toBe('00:00.00')
+    })
+
+    it('T6: Start → Stop → Reset → Cancel preserves step rows and timer display', () => {
+      vi.useFakeTimers()
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /start/i }))
+      act(() => { vi.advanceTimersByTime(5000) })
+      fireEvent.click(screen.getByRole('button', { name: /lap/i }))
+      expect(screen.getAllByLabelText(/Step \d+ time/).length).toBe(2)
+
+      fireEvent.click(screen.getByRole('button', { name: /stop/i }))
+      const timerTextBeforeReset = screen.getByRole('timer').textContent
+
+      fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+      // Cancel
+      fireEvent.click(screen.getByText('キャンセル'))
+
+      expect(screen.getAllByLabelText(/Step \d+ time/).length).toBe(2)
+      expect(screen.getByRole('timer').textContent).toBe(timerTextBeforeReset)
+    })
+
+    it('T7: Reset confirm does not change other form fields', () => {
+      vi.useFakeTimers()
+      render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+      // Fill some fields
+      fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '15' } })
+      fireEvent.change(screen.getByLabelText('Water'), { target: { value: '225' } })
+      fireEvent.change(screen.getByLabelText('Temp'), { target: { value: '92' } })
+      fireEvent.change(screen.getByLabelText('Grind'), { target: { value: '24' } })
+      fireEvent.change(screen.getByPlaceholderText('How was this brew? Any observations?'), {
+        target: { value: 'Nice brew' },
+      })
+
+      // Perform reset
+      fireEvent.click(screen.getByRole('button', { name: /start/i }))
+      act(() => { vi.advanceTimersByTime(1000) })
+      fireEvent.click(screen.getByRole('button', { name: /stop/i }))
+      fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+      fireEvent.click(screen.getByText('リセット', { selector: 'button' }))
+
+      // Other fields unchanged
+      expect((screen.getByLabelText('Coffee') as HTMLInputElement).value).toBe('15')
+      expect((screen.getByLabelText('Water') as HTMLInputElement).value).toBe('225')
+      expect((screen.getByLabelText('Temp') as HTMLInputElement).value).toBe('92')
+      expect((screen.getByLabelText('Grind') as HTMLInputElement).value).toBe('24')
+      expect((screen.getByPlaceholderText('How was this brew? Any observations?') as HTMLTextAreaElement).value).toBe('Nice brew')
+    })
   })
 })

@@ -25,6 +25,8 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
 import { PourChart } from '@/components/pour-chart'
 import type { BrewStep } from '@/lib/types'
+import { useBrewTimer } from '@/hooks/use-brew-timer'
+import { BrewTimer } from '@/components/brew-timer'
 
 interface NewBrewFormProps {
   mode?: "create" | "edit"
@@ -38,6 +40,7 @@ interface NewBrewFormProps {
 export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { status: timerStatus, elapsed, start, lap, stop, reset: resetTimer } = useBrewTimer()
   const [selectedBean, setSelectedBean] = useState(initialBrew?.beanId ?? initialBeanId)
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>(initialBrew?.flavors.map((flavor) => flavor.id) ?? [])
   const [notes, setNotes] = useState(initialBrew?.notes ?? '')
@@ -199,6 +202,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     })
   }
 
+  const handleLap = () => {
+    const roundedSeconds = Math.round(elapsed / 5000) * 5
+    setStepInputs((prev) => [...prev, { time: String(roundedSeconds), water: '' }])
+    lap()
+  }
+
+  const handleReset = () => {
+    resetTimer()
+    setStepInputs([{ time: '', water: '' }])
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Bean Selection */}
@@ -312,6 +326,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
         <div className="mb-4">
           <PourChart steps={steps} totalWater={totalWater} variant="chart-only" />
+        </div>
+
+        <div className="mb-4">
+          <BrewTimer
+            status={timerStatus}
+            elapsed={elapsed}
+            onStart={start}
+            onLap={handleLap}
+            onStop={stop}
+            onReset={handleReset}
+          />
         </div>
 
         <div className="space-y-2">
