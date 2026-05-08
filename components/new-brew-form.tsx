@@ -17,7 +17,7 @@ import {
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { DEFAULT_RATINGS, STEP_TIME_INTERVAL, STEP_WATER_INTERVAL } from '@/lib/constants'
-import { BookmarkPlus, ChevronDown, Loader2, Plus, X } from 'lucide-react'
+import { ChevronDown, Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { Card } from '@/components/ui/card'
@@ -429,7 +429,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               aria-label="Save preset"
               onClick={() => setIsSaveDialogOpen(true)}
             >
-              <BookmarkPlus className="h-3 w-3" />
               Save
             </Button>
           <DropdownMenu>
