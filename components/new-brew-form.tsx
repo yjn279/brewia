@@ -63,8 +63,8 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const [beanWeight, setBeanWeight] = useState(initialBrew ? String(initialBrew.beanWeight) : '')
   const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
   // 0 は未入力扱いとして空欄表示にする
-  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null && initialBrew.waterTemp > 0 ? String(initialBrew.waterTemp) : '')
-  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null && initialBrew.beanGrind > 0 ? String(initialBrew.beanGrind) : '')
+  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp && initialBrew.waterTemp > 0 ? String(initialBrew.waterTemp) : '')
+  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind && initialBrew.beanGrind > 0 ? String(initialBrew.beanGrind) : '')
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
     initialBrew && initialBrew.steps.length > 0
       ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
