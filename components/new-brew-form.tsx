@@ -674,7 +674,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="preset-description">Description (optional)</Label>
+              <Label htmlFor="preset-description">Description</Label>
               <Textarea
                 id="preset-description"
                 placeholder="Describe this preset..."
