@@ -10,8 +10,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { UserMenu } from '@/components/user-menu'
 
 // DropdownMenu の Radix UI ポータルが jsdom で動作しないためモックする
-vi.mock('@/components/ui/dropdown-menu', () => {
-  const React = require('react')
+vi.mock('@/components/ui/dropdown-menu', async () => {
+  const React = await import('react')
 
   function DropdownMenu({ children }: { children: React.ReactNode }) {
     return <>{children}</>

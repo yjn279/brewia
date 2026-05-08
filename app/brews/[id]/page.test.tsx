@@ -196,7 +196,7 @@ describe('BrewDetailPage', () => {
   })
 
   // C4: waterTemp 0 → Temperature tile shows '-' (0 = 未入力扱い), "null" NOT shown
-  it('C4: given a brew with waterTemp === null, when the page renders, then the Temperature tile shows "-", and "null" is not shown', async () => {
+  it('C4: given a brew with waterTemp: 0 (未入力扱い), when the page renders, then the Temperature tile shows "-", and "null" is not shown', async () => {
     const brewNullTemp: BrewWithBean = { ...brew, waterTemp: 0 }
     getBrewByIdMock.mockResolvedValue(brewNullTemp)
 
@@ -212,7 +212,7 @@ describe('BrewDetailPage', () => {
   })
 
   // C5: beanGrind 0 → Grind tile shows '-' (0 = 未入力扱い), "null" not shown
-  it('C5: given a brew with beanGrind === null, when the page renders, then the Grind tile shows "-", and "null" is not shown', async () => {
+  it('C5: given a brew with beanGrind: 0 (未入力扱い), when the page renders, then the Grind tile shows "-", and "null" is not shown', async () => {
     const brewNullGrind: BrewWithBean = { ...brew, beanGrind: 0 }
     getBrewByIdMock.mockResolvedValue(brewNullGrind)
 

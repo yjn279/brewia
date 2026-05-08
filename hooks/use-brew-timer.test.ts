@@ -153,7 +153,7 @@ describe('useBrewTimer', () => {
 
   // stop() from idle does not throw and status stays idle
   it('stop no-op from idle: stop() from idle does not throw and status stays idle', () => {
-    let now = 0
+    const now = 0
     const getNow = () => now
 
     const { result } = renderHook(() => useBrewTimer({ getNow }))

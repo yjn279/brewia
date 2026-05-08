@@ -13,7 +13,6 @@ import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
 import { ArrowLeft, Pencil, CopyPlus, Coffee, Scale, Thermometer, Cog } from 'lucide-react'
-import { DataField } from '@/components/data-field'
 import { MetricTile } from '@/components/metric-tile'
 
 export const dynamic = 'force-dynamic'

@@ -9,8 +9,8 @@ import {
 import { ROAST_LEVELS } from '@/lib/types'
 
 describe('STEP_TIME_INTERVAL', () => {
-  it('is 5', () => {
-    expect(STEP_TIME_INTERVAL).toBe(5)
+  it('is 1', () => {
+    expect(STEP_TIME_INTERVAL).toBe(1)
   })
 })
 
