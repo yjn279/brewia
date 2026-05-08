@@ -1,3 +1,5 @@
+import type { RoastLevel } from '@/lib/types'
+
 /**
  * LLM が返す生の解析結果（サーバー側正規化前）
  * すべてのフィールドは optional — 読み取れなかった項目は undefined
@@ -11,6 +13,8 @@ export interface RawBeanExtraction {
   variety?: string
   process?: string
   notes?: string
+  /** パッケージに印刷された焙煎度の文字情報（例: "Medium", "中煎り"）。LLM が読み取れない場合は undefined */
+  roast?: string
 }
 
 /**
@@ -18,8 +22,9 @@ export interface RawBeanExtraction {
  * 型は Bean フォームの各 state と 1:1 対応する。
  * undefined = 空のまま（フォームへ流し込まない）
  *
- * 注: 焙煎度（roast / roastIndex）は PR #59 の色解析推定で別途扱う。
- * 本機能（LLM 画像抽出）の自動入力スコープには含めない。
+ * 注: 焙煎度（roast）はパッケージに印刷された文字情報として LLM が読み取る。
+ * PhotoImportButton 経路で LLM が文字情報として返し、ROAST_LEVELS に一致した場合のみセット。
+ * 豆の色からの推定は RoastPhotoPicker の責務として別途扱う。
  */
 export interface ExtractedBeanFields {
   name?: string
@@ -32,6 +37,8 @@ export interface ExtractedBeanFields {
   /** PROCESSES に一致した場合のみセット */
   process?: string
   notes?: string
+  /** ROAST_LEVELS に一致した場合のみセット */
+  roast?: RoastLevel
 }
 
 /**

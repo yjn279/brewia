@@ -38,15 +38,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LLMApiError, ExtractionParseError } from '@/lib/llm/errors'
 import { POST } from '@/app/api/beans/extract/route'
 
-// ExtractorService をモック化（route.ts が参照するため先にモック）
-const { extractFromImageMock } = vi.hoisted(() => ({
+// ExtractorService と getAuthenticatedUser をモック化（route.ts が参照するため先にモック）
+const { extractFromImageMock, getAuthenticatedUserMock } = vi.hoisted(() => ({
   extractFromImageMock: vi.fn(),
+  getAuthenticatedUserMock: vi.fn(),
 }))
 
 vi.mock('@/app/beans/extractor/service', () => ({
   extractorService: {
     extractFromImage: extractFromImageMock,
   },
+}))
+
+vi.mock('@/lib/auth/require-user', () => ({
+  getAuthenticatedUser: getAuthenticatedUserMock,
 }))
 
 vi.mock('server-only', () => ({}))
@@ -61,10 +66,33 @@ function makeFile(sizeBytes: number, mimeType = 'image/jpeg', name = 'test.jpg')
   return new File([new Uint8Array(sizeBytes).fill(0xff)], name, { type: mimeType })
 }
 
+// ---- Slice 4: 認証テスト ----
+describe('POST /api/beans/extract — 認証', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('EXT_AUTH1: 認証なしのとき 401 を返す（ファイルが添付されていても）', async () => {
+    getAuthenticatedUserMock.mockResolvedValue(null)
+
+    const file = new File(['fake-image-data'], 'test.jpg', { type: 'image/jpeg' })
+    const response = await POST(makeExtractRequest(file))
+
+    expect(response.status).toBe(401)
+    expect(extractFromImageMock).not.toHaveBeenCalled()
+  })
+})
+
 // ---- Slice 4: バリデーション・正常系テスト ----
 describe('POST /api/beans/extract — バリデーション (skip until route.ts is implemented)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // 認証済み状態をデフォルトに設定（認証テスト以外では認証済みを前提とする）
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: 'user-1',
+      email: 'a@example.com',
+      name: 'Alice',
+    })
   })
 
   // ---- バリデーション: ファイルなし ----
@@ -155,6 +183,11 @@ describe('POST /api/beans/extract — バリデーション (skip until route.ts
 describe('POST /api/beans/extract — LLM エラー系 (skip until errors.ts files are implemented)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: 'user-1',
+      email: 'a@example.com',
+      name: 'Alice',
+    })
   })
 
   it('given ExtractorService が LLMApiError をスローするとき then 503 と code: EXTRACTION_FAILED を返す', async () => {
@@ -187,6 +220,15 @@ describe('POST /api/beans/extract — LLM エラー系 (skip until errors.ts fil
 
 // ---- Route のエクスポート確認 ----
 describe('POST /api/beans/extract — Route エクスポート確認 (skip until route.ts is implemented)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: 'user-1',
+      email: 'a@example.com',
+      name: 'Alice',
+    })
+  })
+
   it('given route モジュールのとき then runtime が "nodejs" としてエクスポートされている', async () => {
     const routeModule = await import('@/app/api/beans/extract/route')
     expect(routeModule.runtime).toBe('nodejs')

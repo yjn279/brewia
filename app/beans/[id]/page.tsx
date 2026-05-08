@@ -1,11 +1,14 @@
 import { notFound } from 'next/navigation'
 import { beansService } from '@/app/beans/service'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { ROAST_COLORS } from '@/lib/roast-colors'
 import { BrewCard } from '@/components/brew-card'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
+import { UserMenu } from '@/components/user-menu'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { DataField } from '@/components/data-field'
@@ -18,14 +21,15 @@ interface BeanDetailPageProps {
 }
 
 export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
+  const user = await requireUser()
   const { id } = await params
-  const bean = await beansService.getBeanById(id)
+  const bean = await beansService.getBeanById(user.id, id)
 
   if (!bean) {
     notFound()
   }
 
-  const brews = await brewsService.getBrewsByBeanId(id)
+  const brews = await brewsService.getBrewsByBeanId(user.id, id)
   const flag = COUNTRY_FLAGS[bean.country]
 
   return (
@@ -69,6 +73,7 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
             >
               <Plus className="h-4 w-4" />
             </HeaderAction>
+            <UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />
           </>
         }
       />
@@ -95,6 +100,11 @@ export default async function BeanDetailPage({ params }: BeanDetailPageProps) {
               <DataField label="Farm / Station" valueClassName="font-normal">{bean.farm || '—'}</DataField>
               <DataField label="Variety" valueClassName="font-normal">{bean.variety || '—'}</DataField>
               <DataField label="Process" valueClassName="font-normal">{bean.process || '—'}</DataField>
+              {bean.priceJpy > 0 && (
+                <DataField label="Price" valueClassName="font-normal">
+                  {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(bean.priceJpy)}
+                </DataField>
+              )}
             </div>
 
             {/* Roast row — full width below the grid */}

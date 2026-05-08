@@ -3,7 +3,7 @@ import 'server-only'
 import { AnthropicLLMClient } from '@/lib/llm/anthropic-client'
 import { ALLOWED_MEDIA_TYPES, SERVER_MAX_IMAGE_SIZE_BYTES } from '@/lib/llm/constants'
 import type { ExtractedBeanFields, LLMClient, RawBeanExtraction } from '@/lib/llm/types'
-import { COUNTRIES, PROCESSES } from '@/lib/types'
+import { COUNTRIES, PROCESSES, ROAST_LEVELS } from '@/lib/types'
 import { InvalidImageError } from './errors'
 
 export class ExtractorService {
@@ -79,6 +79,15 @@ export class ExtractorService {
       const trimmedProcess = raw.process.trim()
       const matched = PROCESSES.find((p) => p === trimmedProcess)
       if (matched !== undefined) result.process = matched
+    }
+
+    // roast: ROAST_LEVELS と大文字小文字無視で一致するものに正規化
+    if (raw.roast !== undefined) {
+      const normalizedInput = raw.roast.trim().toLowerCase()
+      const matched = ROAST_LEVELS.find(
+        (r) => r.toLowerCase() === normalizedInput
+      )
+      if (matched !== undefined) result.roast = matched
     }
 
     return result

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,13 +17,28 @@ import {
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { DEFAULT_RATINGS, STEP_TIME_INTERVAL, STEP_WATER_INTERVAL } from '@/lib/constants'
-import { Loader2, Plus, X } from 'lucide-react'
+import { ChevronDown, Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { Card } from '@/components/ui/card'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
 import { PourChart } from '@/components/pour-chart'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import type { BrewPresetRecord } from '@/app/brew-presets/repository'
+import { toast } from '@/components/ui/use-toast'
 import type { BrewStep } from '@/lib/types'
 import { useBrewTimer } from '@/hooks/use-brew-timer'
 import { BrewTimer } from '@/components/brew-timer'
@@ -40,7 +55,6 @@ interface NewBrewFormProps {
 export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans, flavors }: NewBrewFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { status: timerStatus, elapsed, start, lap, stop, reset: resetTimer } = useBrewTimer()
   const [selectedBean, setSelectedBean] = useState(initialBrew?.beanId ?? initialBeanId)
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>(initialBrew?.flavors.map((flavor) => flavor.id) ?? [])
   const [notes, setNotes] = useState(initialBrew?.notes ?? '')
@@ -48,8 +62,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   // Brew parameters
   const [beanWeight, setBeanWeight] = useState(initialBrew ? String(initialBrew.beanWeight) : '')
   const [waterWeight, setWaterWeight] = useState(initialBrew ? String(initialBrew.waterWeight) : '')
-  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp != null ? String(initialBrew.waterTemp) : '')
-  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind != null ? String(initialBrew.beanGrind) : '')
+  // 0 は未入力扱いとして空欄表示にする
+  const [waterTemp, setWaterTemp] = useState(initialBrew?.waterTemp && initialBrew.waterTemp > 0 ? String(initialBrew.waterTemp) : '')
+  const [grindSize, setGrindSize] = useState(initialBrew?.beanGrind && initialBrew.beanGrind > 0 ? String(initialBrew.beanGrind) : '')
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
     initialBrew && initialBrew.steps.length > 0
       ? initialBrew.steps.map((step) => ({ time: String(step.time), water: String(step.water) }))
@@ -108,9 +123,9 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         body: JSON.stringify({
           beanId: selectedBean,
           beanWeight: parseFloat(beanWeight),
-          beanGrind: grindSize ? parseFloat(grindSize) : '',
+          beanGrind: grindSize ? parseFloat(grindSize) : 0,
           waterWeight: parseFloat(waterWeight),
-          waterTemp: waterTemp ? parseFloat(waterTemp) : '',
+          waterTemp: waterTemp ? parseFloat(waterTemp) : 0,
           steps,
           aroma: recordLater ? 0 : aroma[0],
           acidity: recordLater ? 0 : acidity[0],
@@ -177,6 +192,98 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     [stepInputs, totalTime, totalWater]
   )
 
+  const { status: timerStatus, elapsed: timerElapsed, start: startTimer, lap: lapTimer, stop: stopTimer, reset: resetTimer } = useBrewTimer()
+
+  // User presets state
+  const [userPresets, setUserPresets] = useState<BrewPresetRecord[]>([])
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
+  const [presetName, setPresetName] = useState('')
+  const [presetDescription, setPresetDescription] = useState('')
+  const [isSavingPreset, setIsSavingPreset] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/brew-presets')
+      .then((res) => res.json())
+      .then((data: unknown) => {
+        if (Array.isArray(data)) {
+          setUserPresets(data as BrewPresetRecord[])
+        }
+      })
+      .catch(() => {
+        // Ignore fetch errors silently
+      })
+  }, [])
+
+  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; defaultBeanWeight?: number; defaultWaterTemp?: number }) => {
+    setStepInputs(
+      preset.steps.map((s) => ({
+        time: String(s.time),
+        water: String(s.water),
+      })),
+    )
+    // 0 は未入力扱いなので空欄にする
+    if (preset.defaultBeanWeight != null && preset.defaultBeanWeight > 0) {
+      setBeanWeight(String(preset.defaultBeanWeight))
+    }
+    if (preset.defaultWaterTemp != null && preset.defaultWaterTemp > 0) {
+      setWaterTemp(String(preset.defaultWaterTemp))
+    }
+  }
+
+  const handleSaveAsPreset = async () => {
+    if (!presetName.trim()) return
+    if (steps.length === 0) {
+      toast({ title: 'Add at least one step before saving as preset', variant: 'destructive' })
+      return
+    }
+    setIsSavingPreset(true)
+    try {
+      const response = await fetch('/api/brew-presets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: presetName.trim(),
+          description: presetDescription.trim(),
+          defaultBeanWeight: beanWeight ? parseFloat(beanWeight) : 0,
+          defaultWaterTemp: waterTemp ? parseFloat(waterTemp) : 0,
+          steps,
+        }),
+      })
+      if (!response.ok) {
+        throw new Error('Failed to save preset')
+      }
+      toast({ title: 'Preset saved' })
+      setIsSaveDialogOpen(false)
+      setPresetName('')
+      setPresetDescription('')
+      // Refresh user presets list
+      fetch('/api/brew-presets')
+        .then((res) => res.json())
+        .then((data: unknown) => {
+          if (Array.isArray(data)) {
+            setUserPresets(data as BrewPresetRecord[])
+          }
+        })
+        .catch(() => {})
+    } catch {
+      toast({ title: 'Failed to save preset', variant: 'destructive' })
+    } finally {
+      setIsSavingPreset(false)
+    }
+  }
+
+  const handleLap = () => {
+    // Round to nearest 5 seconds
+    const seconds = Math.round(timerElapsed / 5000) * 5
+    setStepInputs((prev) => [...prev, { time: String(seconds), water: '' }])
+    lapTimer()
+  }
+
+  const handleReset = () => {
+    resetTimer()
+    setStepInputs([{ time: '', water: '' }])
+  }
+
   const handleStepInputChange = (index: number, key: keyof BrewStep, value: string) => {
     setStepInputs((prev) => {
       const next = [...prev]
@@ -200,17 +307,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       }
       return next
     })
-  }
-
-  const handleLap = () => {
-    const roundedSeconds = Math.round(elapsed / 5000) * 5
-    setStepInputs((prev) => [...prev, { time: String(roundedSeconds), water: '' }])
-    lap()
-  }
-
-  const handleReset = () => {
-    resetTimer()
-    setStepInputs([{ time: '', water: '' }])
   }
 
   return (
@@ -322,7 +418,44 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
       {/* Extraction Steps */}
       <Card>
-        <SectionHeading>Extraction Steps</SectionHeading>
+        <div className="mb-3 flex items-center justify-between">
+          <SectionHeading className="mb-0">Extraction Steps</SectionHeading>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                aria-label="Insert preset"
+              >
+                Insert preset
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              {userPresets.length === 0 ? (
+                <DropdownMenuItem disabled>
+                  No saved presets yet
+                </DropdownMenuItem>
+              ) : (
+                userPresets.map((preset) => (
+                  <DropdownMenuItem
+                    key={preset.id}
+                    onSelect={() => applyPreset(preset)}
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium">{preset.name}</span>
+                      {preset.description && (
+                        <span className="text-xs text-muted-foreground">{preset.description}</span>
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                ))
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div className="mb-4">
           <PourChart steps={steps} totalWater={totalWater} variant="chart-only" />
@@ -331,10 +464,10 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         <div className="mb-4">
           <BrewTimer
             status={timerStatus}
-            elapsed={elapsed}
-            onStart={start}
+            elapsed={timerElapsed}
+            onStart={startTimer}
             onLap={handleLap}
-            onStop={stop}
+            onStop={stopTimer}
             onReset={handleReset}
           />
         </div>
@@ -497,6 +630,21 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         />
       </Card>
 
+      {/* Save as preset */}
+      <div className="rounded-xl bg-card p-4 shadow-sm">
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Save as Preset
+        </h2>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => setIsSaveDialogOpen(true)}
+        >
+          Save current as preset
+        </Button>
+      </div>
+
       {/* Submit */}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (
@@ -508,6 +656,56 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           mode === 'edit' ? 'Save Brew' : 'Log Brew'
         )}
       </Button>
+
+      {/* Save preset dialog */}
+      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save as Preset</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="preset-name">Name</Label>
+              <Input
+                id="preset-name"
+                placeholder="e.g. My V60 Recipe"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="preset-description">Description (optional)</Label>
+              <Textarea
+                id="preset-description"
+                placeholder="Describe this preset..."
+                rows={2}
+                value={presetDescription}
+                onChange={(e) => setPresetDescription(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsSaveDialogOpen(false)}
+              disabled={isSavingPreset}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={!presetName.trim() || isSavingPreset}
+              onClick={handleSaveAsPreset}
+            >
+              {isSavingPreset ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Save Preset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   )
 }

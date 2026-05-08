@@ -3,12 +3,25 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BrewDetailPage from '@/app/brews/[id]/page'
 import type { BrewWithBean } from '@/lib/types'
 
-const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock } = vi.hoisted(() => ({
+const { getBrewByIdMock, notFoundMock, pourChartSpy, pushMock, refreshMock, requireUserMock } = vi.hoisted(() => ({
   getBrewByIdMock: vi.fn(),
   notFoundMock: vi.fn(),
   pourChartSpy: vi.fn(),
   pushMock: vi.fn(),
   refreshMock: vi.fn(),
+  requireUserMock: vi.fn().mockResolvedValue({ id: 'user-1', email: 'a@example.com', name: null }),
+}))
+
+vi.mock('@/lib/auth/require-user', () => ({
+  requireUser: requireUserMock,
+}))
+
+vi.mock('@/lib/auth/actions', () => ({
+  signOutAction: vi.fn(),
+}))
+
+vi.mock('@/components/user-menu', () => ({
+  UserMenu: () => <div data-testid="user-menu" />,
 }))
 
 vi.mock('@/app/brews/service', () => ({
@@ -60,14 +73,17 @@ const brew: BrewWithBean = {
     farm: 'Kieni',
     id: 'bean-1',
     name: 'Kenya AA',
-    notes: null,
+    notes: '',
     process: 'Washed',
     region: 'Nyeri',
     roast: 'Light',
     roaster: 'Glitch',
+    userId: 'user-1',
+    priceJpy: 0,
     updated: '2026-04-18T00:00:00.000Z',
     variety: 'SL28',
   },
+  userId: 'user-1',
   beanGrind: 24,
   beanId: 'bean-1',
   beanWeight: 7,
@@ -179,9 +195,9 @@ describe('BrewDetailPage', () => {
     expect(screen.getByTestId('taste-bars')).toBeDefined()
   })
 
-  // C4: waterTemp null → Temperature tile shows '-', "null" NOT shown
-  it('C4: given a brew with waterTemp === null, when the page renders, then the Temperature tile shows "-", and "null" is not shown', async () => {
-    const brewNullTemp: BrewWithBean = { ...brew, waterTemp: null }
+  // C4: waterTemp 0 → Temperature tile shows '-' (0 = 未入力扱い), "null" NOT shown
+  it('C4: given a brew with waterTemp: 0 (未入力扱い), when the page renders, then the Temperature tile shows "-", and "null" is not shown', async () => {
+    const brewNullTemp: BrewWithBean = { ...brew, waterTemp: 0 }
     getBrewByIdMock.mockResolvedValue(brewNullTemp)
 
     const page = await BrewDetailPage({
@@ -195,9 +211,9 @@ describe('BrewDetailPage', () => {
     expect(screen.queryByText(/null/)).toBeNull()
   })
 
-  // C5: beanGrind null → Grind tile shows '-', "null" not shown
-  it('C5: given a brew with beanGrind === null, when the page renders, then the Grind tile shows "-", and "null" is not shown', async () => {
-    const brewNullGrind: BrewWithBean = { ...brew, beanGrind: null }
+  // C5: beanGrind 0 → Grind tile shows '-' (0 = 未入力扱い), "null" not shown
+  it('C5: given a brew with beanGrind: 0 (未入力扱い), when the page renders, then the Grind tile shows "-", and "null" is not shown', async () => {
+    const brewNullGrind: BrewWithBean = { ...brew, beanGrind: 0 }
     getBrewByIdMock.mockResolvedValue(brewNullGrind)
 
     const page = await BrewDetailPage({
@@ -211,9 +227,9 @@ describe('BrewDetailPage', () => {
     expect(screen.queryByText(/null/)).toBeNull()
   })
 
-  // C6: both waterTemp and beanGrind null → both tiles show '-', "null" does not appear
+  // C6: both waterTemp and beanGrind 0 → both tiles show '-' (0 = 未入力扱い), "null" does not appear
   it('C6: given a brew with both waterTemp and beanGrind null, when the page renders, then both Temperature and Grind tiles show "-", and "null" does not appear', async () => {
-    const brewBothNull: BrewWithBean = { ...brew, waterTemp: null, beanGrind: null }
+    const brewBothNull: BrewWithBean = { ...brew, waterTemp: 0, beanGrind: 0 }
     getBrewByIdMock.mockResolvedValue(brewBothNull)
 
     const page = await BrewDetailPage({

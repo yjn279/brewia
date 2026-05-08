@@ -27,8 +27,10 @@ const baseBean: Bean = {
   variety: 'Heirloom',
   process: 'Natural',
   roast: 'Light',
-  farm: null,
-  notes: null,
+  farm: '',
+  userId: 'user-1',
+  priceJpy: 0,
+  notes: '',
   created: '2026-04-01T00:00:00.000Z',
   updated: '2026-04-01T00:00:00.000Z',
 }

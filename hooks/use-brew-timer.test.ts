@@ -11,22 +11,76 @@ describe('useBrewTimer', () => {
     vi.useRealTimers()
   })
 
-  it('initial state is idle with elapsed 0', () => {
-    const { result } = renderHook(() => useBrewTimer())
+  it('T2: initial state is idle/0; after start + 3000ms elapsed is running and >= 3000', () => {
+    let now = 0
+    const getNow = () => now
+
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.elapsed).toBe(0)
+
+    act(() => {
+      result.current.start()
+    })
+
+    expect(result.current.status).toBe('running')
+
+    act(() => {
+      now = 3000
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.status).toBe('running')
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(3000)
+  })
+
+  // T3a: stop() from running freezes elapsed and status='stopped'; further time does NOT advance elapsed; reset() restores idle/0
+  it('T3a: after start + 7000ms, stop() sets stopped/frozen; advance 3000ms more does not change elapsed; reset() sets idle/0', () => {
+    let now = 0
+    const getNow = () => now
+
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
+
+    act(() => {
+      result.current.start()
+    })
+
+    act(() => {
+      now = 7000
+      vi.advanceTimersByTime(7000)
+    })
+
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(7000)
+
+    act(() => {
+      result.current.stop()
+    })
+
+    expect(result.current.status).toBe('stopped')
+    const frozenElapsed = result.current.elapsed
+    expect(frozenElapsed).toBeGreaterThanOrEqual(7000)
+
+    // Advance more time — elapsed must stay frozen (interval cleared on stop)
+    act(() => {
+      now = 10000
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.elapsed).toBe(frozenElapsed)
+
+    // reset() from stopped
+    act(() => {
+      result.current.reset()
+    })
+
     expect(result.current.status).toBe('idle')
     expect(result.current.elapsed).toBe(0)
   })
 
-  it('start() transitions to running', () => {
-    const { result } = renderHook(() => useBrewTimer())
-    act(() => {
-      result.current.start()
-    })
-    expect(result.current.status).toBe('running')
-  })
-
-  it('elapsed increases after start() with getNow injection', () => {
-    let now = 1000
+  // T3b: reset() directly from running (without stopping first) still works
+  it('T3b: after start + 7000ms, reset() from running directly sets idle/0 and stops further updates', () => {
+    let now = 0
     const getNow = () => now
 
     const { result } = renderHook(() => useBrewTimer({ getNow }))
@@ -36,22 +90,31 @@ describe('useBrewTimer', () => {
     })
 
     act(() => {
-      now = 2000
-      vi.advanceTimersByTime(50)
+      now = 7000
+      vi.advanceTimersByTime(7000)
     })
 
-    expect(result.current.elapsed).toBe(1000)
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(7000)
 
     act(() => {
-      now = 3500
-      vi.advanceTimersByTime(50)
+      result.current.reset()
     })
 
-    expect(result.current.elapsed).toBe(2500)
+    expect(result.current.status).toBe('idle')
+    expect(result.current.elapsed).toBe(0)
+
+    // Advance more time; elapsed must stay 0 because interval was cleared
+    act(() => {
+      now = 10000
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.elapsed).toBe(0)
   })
 
-  it('stop() transitions to stopped and elapsed is frozen', () => {
-    let now = 1000
+  // start() is a no-op from 'stopped' (no resume in this iteration)
+  it('start no-op from stopped: after stop, calling start() does not resume or restart', () => {
+    let now = 0
     const getNow = () => now
 
     const { result } = renderHook(() => useBrewTimer({ getNow }))
@@ -61,8 +124,8 @@ describe('useBrewTimer', () => {
     })
 
     act(() => {
-      now = 2000
-      vi.advanceTimersByTime(50)
+      now = 5000
+      vi.advanceTimersByTime(5000)
     })
 
     act(() => {
@@ -72,25 +135,70 @@ describe('useBrewTimer', () => {
     expect(result.current.status).toBe('stopped')
     const frozenElapsed = result.current.elapsed
 
+    // Attempt to start from stopped — should be no-op
     act(() => {
-      now = 5000
-      vi.advanceTimersByTime(200)
+      result.current.start()
+    })
+
+    expect(result.current.status).toBe('stopped')
+
+    // Advance time — elapsed must not change
+    act(() => {
+      now = 8000
+      vi.advanceTimersByTime(3000)
     })
 
     expect(result.current.elapsed).toBe(frozenElapsed)
   })
 
-  it('reset() from idle returns idle with elapsed 0', () => {
-    const { result } = renderHook(() => useBrewTimer())
+  // stop() from idle does not throw and status stays idle
+  it('stop no-op from idle: stop() from idle does not throw and status stays idle', () => {
+    const now = 0
+    const getNow = () => now
+
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
+
+    expect(result.current.status).toBe('idle')
+
     act(() => {
-      result.current.reset()
+      result.current.stop()
     })
+
     expect(result.current.status).toBe('idle')
     expect(result.current.elapsed).toBe(0)
   })
 
-  it('reset() from running returns idle with elapsed 0', () => {
-    let now = 1000
+  it('T7: unmount clears interval — no setState-on-unmounted-component error', () => {
+    let now = 0
+    const getNow = () => now
+
+    const { result, unmount } = renderHook(() => useBrewTimer({ getNow }))
+
+    act(() => {
+      result.current.start()
+    })
+
+    act(() => {
+      now = 1000
+      vi.advanceTimersByTime(1000)
+    })
+
+    const errorSpy = vi.spyOn(console, 'error')
+
+    unmount()
+
+    act(() => {
+      now = 5000
+      vi.advanceTimersByTime(4000)
+    })
+
+    expect(errorSpy).not.toHaveBeenCalled()
+
+    errorSpy.mockRestore()
+  })
+
+  it('lap no-op: lap does not throw and does not change status/elapsed', () => {
+    let now = 0
     const getNow = () => now
 
     const { result } = renderHook(() => useBrewTimer({ getNow }))
@@ -101,72 +209,47 @@ describe('useBrewTimer', () => {
 
     act(() => {
       now = 2000
-      vi.advanceTimersByTime(50)
+      vi.advanceTimersByTime(2000)
     })
 
-    act(() => {
-      result.current.reset()
-    })
-
-    expect(result.current.status).toBe('idle')
-    expect(result.current.elapsed).toBe(0)
-  })
-
-  it('reset() from stopped returns idle with elapsed 0', () => {
-    const { result } = renderHook(() => useBrewTimer())
+    const elapsedBeforeLap = result.current.elapsed
 
     act(() => {
-      result.current.start()
-    })
-
-    act(() => {
-      result.current.stop()
-    })
-
-    act(() => {
-      result.current.reset()
-    })
-
-    expect(result.current.status).toBe('idle')
-    expect(result.current.elapsed).toBe(0)
-  })
-
-  it('start() is no-op when already running', () => {
-    const { result } = renderHook(() => useBrewTimer())
-
-    act(() => {
-      result.current.start()
-      result.current.start()
+      result.current.lap()
     })
 
     expect(result.current.status).toBe('running')
+    // elapsed should still be >= 2000 (not reset by lap)
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(2000)
+    // lap did not reduce elapsed
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(elapsedBeforeLap)
   })
 
-  it('stop() is no-op when idle', () => {
-    const { result } = renderHook(() => useBrewTimer())
+  it('start is a no-op when already running', () => {
+    let now = 0
+    const getNow = () => now
 
-    act(() => {
-      result.current.stop()
-    })
-
-    expect(result.current.status).toBe('idle')
-    expect(result.current.elapsed).toBe(0)
-  })
-
-  it('unmount during running clears the interval (no leak)', () => {
-    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
-
-    const { result, unmount } = renderHook(() => useBrewTimer())
+    const { result } = renderHook(() => useBrewTimer({ getNow }))
 
     act(() => {
       result.current.start()
     })
 
-    expect(result.current.status).toBe('running')
+    act(() => {
+      now = 1000
+      vi.advanceTimersByTime(1000)
+    })
 
-    unmount()
+    // Call start again while running — should not reset the timer
+    act(() => {
+      result.current.start()
+    })
 
-    expect(clearIntervalSpy).toHaveBeenCalled()
-    clearIntervalSpy.mockRestore()
+    act(() => {
+      now = 2000
+      vi.advanceTimersByTime(1000)
+    })
+
+    expect(result.current.elapsed).toBeGreaterThanOrEqual(2000)
   })
 })

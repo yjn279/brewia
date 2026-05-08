@@ -8,12 +8,12 @@ const brewStepSchema = z.object({
 export const upsertBrewSchema = z.object({
   beanId: z.string().trim().min(1),
   beanWeight: z.coerce.number().positive(),
-  beanGrind: z.union([z.coerce.number().positive(), z.literal('')]).transform((value) => {
-    return value === '' ? null : value
+  beanGrind: z.union([z.coerce.number().nonnegative(), z.literal('')]).transform((value) => {
+    return value === '' ? 0 : value
   }),
   waterWeight: z.coerce.number().positive(),
   waterTemp: z.union([z.coerce.number().min(0).max(100), z.literal('')]).transform((value) => {
-    return value === '' ? null : value
+    return value === '' ? 0 : value
   }),
   steps: z.array(brewStepSchema).default([]),
   aroma: z.coerce.number().int().min(0).max(5),
