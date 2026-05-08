@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NewBrewForm } from '@/components/new-brew-form'
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
@@ -1191,8 +1191,8 @@ describe('NewBrewForm', () => {
     expect(step1Water.value).toBe('50')
   })
 
-  // P4: "Save as preset" button exists; clicking it opens a dialog; submitting calls POST /api/brew-presets
-  it('P4: given valid step inputs, when "Save current as preset" is clicked and name is entered, then POST /api/brew-presets is called with the correct body', async () => {
+  // P4: "Save preset" button in Extraction Steps header opens a dialog; submitting calls POST /api/brew-presets
+  it('P4: given valid step inputs, when "Save preset" header button is clicked and name is entered, then POST /api/brew-presets is called with the correct body', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
@@ -1209,20 +1209,21 @@ describe('NewBrewForm', () => {
     fireEvent.change(screen.getByLabelText('Step 1 water'), { target: { value: '50' } })
     fireEvent.blur(screen.getByLabelText('Step 1 water'))
 
-    // Click "Save current as preset"
-    const saveButton = screen.getByRole('button', { name: /save.*preset/i })
+    // Click "Save preset" button in Extraction Steps header
+    const saveButton = screen.getByRole('button', { name: 'Save preset' })
     expect(saveButton).toBeDefined()
     fireEvent.click(saveButton)
 
     // Dialog should open
-    expect(screen.getByRole('dialog')).toBeDefined()
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toBeDefined()
 
     // Enter preset name
     const nameInput = screen.getByLabelText('Name') as HTMLInputElement
     fireEvent.change(nameInput, { target: { value: 'My New Preset' } })
 
     // Click Save Preset button in dialog
-    const savePresetButton = screen.getByRole('button', { name: /Save Preset/i })
+    const savePresetButton = within(dialog).getByRole('button', { name: /Save Preset/i })
     fireEvent.click(savePresetButton)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1236,5 +1237,16 @@ describe('NewBrewForm', () => {
     const postBody = JSON.parse((postCall[1] as RequestInit).body as string) as { name: string; steps: Array<{ time: number; water: number }> }
     expect(postBody.name).toBe('My New Preset')
     expect(postBody.steps.length).toBeGreaterThan(0)
+  })
+
+  // P5: フォーム末尾に独立した「Save as Preset」セクションが存在しないことを確認
+  it('P5: the standalone "Save as Preset" section is not rendered at the bottom of the form', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // 「Save current as preset」というラベルのボタンは存在しない
+    expect(screen.queryByRole('button', { name: /save current as preset/i })).toBeNull()
+    // 「Save as Preset」という見出し（h2）はフォーム末尾に存在しない
+    const headings = screen.queryAllByRole('heading', { name: /save as preset/i })
+    expect(headings.length).toBe(0)
   })
 })

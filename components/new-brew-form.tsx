@@ -17,7 +17,7 @@ import {
 import type { Bean, BrewWithBean, Flavor } from '@/lib/types'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { DEFAULT_RATINGS, STEP_TIME_INTERVAL, STEP_WATER_INTERVAL } from '@/lib/constants'
-import { ChevronDown, Loader2, Plus, X } from 'lucide-react'
+import { BookmarkPlus, ChevronDown, Loader2, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { Card } from '@/components/ui/card'
@@ -420,6 +420,18 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <SectionHeading className="mb-0">Extraction Steps</SectionHeading>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs"
+              aria-label="Save preset"
+              onClick={() => setIsSaveDialogOpen(true)}
+            >
+              <BookmarkPlus className="h-3 w-3" />
+              Save
+            </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -455,6 +467,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -629,21 +642,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
           onChange={(event) => setNotes(event.target.value)}
         />
       </Card>
-
-      {/* Save as preset */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Save as Preset
-        </h2>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => setIsSaveDialogOpen(true)}
-        >
-          Save current as preset
-        </Button>
-      </div>
 
       {/* Submit */}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
