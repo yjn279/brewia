@@ -12,6 +12,7 @@ import {
 import { performBackfill } from '@/lib/auth/backfill'
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
+  redirectProxyUrl: process.env.AUTH_REDIRECT_PROXY_URL,
   adapter: DrizzleAdapter(db, {
     usersTable,
     accountsTable,
