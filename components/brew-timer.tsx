@@ -1,8 +1,20 @@
 'use client'
 
+import { useState } from 'react'
 import type { ReactElement } from 'react'
 import { Button } from '@/components/ui/button'
 import { Flag, Play, RotateCcw, Square } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import type { BrewTimerStatus } from '@/hooks/use-brew-timer'
 
 export interface BrewTimerProps {
@@ -30,6 +42,8 @@ export function BrewTimer({
   onStop,
   onReset,
 }: BrewTimerProps): ReactElement {
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl bg-secondary/30 p-4">
       <div className="flex items-center gap-2">
@@ -68,10 +82,32 @@ export function BrewTimer({
           </>
         )}
         {status === 'stopped' && (
-          <Button type="button" variant="outline" className="flex-1" onClick={onReset}>
-            <RotateCcw aria-hidden className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
+          <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="outline" className="flex-1">
+                <RotateCcw aria-hidden className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>タイマーをリセット</AlertDialogTitle>
+                <AlertDialogDescription>
+                  リセットするとタイマーと抽出ステップ行も初期化されます。続行しますか？
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    onReset()
+                  }}
+                >
+                  リセット
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>

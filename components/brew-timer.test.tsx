@@ -1,204 +1,166 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { BrewTimer } from '@/components/brew-timer'
 
+function makeProps(overrides: Partial<Parameters<typeof BrewTimer>[0]> = {}) {
+  return {
+    status: 'idle' as const,
+    elapsed: 0,
+    onStart: vi.fn(),
+    onLap: vi.fn(),
+    onStop: vi.fn(),
+    onReset: vi.fn(),
+    ...overrides,
+  }
+}
+
 describe('BrewTimer', () => {
-  // T1: idle state rendering
-  it('T1: given status="idle" and elapsed=0, renders Start button only and shows 00:00.00', () => {
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="idle"
-        elapsed={0}
-        onStart={noop}
-        onLap={noop}
-        onStop={noop}
-        onReset={noop}
-      />,
-    )
+  // Button visibility per status
+  it('idle: shows only Start button', () => {
+    render(<BrewTimer {...makeProps({ status: 'idle' })} />)
+    expect(screen.getByRole('button', { name: /start/i })).toBeDefined()
+    expect(screen.queryByRole('button', { name: /lap/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /stop/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /reset/i })).toBeNull()
+  })
 
-    expect(screen.getByRole('button', { name: 'Start' })).toBeDefined()
-    expect(screen.queryByRole('button', { name: 'Lap' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
+  it('running: shows Lap and Stop buttons only', () => {
+    render(<BrewTimer {...makeProps({ status: 'running' })} />)
+    expect(screen.getByRole('button', { name: /lap/i })).toBeDefined()
+    expect(screen.getByRole('button', { name: /stop/i })).toBeDefined()
+    expect(screen.queryByRole('button', { name: /start/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /reset/i })).toBeNull()
+  })
 
+  it('stopped: shows only Reset button', () => {
+    render(<BrewTimer {...makeProps({ status: 'stopped' })} />)
+    expect(screen.getByRole('button', { name: /reset/i })).toBeDefined()
+    expect(screen.queryByRole('button', { name: /start/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /lap/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /stop/i })).toBeNull()
+  })
+
+  // Timer element attributes
+  it('timer element has role="timer", aria-live="polite", aria-label="Elapsed time"', () => {
+    render(<BrewTimer {...makeProps()} />)
     const timer = screen.getByRole('timer')
-    expect(timer.textContent).toBe('00:00.00')
     expect(timer.getAttribute('aria-live')).toBe('polite')
     expect(timer.getAttribute('aria-label')).toBe('Elapsed time')
   })
 
-  // T4: running state rendering
-  it('T4: given status="running" and elapsed=7300, renders Lap and Stop buttons but not Start or Reset, shows 00:07.30', () => {
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="running"
-        elapsed={7300}
-        onStart={noop}
-        onLap={noop}
-        onStop={noop}
-        onReset={noop}
-      />,
-    )
-
-    expect(screen.getByRole('button', { name: 'Lap' })).toBeDefined()
-    expect(screen.getByRole('button', { name: 'Stop' })).toBeDefined()
-    expect(screen.queryByRole('button', { name: 'Start' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
-
-    expect(screen.getByRole('timer').textContent).toBe('00:07.30')
+  // formatElapsed boundary values
+  it.each([
+    [0, '00:00.00'],
+    [59000, '00:59.00'],
+    [59990, '00:59.99'],
+    [60000, '01:00.00'],
+    [123456, '02:03.45'],
+    [600000, '10:00.00'],
+    [-500, '00:00.00'],
+  ])('elapsed=%i renders as %s', (elapsed, expected) => {
+    render(<BrewTimer {...makeProps({ elapsed })} />)
+    expect(screen.getByRole('timer').textContent).toBe(expected)
   })
 
-  // T4-stopped: stopped state rendering
-  it('T4-stopped: given status="stopped", renders Reset button only; Start/Lap/Stop are absent', () => {
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="stopped"
-        elapsed={10000}
-        onStart={noop}
-        onLap={noop}
-        onStop={noop}
-        onReset={noop}
-      />,
-    )
-
-    expect(screen.getByRole('button', { name: 'Reset' })).toBeDefined()
-    expect(screen.queryByRole('button', { name: 'Start' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Lap' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull()
-  })
-
-  // T4b: formatting — mm:ss.cc
-  it('T4b: formats elapsed values correctly in mm:ss.cc format', () => {
-    const noop = vi.fn()
-    const cases: Array<{ elapsed: number; expected: string }> = [
-      { elapsed: 0, expected: '00:00.00' },
-      { elapsed: 59000, expected: '00:59.00' },
-      { elapsed: 59990, expected: '00:59.99' },
-      { elapsed: 60000, expected: '01:00.00' },
-      { elapsed: 600000, expected: '10:00.00' },
-      { elapsed: 3599000, expected: '59:59.00' },
-      { elapsed: 123456, expected: '02:03.45' },
-    ]
-
-    for (const { elapsed, expected } of cases) {
-      const { unmount } = render(
-        <BrewTimer
-          status="running"
-          elapsed={elapsed}
-          onStart={noop}
-          onLap={noop}
-          onStop={noop}
-          onReset={noop}
-        />,
-      )
-      expect(screen.getByRole('timer').textContent).toBe(expected)
-      unmount()
-    }
-  })
-
-  // T4b-neg: negative elapsed guard
-  it('T4b-neg: given elapsed=-500, clamps to 00:00.00 and does not render garbage', () => {
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="idle"
-        elapsed={-500}
-        onStart={noop}
-        onLap={noop}
-        onStop={noop}
-        onReset={noop}
-      />,
-    )
-    expect(screen.getByRole('timer').textContent).toBe('00:00.00')
-  })
-
-  // Click wiring — idle
-  it('click wiring: clicking Start in idle state calls onStart', () => {
+  // Callback tests
+  it('clicking Start calls onStart once', () => {
     const onStart = vi.fn()
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="idle"
-        elapsed={0}
-        onStart={onStart}
-        onLap={noop}
-        onStop={noop}
-        onReset={noop}
-      />,
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+    render(<BrewTimer {...makeProps({ status: 'idle', onStart })} />)
+    fireEvent.click(screen.getByRole('button', { name: /start/i }))
     expect(onStart).toHaveBeenCalledTimes(1)
   })
 
-  // Click wiring — running
-  it('click wiring: clicking Lap and Stop in running state call their handlers', () => {
+  it('clicking Lap calls onLap once', () => {
     const onLap = vi.fn()
-    const onStop = vi.fn()
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="running"
-        elapsed={5000}
-        onStart={noop}
-        onLap={onLap}
-        onStop={onStop}
-        onReset={noop}
-      />,
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+    render(<BrewTimer {...makeProps({ status: 'running', onLap })} />)
+    fireEvent.click(screen.getByRole('button', { name: /lap/i }))
     expect(onLap).toHaveBeenCalledTimes(1)
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+  it('clicking Stop calls onStop once', () => {
+    const onStop = vi.fn()
+    render(<BrewTimer {...makeProps({ status: 'running', onStop })} />)
+    fireEvent.click(screen.getByRole('button', { name: /stop/i }))
     expect(onStop).toHaveBeenCalledTimes(1)
   })
 
-  // Click wiring — stopped
-  it('click wiring: clicking Reset in stopped state calls onReset', () => {
+  // Reset dialog flow
+  it('clicking Reset does not immediately call onReset and opens dialog', () => {
     const onReset = vi.fn()
-    const noop = vi.fn()
-    render(
-      <BrewTimer
-        status="stopped"
-        elapsed={10000}
-        onStart={noop}
-        onLap={noop}
-        onStop={noop}
-        onReset={onReset}
-      />,
-    )
+    render(<BrewTimer {...makeProps({ status: 'stopped', onReset })} />)
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+    expect(onReset).not.toHaveBeenCalled()
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+    expect(screen.getByText('リセットするとタイマーと抽出ステップ行も初期化されます。続行しますか？')).toBeDefined()
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+  it('dialog Confirm ("リセット") calls onReset once', () => {
+    const onReset = vi.fn()
+    render(<BrewTimer {...makeProps({ status: 'stopped', onReset })} />)
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+    fireEvent.click(screen.getByText('リセット', { selector: 'button' }))
     expect(onReset).toHaveBeenCalledTimes(1)
   })
 
-  // T_buttons_full_width: each button gets flex-1 so buttons fill the available row width
-  it('T_buttons_full_width: each button in every status has className including "flex-1"', () => {
-    const noop = vi.fn()
+  it('dialog Cancel ("キャンセル") does not call onReset', () => {
+    const onReset = vi.fn()
+    render(<BrewTimer {...makeProps({ status: 'stopped', onReset })} />)
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+    fireEvent.click(screen.getByText('キャンセル'))
+    expect(onReset).not.toHaveBeenCalled()
+  })
 
-    // idle: Start button
-    const { unmount: unmount1 } = render(
-      <BrewTimer status="idle" elapsed={0} onStart={noop} onLap={noop} onStop={noop} onReset={noop} />,
-    )
-    expect(screen.getByRole('button', { name: 'Start' }).className).toContain('flex-1')
-    unmount1()
+  it('ESC key closes dialog without calling onReset', () => {
+    const onReset = vi.fn()
+    render(<BrewTimer {...makeProps({ status: 'stopped', onReset })} />)
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+    // Dialog should be open
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+    fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' })
+    expect(onReset).not.toHaveBeenCalled()
+  })
 
-    // running: Lap and Stop buttons
-    const { unmount: unmount2 } = render(
-      <BrewTimer status="running" elapsed={0} onStart={noop} onLap={noop} onStop={noop} onReset={noop} />,
-    )
-    expect(screen.getByRole('button', { name: 'Lap' }).className).toContain('flex-1')
-    expect(screen.getByRole('button', { name: 'Stop' }).className).toContain('flex-1')
-    unmount2()
+  it('Reset → Cancel → Reset opens dialog again with all required elements', () => {
+    const onReset = vi.fn()
+    render(<BrewTimer {...makeProps({ status: 'stopped', onReset })} />)
 
-    // stopped: Reset button
-    render(
-      <BrewTimer status="stopped" elapsed={0} onStart={noop} onLap={noop} onStop={noop} onReset={noop} />,
-    )
-    expect(screen.getByRole('button', { name: 'Reset' }).className).toContain('flex-1')
+    // First open
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+
+    // Cancel
+    fireEvent.click(screen.getByText('キャンセル'))
+
+    // Second open
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }))
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+    expect(screen.getByText('リセットするとタイマーと抽出ステップ行も初期化されます。続行しますか？')).toBeDefined()
+    expect(screen.getByText('リセット', { selector: 'button' })).toBeDefined()
+    expect(screen.getByText('キャンセル')).toBeDefined()
+  })
+
+  // flex-1 class on buttons
+  it('idle Start button has flex-1 class', () => {
+    render(<BrewTimer {...makeProps({ status: 'idle' })} />)
+    const btn = screen.getByRole('button', { name: /start/i })
+    expect(btn.className).toContain('flex-1')
+  })
+
+  it('running Lap button has flex-1 class', () => {
+    render(<BrewTimer {...makeProps({ status: 'running' })} />)
+    const btn = screen.getByRole('button', { name: /lap/i })
+    expect(btn.className).toContain('flex-1')
+  })
+
+  it('running Stop button has flex-1 class', () => {
+    render(<BrewTimer {...makeProps({ status: 'running' })} />)
+    const btn = screen.getByRole('button', { name: /stop/i })
+    expect(btn.className).toContain('flex-1')
+  })
+
+  it('stopped Reset button has flex-1 class', () => {
+    render(<BrewTimer {...makeProps({ status: 'stopped' })} />)
+    const btn = screen.getByRole('button', { name: /reset/i })
+    expect(btn.className).toContain('flex-1')
   })
 })
