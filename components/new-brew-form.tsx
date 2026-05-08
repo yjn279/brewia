@@ -420,6 +420,17 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <SectionHeading className="mb-0">Extraction Steps</SectionHeading>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs"
+              aria-label="Save preset"
+              onClick={() => setIsSaveDialogOpen(true)}
+            >
+              Save
+            </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -455,6 +466,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -630,21 +642,6 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
         />
       </Card>
 
-      {/* Save as preset */}
-      <div className="rounded-xl bg-card p-4 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Save as Preset
-        </h2>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => setIsSaveDialogOpen(true)}
-        >
-          Save current as preset
-        </Button>
-      </div>
-
       {/* Submit */}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (
@@ -674,7 +671,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="preset-description">Description (optional)</Label>
+              <Label htmlFor="preset-description">Description</Label>
               <Textarea
                 id="preset-description"
                 placeholder="Describe this preset..."
