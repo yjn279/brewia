@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq } from 'drizzle-orm'
 import type { Brew, BrewStep, BrewWithBean } from '@/lib/types'
 import { db } from '@/lib/db/drizzle'
 import { brewFlavorsTable, brewsTable } from '@/lib/db/schema'
@@ -11,9 +11,9 @@ import { FlavorsRepository } from '@/app/flavors/repository'
 export interface BrewMutationInput {
   beanId: string
   beanWeight: number
-  beanGrind: number | null
+  beanGrind: number
   waterWeight: number
-  waterTemp: number | null
+  waterTemp: number
   steps: BrewStep[]
   aroma: number
   acidity: number
@@ -26,8 +26,22 @@ export interface BrewMutationInput {
 
 function mapBrewRow(row: typeof brewsTable.$inferSelect): Brew {
   return {
-    ...row,
+    id: row.id,
+    userId: row.userId,
+    beanId: row.beanId,
+    beanWeight: row.beanWeight,
+    beanGrind: row.beanGrind,
+    waterWeight: row.waterWeight,
+    waterTemp: row.waterTemp,
     steps: parseSteps(row.steps),
+    aroma: row.aroma,
+    acidity: row.acidity,
+    sweetness: row.sweetness,
+    body: row.body,
+    overall: row.overall,
+    notes: row.notes,
+    created: row.created,
+    updated: row.updated,
   }
 }
 
@@ -35,31 +49,33 @@ const beansRepository = new BeansRepository()
 const flavorsRepository = new FlavorsRepository()
 
 export class BrewsRepository {
-  async findAll(): Promise<Brew[]> {
+  async findAll(userId: string): Promise<Brew[]> {
     const rows = await db
       .select()
       .from(brewsTable)
+      .where(eq(brewsTable.userId, userId))
       .orderBy(desc(brewsTable.created))
 
     return rows.map(mapBrewRow)
   }
 
-  async findCountByBeanIdMap(): Promise<Map<string, number>> {
+  async findCountByBeanIdMap(userId: string): Promise<Map<string, number>> {
     const rows = await db
       .select({ beanId: brewsTable.beanId, brewCount: count(brewsTable.id) })
       .from(brewsTable)
+      .where(eq(brewsTable.userId, userId))
       .groupBy(brewsTable.beanId)
 
     return new Map(rows.map((row) => [row.beanId, row.brewCount]))
   }
 
-  async findByBeanId(beanId: string): Promise<BrewWithBean[]> {
+  async findByBeanId(userId: string, beanId: string): Promise<BrewWithBean[]> {
     const [bean, brewRows, flavorByBrewId] = await Promise.all([
-      beansRepository.findById(beanId),
+      beansRepository.findById(userId, beanId),
       db
         .select()
         .from(brewsTable)
-        .where(eq(brewsTable.beanId, beanId))
+        .where(and(eq(brewsTable.userId, userId), eq(brewsTable.beanId, beanId)))
         .orderBy(desc(brewsTable.created)),
       flavorsRepository.findMapByBeanId(beanId),
     ])
@@ -78,11 +94,11 @@ export class BrewsRepository {
     })
   }
 
-  async findById(id: string): Promise<BrewWithBean | undefined> {
+  async findById(userId: string, id: string): Promise<BrewWithBean | undefined> {
     const [brewRow] = await db
       .select()
       .from(brewsTable)
-      .where(eq(brewsTable.id, id))
+      .where(and(eq(brewsTable.userId, userId), eq(brewsTable.id, id)))
       .limit(1)
 
     if (!brewRow) {
@@ -91,7 +107,7 @@ export class BrewsRepository {
 
     const brew = mapBrewRow(brewRow)
     const [bean, flavors] = await Promise.all([
-      beansRepository.findById(brew.beanId),
+      beansRepository.findById(userId, brew.beanId),
       flavorsRepository.findByBrewId(id),
     ])
 
@@ -106,11 +122,12 @@ export class BrewsRepository {
     }
   }
 
-  async create(input: BrewMutationInput): Promise<Brew> {
+  async create(userId: string, input: BrewMutationInput): Promise<Brew> {
     return db.transaction(async (tx) => {
       const [brewRow] = await tx
         .insert(brewsTable)
         .values({
+          userId,
           beanId: input.beanId,
           beanWeight: input.beanWeight,
           beanGrind: input.beanGrind,
@@ -139,7 +156,7 @@ export class BrewsRepository {
     })
   }
 
-  async update(id: string, input: BrewMutationInput): Promise<Brew | undefined> {
+  async update(userId: string, id: string, input: BrewMutationInput): Promise<Brew | undefined> {
     return db.transaction(async (tx) => {
       const [brewRow] = await tx
         .update(brewsTable)
@@ -158,7 +175,7 @@ export class BrewsRepository {
           notes: input.notes,
           updated: new Date().toISOString(),
         })
-        .where(eq(brewsTable.id, id))
+        .where(and(eq(brewsTable.userId, userId), eq(brewsTable.id, id)))
         .returning()
 
       if (!brewRow) {
@@ -182,18 +199,22 @@ export class BrewsRepository {
     })
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(userId: string, id: string): Promise<boolean> {
     return db.transaction(async (tx) => {
+      // 先に所有権確認を兼ねた brew 削除（userId フィルタで他ユーザーの brew は 0 件になる）
+      const result = await tx
+        .delete(brewsTable)
+        .where(and(eq(brewsTable.userId, userId), eq(brewsTable.id, id)))
+        .returning({ id: brewsTable.id })
+
+      if (result.length === 0) return false
+
+      // 所有権確認後に brew_flavor を削除
       await tx
         .delete(brewFlavorsTable)
         .where(eq(brewFlavorsTable.brewId, id))
 
-      const result = await tx
-        .delete(brewsTable)
-        .where(eq(brewsTable.id, id))
-        .returning({ id: brewsTable.id })
-
-      return result.length > 0
+      return true
     })
   }
 }

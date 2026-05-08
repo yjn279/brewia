@@ -1,16 +1,18 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 import { COUNTRY_FLAGS } from '@/lib/types'
 import { TasteBars } from '@/components/taste-bars'
 import { PourChart } from '@/components/pour-chart'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
 import { PageHeader, HeaderAction } from '@/components/page-header'
+import { UserMenu } from '@/components/user-menu'
 import { SectionHeading } from '@/components/section-heading'
 import { Card } from '@/components/ui/card'
 import { FlavorBadge } from '@/components/flavor-badge'
 import { ArrowLeft, Pencil, CopyPlus, Coffee, Scale, Thermometer, Cog } from 'lucide-react'
-import { DataField } from '@/components/data-field'
 import { MetricTile } from '@/components/metric-tile'
 
 export const dynamic = 'force-dynamic'
@@ -20,8 +22,9 @@ interface BrewDetailPageProps {
 }
 
 export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
+  const user = await requireUser()
   const { id } = await params
-  const brew = await brewsService.getBrewById(id)
+  const brew = await brewsService.getBrewById(user.id, id)
 
   if (!brew) {
     notFound()
@@ -64,6 +67,7 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
               showLabel={false}
               className="h-8 w-8 px-0"
             />
+            <UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />
           </>
         }
       />
@@ -99,12 +103,12 @@ export default async function BrewDetailPage({ params }: BrewDetailPageProps) {
             />
             <MetricTile
               icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
-              value={brew.waterTemp == null ? '-' : `${brew.waterTemp}°C`}
+              value={brew.waterTemp === 0 ? '-' : `${brew.waterTemp}°C`}
               label="Temperature"
             />
             <MetricTile
               icon={<Cog className="h-4 w-4 text-muted-foreground" />}
-              value={brew.beanGrind == null ? '-' : `${brew.beanGrind} clicks`}
+              value={brew.beanGrind === 0 ? '-' : `${brew.beanGrind} clicks`}
               label="Grind"
             />
           </div>

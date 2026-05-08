@@ -6,16 +6,16 @@ import type { UpsertBeanDto } from '@/app/beans/schema'
 const beansRepository = new BeansRepository()
 
 export class BeansService {
-  async getBeans() {
-    return beansRepository.findAll()
+  async getBeans(userId: string) {
+    return beansRepository.findAll(userId)
   }
 
-  async getBeanById(id: string) {
-    return beansRepository.findById(id)
+  async getBeanById(userId: string, id: string) {
+    return beansRepository.findById(userId, id)
   }
 
-  async createBean(dto: UpsertBeanDto) {
-    return beansRepository.create({
+  async createBean(userId: string, dto: UpsertBeanDto) {
+    return beansRepository.create(userId, {
       name: dto.name,
       roaster: dto.roaster,
       country: dto.country,
@@ -24,12 +24,13 @@ export class BeansService {
       variety: dto.variety,
       process: dto.process,
       roast: dto.roast,
+      priceJpy: dto.priceJpy,
       notes: dto.notes,
     })
   }
 
-  async updateBean(id: string, dto: UpsertBeanDto) {
-    return beansRepository.update(id, {
+  async updateBean(userId: string, id: string, dto: UpsertBeanDto) {
+    return beansRepository.update(userId, id, {
       name: dto.name,
       roaster: dto.roaster,
       country: dto.country,
@@ -38,12 +39,13 @@ export class BeansService {
       variety: dto.variety,
       process: dto.process,
       roast: dto.roast,
+      priceJpy: dto.priceJpy,
       notes: dto.notes,
     })
   }
 
-  async deleteBean(id: string) {
-    return beansRepository.delete(id)
+  async deleteBean(userId: string, id: string) {
+    return beansRepository.delete(userId, id)
   }
 }
 

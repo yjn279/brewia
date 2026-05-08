@@ -1,4 +1,4 @@
-export const STEP_TIME_INTERVAL = 5 as const
+export const STEP_TIME_INTERVAL = 1 as const
 export const STEP_WATER_INTERVAL = 5 as const
 export const DEFAULT_ROAST_INDEX = 2 as const
 

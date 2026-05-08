@@ -22,15 +22,23 @@ export const ROAST_LEVELS = [
 export type RoastLevel = (typeof ROAST_LEVELS)[number]
 
 export const COUNTRIES = [
-  'Ethiopia',
-  'Kenya',
-  'Colombia',
   'Brazil',
-  'Guatemala',
-  'Panama',
+  'Burundi',
+  'Colombia',
   'Costa Rica',
+  'El Salvador',
+  'Ethiopia',
+  'Guatemala',
+  'Honduras',
   'Indonesia',
+  'Jamaica',
+  'Kenya',
+  'Nicaragua',
+  'Panama',
+  'Papua New Guinea',
   'Rwanda',
+  'Tanzania',
+  'Vietnam',
   'Yemen',
   'Blended',
 ] as const
@@ -38,30 +46,40 @@ export const COUNTRIES = [
 export type Country = (typeof COUNTRIES)[number]
 
 export const COUNTRY_FLAGS: Record<Country, string> = {
-  Ethiopia: '🇪🇹',
-  Panama: '🇵🇦',
-  Guatemala: '🇬🇹',
   Brazil: '🇧🇷',
+  Burundi: '🇧🇮',
   Colombia: '🇨🇴',
-  Kenya: '🇰🇪',
   'Costa Rica': '🇨🇷',
+  'El Salvador': '🇸🇻',
+  Ethiopia: '🇪🇹',
+  Guatemala: '🇬🇹',
+  Honduras: '🇭🇳',
   Indonesia: '🇮🇩',
+  Jamaica: '🇯🇲',
+  Kenya: '🇰🇪',
+  Nicaragua: '🇳🇮',
+  Panama: '🇵🇦',
+  'Papua New Guinea': '🇵🇬',
   Rwanda: '🇷🇼',
+  Tanzania: '🇹🇿',
+  Vietnam: '🇻🇳',
   Yemen: '🇾🇪',
   Blended: '🏳️‍🌈',
 }
 
 export interface Bean {
   id: string
+  userId: string
   name: string
   country: Country
-  region: string | null
-  farm: string | null
-  process: string | null
-  variety: string | null
+  region: string
+  farm: string
+  process: string
+  variety: string
   roast: RoastLevel
-  roaster: string | null
-  notes: string | null
+  roaster: string
+  priceJpy: number
+  notes: string
   created: string
   updated: string
 }
@@ -73,18 +91,19 @@ export interface BrewStep {
 
 export interface Brew {
   id: string
+  userId: string
   beanId: string
   beanWeight: number
-  beanGrind: number | null
+  beanGrind: number
   waterWeight: number
-  waterTemp: number | null
+  waterTemp: number
   steps: BrewStep[]
   aroma: number // 1-5 scale
   acidity: number
   sweetness: number
   body: number
   overall: number
-  notes: string | null
+  notes: string
   created: string
   updated: string
 }

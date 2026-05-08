@@ -3,15 +3,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BeanDetailPage from '@/app/beans/[id]/page'
 import type { Bean, BrewWithBean } from '@/lib/types'
 
-const { getBeanByIdMock, getBrewsByBeanIdMock, notFoundMock, pushMock, refreshMock } = vi.hoisted(
+const { getBeanByIdMock, getBrewsByBeanIdMock, notFoundMock, pushMock, refreshMock, requireUserMock } = vi.hoisted(
   () => ({
     getBeanByIdMock: vi.fn(),
     getBrewsByBeanIdMock: vi.fn(),
     notFoundMock: vi.fn(),
     pushMock: vi.fn(),
     refreshMock: vi.fn(),
+    requireUserMock: vi.fn().mockResolvedValue({ id: 'user-1', email: 'a@example.com', name: null }),
   })
 )
+
+vi.mock('@/lib/auth/require-user', () => ({
+  requireUser: requireUserMock,
+}))
+
+vi.mock('@/lib/auth/actions', () => ({
+  signOutAction: vi.fn(),
+}))
+
+vi.mock('@/components/user-menu', () => ({
+  UserMenu: () => <div data-testid="user-menu" />,
+}))
 
 vi.mock('@/app/beans/service', () => ({
   beansService: {
@@ -72,6 +85,8 @@ const bean: Bean = {
   variety: 'SL28',
   roast: 'Light',
   roaster: 'Glitch Coffee',
+  userId: 'user-1',
+  priceJpy: 0,
   notes: 'Bright and citrusy',
   created: '2026-04-18T00:00:00.000Z',
   updated: '2026-04-18T00:00:00.000Z',

@@ -10,11 +10,14 @@ import { RoastPhotoPicker } from '@/components/roast-photo-picker'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { COUNTRIES, COUNTRY_FLAGS, PROCESSES, ROAST_LEVELS, type Bean, type Country } from '@/lib/types'
+import { REGION_ORDER, countriesByRegion } from '@/lib/country-regions'
 import { DEFAULT_ROAST_INDEX } from '@/lib/constants'
 import { Loader2 } from 'lucide-react'
 import { PhotoImportButton } from '@/components/photo-import-button'
@@ -23,6 +26,8 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
 
 const NO_PROCESS_VALUE = '__none__'
+const priceFormatter = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' })
+const pricePlaceholder = priceFormatter.format(1500)
 
 interface NewBeanFormProps {
   mode?: 'create' | 'edit'
@@ -36,6 +41,31 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   const [roastIndex, setRoastIndex] = useState([initialRoastIndex])
   const [name, setName] = useState(initialBean?.name ?? '')
   const [roaster, setRoaster] = useState(initialBean?.roaster ?? '')
+  // priceRaw は整数文字列（送信用）、priceDisplay はフォーマット済み文字列（表示用）
+  // 0 は未入力扱いとして空欄表示にする
+  const [priceRaw, setPriceRaw] = useState<string>(
+    initialBean?.priceJpy != null && initialBean.priceJpy > 0 ? String(initialBean.priceJpy) : '',
+  )
+
+  function formatPriceDisplay(raw: string): string {
+    if (raw === '') return ''
+    const num = parseInt(raw, 10)
+    if (isNaN(num)) return raw
+    return priceFormatter.format(num)
+  }
+
+  const [priceDisplay, setPriceDisplay] = useState<string>(
+    initialBean?.priceJpy != null && initialBean.priceJpy > 0
+      ? formatPriceDisplay(String(initialBean.priceJpy))
+      : '',
+  )
+
+  function handlePriceChange(input: string) {
+    // 数字以外を除去して整数値を得る
+    const digits = input.replace(/[^\d]/g, '')
+    setPriceRaw(digits)
+    setPriceDisplay(digits === '' ? '' : formatPriceDisplay(digits))
+  }
   const [country, setCountry] = useState<(typeof COUNTRIES)[number] | ''>(initialBean?.country ?? '')
   const [region, setRegion] = useState(initialBean?.region ?? '')
   const [farm, setFarm] = useState(initialBean?.farm ?? '')
@@ -67,6 +97,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           variety,
           process,
           roast: ROAST_LEVELS[roastIndex[0]],
+          priceJpy: priceRaw === '' ? 0 : Number(priceRaw),
           notes,
         }),
       })
@@ -101,6 +132,8 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           if (fields.variety !== undefined) setVariety(fields.variety)
           if (fields.process !== undefined) setProcess(fields.process)
           if (fields.notes !== undefined) setNotes(fields.notes)
+          // LLM がパッケージから焙煎度の文字情報を読み取った場合は更新する（方針 A: 常に上書き）
+          if (fields.roast !== undefined) setRoastIndex([ROAST_LEVELS.indexOf(fields.roast)])
         }}
       />
       <Card>
@@ -113,6 +146,17 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           <Field>
             <FieldLabel htmlFor="roaster">Roaster</FieldLabel>
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="priceJpy">Price (JPY)</FieldLabel>
+            <Input
+              id="priceJpy"
+              type="text"
+              inputMode="numeric"
+              placeholder={pricePlaceholder}
+              value={priceDisplay}
+              onChange={(event) => handlePriceChange(event.target.value)}
+            />
           </Field>
         </div>
       </Card>
@@ -127,13 +171,18 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent>
-                {COUNTRIES.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    <span className="flex items-center gap-2">
-                      <span>{COUNTRY_FLAGS[country]}</span>
-                      <span>{country}</span>
-                    </span>
-                  </SelectItem>
+                {REGION_ORDER.map((region) => (
+                  <SelectGroup key={region}>
+                    <SelectLabel>{region}</SelectLabel>
+                    {countriesByRegion(region).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        <span className="flex items-center gap-2">
+                          <span>{COUNTRY_FLAGS[c]}</span>
+                          <span>{c}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>

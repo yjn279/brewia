@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { brewsService } from '@/app/brews/service'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
+import { requireUser } from '@/lib/auth/require-user'
 import { NewBrewForm } from '@/components/new-brew-form'
 
 interface EditBrewPageProps {
@@ -11,15 +12,16 @@ interface EditBrewPageProps {
 }
 
 export default async function EditBrewPage({ params }: EditBrewPageProps) {
+  const user = await requireUser()
   const { id } = await params
-  const brew = await brewsService.getBrewById(id)
+  const brew = await brewsService.getBrewById(user.id, id)
 
   if (!brew) {
     notFound()
   }
 
   const [beans, flavors] = await Promise.all([
-    beansService.getBeans(),
+    beansService.getBeans(user.id),
     flavorsService.getFlavors(),
   ])
 
