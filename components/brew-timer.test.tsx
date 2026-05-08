@@ -228,6 +228,63 @@ describe('BrewTimer', () => {
     expect(onReset).toHaveBeenCalledTimes(0)
   })
 
+  // T_dialog_esc: ESC キーでダイアログを閉じても onReset が呼ばれない
+  it('T_dialog_esc: pressing ESC after opening the dialog does NOT call onReset', () => {
+    const onReset = vi.fn()
+    const noop = vi.fn()
+    render(
+      <BrewTimer
+        status="stopped"
+        elapsed={10000}
+        onStart={noop}
+        onLap={noop}
+        onStop={noop}
+        onReset={onReset}
+      />,
+    )
+
+    // Open dialog
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+
+    // Fire ESC on the document (Radix intercepts keyboard events at document level)
+    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
+
+    // onReset must NOT have been called
+    expect(onReset).toHaveBeenCalledTimes(0)
+  })
+
+  // T_dialog_reopen: キャンセル後に Reset を再度押すとダイアログが再度開ける
+  it('T_dialog_reopen: after cancelling, pressing Reset a second time re-opens the dialog', () => {
+    const onReset = vi.fn()
+    const noop = vi.fn()
+    render(
+      <BrewTimer
+        status="stopped"
+        elapsed={10000}
+        onStart={noop}
+        onLap={noop}
+        onStop={noop}
+        onReset={onReset}
+      />,
+    )
+
+    // First open: click Reset then Cancel
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: 'キャンセル' }))
+
+    // Second open: click Reset again
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    // Dialog should be open again with the correct title and both action buttons
+    expect(screen.getByText('タイマーをリセット')).toBeDefined()
+    expect(screen.getByRole('button', { name: 'リセット' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'キャンセル' })).toBeDefined()
+    // onReset was never called
+    expect(onReset).toHaveBeenCalledTimes(0)
+  })
+
   // T_buttons_full_width: each button gets flex-1 so buttons fill the available row width
   it('T_buttons_full_width: each button in every status has className including "flex-1"', () => {
     const noop = vi.fn()

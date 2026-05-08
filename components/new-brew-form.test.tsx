@@ -748,6 +748,26 @@ describe('NewBrewForm', () => {
     expect(screen.getByRole('timer').textContent).toBe('00:00.00')
   })
 
+  // T_lap_repeat: Start → Lap → Lap（連続 2 回）で crash せず step 行が 3 行になる
+  it('T_lap_repeat: clicking Lap twice consecutively does not crash and results in 3 step rows', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Initially 1 step row
+    const initialRows = screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })
+    expect(initialRows).toHaveLength(1)
+
+    // Start the timer
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+
+    // First Lap
+    fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+    expect(screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })).toHaveLength(2)
+
+    // Second Lap (consecutive)
+    fireEvent.click(screen.getByRole('button', { name: 'Lap' }))
+    expect(screen.getAllByRole('spinbutton', { name: /Step \d+ time/ })).toHaveLength(3)
+  })
+
   // T-timer-reset-cancel: Stop → Reset → 「キャンセル」 → step 行は変化せず
   it('T-timer-reset-cancel: after Stop → Reset dialog Cancel, stepInputs and timer are unchanged', () => {
     render(<NewBrewForm beans={beans} flavors={flavors} />)
