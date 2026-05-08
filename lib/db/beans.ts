@@ -36,12 +36,14 @@ interface CreateBeanInput {
   name: string
   country: Bean['country']
   roast: Bean['roast']
-  roaster: string | null
-  region: string | null
-  farm: string | null
-  process: string | null
-  variety: string | null
-  notes: string | null
+  roaster: string
+  region: string
+  farm: string
+  process: string
+  variety: string
+  priceJpy: number
+  notes: string
+  userId: string
 }
 
 export async function createBean(input: CreateBeanInput): Promise<Bean> {

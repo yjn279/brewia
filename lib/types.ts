@@ -69,15 +69,17 @@ export const COUNTRY_FLAGS: Record<Country, string> = {
 
 export interface Bean {
   id: string
+  userId: string
   name: string
   country: Country
-  region: string | null
-  farm: string | null
-  process: string | null
-  variety: string | null
+  region: string
+  farm: string
+  process: string
+  variety: string
   roast: RoastLevel
-  roaster: string | null
-  notes: string | null
+  roaster: string
+  priceJpy: number
+  notes: string
   created: string
   updated: string
 }
@@ -89,18 +91,19 @@ export interface BrewStep {
 
 export interface Brew {
   id: string
+  userId: string
   beanId: string
   beanWeight: number
-  beanGrind: number | null
+  beanGrind: number
   waterWeight: number
-  waterTemp: number | null
+  waterTemp: number
   steps: BrewStep[]
   aroma: number // 1-5 scale
   acidity: number
   sweetness: number
   body: number
   overall: number
-  notes: string | null
+  notes: string
   created: string
   updated: string
 }

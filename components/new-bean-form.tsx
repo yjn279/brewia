@@ -26,6 +26,8 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { SectionHeading } from '@/components/section-heading'
 
 const NO_PROCESS_VALUE = '__none__'
+const priceFormatter = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' })
+const pricePlaceholder = priceFormatter.format(1500)
 
 interface NewBeanFormProps {
   mode?: 'create' | 'edit'
@@ -39,6 +41,31 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
   const [roastIndex, setRoastIndex] = useState([initialRoastIndex])
   const [name, setName] = useState(initialBean?.name ?? '')
   const [roaster, setRoaster] = useState(initialBean?.roaster ?? '')
+  // priceRaw は整数文字列（送信用）、priceDisplay はフォーマット済み文字列（表示用）
+  // 0 は未入力扱いとして空欄表示にする
+  const [priceRaw, setPriceRaw] = useState<string>(
+    initialBean?.priceJpy != null && initialBean.priceJpy > 0 ? String(initialBean.priceJpy) : '',
+  )
+
+  function formatPriceDisplay(raw: string): string {
+    if (raw === '') return ''
+    const num = parseInt(raw, 10)
+    if (isNaN(num)) return raw
+    return priceFormatter.format(num)
+  }
+
+  const [priceDisplay, setPriceDisplay] = useState<string>(
+    initialBean?.priceJpy != null && initialBean.priceJpy > 0
+      ? formatPriceDisplay(String(initialBean.priceJpy))
+      : '',
+  )
+
+  function handlePriceChange(input: string) {
+    // 数字以外を除去して整数値を得る
+    const digits = input.replace(/[^\d]/g, '')
+    setPriceRaw(digits)
+    setPriceDisplay(digits === '' ? '' : formatPriceDisplay(digits))
+  }
   const [country, setCountry] = useState<(typeof COUNTRIES)[number] | ''>(initialBean?.country ?? '')
   const [region, setRegion] = useState(initialBean?.region ?? '')
   const [farm, setFarm] = useState(initialBean?.farm ?? '')
@@ -70,6 +97,7 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           variety,
           process,
           roast: ROAST_LEVELS[roastIndex[0]],
+          priceJpy: priceRaw === '' ? 0 : Number(priceRaw),
           notes,
         }),
       })
@@ -118,6 +146,17 @@ export function NewBeanForm({ mode = 'create', initialBean }: NewBeanFormProps) 
           <Field>
             <FieldLabel htmlFor="roaster">Roaster</FieldLabel>
             <Input id="roaster" placeholder="Onibus Coffee" value={roaster} onChange={(event) => setRoaster(event.target.value)} required />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="priceJpy">Price (JPY)</FieldLabel>
+            <Input
+              id="priceJpy"
+              type="text"
+              inputMode="numeric"
+              placeholder={pricePlaceholder}
+              value={priceDisplay}
+              onChange={(event) => handlePriceChange(event.target.value)}
+            />
           </Field>
         </div>
       </Card>

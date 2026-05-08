@@ -69,12 +69,7 @@ export function NewEntryTabs({ beans, flavors, initialBean: initialBeanData, ini
           Add Bean
         </button>
       </div>
-      {!hasBeans && (
-        <p className="mb-6 rounded-xl border border-dashed bg-card px-4 py-3 text-sm text-muted-foreground">
-          Add a bean first. Brew logging is enabled after at least one bean exists in the
-          database.
-        </p>
-      )}
+
 
       {/* Forms */}
       {activeTab === 'brew' ? (

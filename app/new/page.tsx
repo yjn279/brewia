@@ -2,9 +2,12 @@ import { Suspense } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { NewEntryTabs } from '@/components/new-entry-tabs'
 import { PageHeader, HeaderAction } from '@/components/page-header'
+import { UserMenu } from '@/components/user-menu'
 import { beansService } from '@/app/beans/service'
 import { flavorsService } from '@/app/flavors/service'
 import { brewsService } from '@/app/brews/service'
+import { requireUser } from '@/lib/auth/require-user'
+import { signOutAction } from '@/lib/auth/actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,12 +21,13 @@ interface NewPageProps {
 }
 
 export default async function NewPage({ searchParams }: NewPageProps) {
+  const user = await requireUser()
   const params = await searchParams
   const [beans, flavors, initialBean, initialBrew] = await Promise.all([
-    beansService.getBeans(),
+    beansService.getBeans(user.id),
     flavorsService.getFlavors(),
-    params.copyBean ? beansService.getBeanById(params.copyBean) : Promise.resolve(undefined),
-    params.copyBrew ? brewsService.getBrewById(params.copyBrew) : Promise.resolve(undefined),
+    params.copyBean ? beansService.getBeanById(user.id, params.copyBean) : Promise.resolve(undefined),
+    params.copyBrew ? brewsService.getBrewById(user.id, params.copyBrew) : Promise.resolve(undefined),
   ])
 
   return (
@@ -37,6 +41,7 @@ export default async function NewPage({ searchParams }: NewPageProps) {
             <span className="font-medium">New Entry</span>
           </>
         }
+        actions={<UserMenu email={user.email} name={user.name} signOutAction={signOutAction} />}
       />
 
       <main className="mx-auto max-w-md px-4 py-6">

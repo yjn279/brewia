@@ -6,24 +6,24 @@ import type { UpsertBrewDto } from '@/app/brews/schema'
 const brewsRepository = new BrewsRepository()
 
 export class BrewsService {
-  async getBrews() {
-    return brewsRepository.findAll()
+  async getBrews(userId: string) {
+    return brewsRepository.findAll(userId)
   }
 
-  async getBrewCountByBeanIdMap() {
-    return brewsRepository.findCountByBeanIdMap()
+  async getBrewCountByBeanIdMap(userId: string) {
+    return brewsRepository.findCountByBeanIdMap(userId)
   }
 
-  async getBrewsByBeanId(beanId: string) {
-    return brewsRepository.findByBeanId(beanId)
+  async getBrewsByBeanId(userId: string, beanId: string) {
+    return brewsRepository.findByBeanId(userId, beanId)
   }
 
-  async getBrewById(id: string) {
-    return brewsRepository.findById(id)
+  async getBrewById(userId: string, id: string) {
+    return brewsRepository.findById(userId, id)
   }
 
-  async createBrew(dto: UpsertBrewDto) {
-    return brewsRepository.create({
+  async createBrew(userId: string, dto: UpsertBrewDto) {
+    return brewsRepository.create(userId, {
       beanId: dto.beanId,
       beanWeight: dto.beanWeight,
       beanGrind: dto.beanGrind,
@@ -40,8 +40,8 @@ export class BrewsService {
     })
   }
 
-  async updateBrew(id: string, dto: UpsertBrewDto) {
-    return brewsRepository.update(id, {
+  async updateBrew(userId: string, id: string, dto: UpsertBrewDto) {
+    return brewsRepository.update(userId, id, {
       beanId: dto.beanId,
       beanWeight: dto.beanWeight,
       beanGrind: dto.beanGrind,
@@ -58,8 +58,8 @@ export class BrewsService {
     })
   }
 
-  async deleteBrew(id: string) {
-    return brewsRepository.delete(id)
+  async deleteBrew(userId: string, id: string) {
+    return brewsRepository.delete(userId, id)
   }
 }
 

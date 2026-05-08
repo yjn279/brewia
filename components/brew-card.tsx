@@ -29,8 +29,8 @@ export function BrewCard({ brew, showBeanInfo = true, className }: BrewCardProps
                 {[
                   `${brew.beanWeight} g`,
                   `${brew.waterWeight} g`,
-                  brew.waterTemp != null && `${brew.waterTemp}°C`,
-                  brew.beanGrind != null && `${brew.beanGrind} clicks`,
+                  brew.waterTemp > 0 && `${brew.waterTemp}°C`,
+                  brew.beanGrind > 0 && `${brew.beanGrind} clicks`,
                 ].filter(Boolean).join(', ')}
               </p>
               {brew.flavors.length > 0 && (
