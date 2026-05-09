@@ -1,7 +1,6 @@
 import NextAuth from 'next-auth'
 import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import Google from 'next-auth/providers/google'
-import Resend from 'next-auth/providers/resend'
 import { db } from '@/lib/db/drizzle'
 import {
   usersTable,
@@ -23,10 +22,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    }),
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY,
-      from: process.env.EMAIL_FROM ?? 'noreply@example.com',
     }),
   ],
   session: {
