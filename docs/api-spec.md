@@ -4,15 +4,15 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 
 ---
 
-## 1. 共通仕様
+## 共通仕様
 
-### 1.1 ベースパスとレスポンス形式
+### ベースパスとレスポンス形式
 
 - ベースパス: `/api`
 - リクエスト / レスポンスとも JSON（`Content-Type: application/json`）
 - 例外として `POST /api/beans/extract` のみ `multipart/form-data` を受け付ける
 
-### 1.2 認証
+### 認証
 
 すべてのエンドポイントは Auth.js セッションを必須とする（`/api/auth/*` を除く）。
 
@@ -21,9 +21,9 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 | 未認証 | 401 | `{ "error": "Unauthorized" }` |
 | 他ユーザーのリソースを指定 | 404 | `{ "error": "<Resource> not found" }` |
 
-403 は使用しない。リソースの存在を露出させない方針。
+403 は返さず、404 でリソースの存在を伏せる。
 
-### 1.3 エラーレスポンスの形式
+### エラーレスポンスの形式
 
 | ステータス | 用途 | ボディ例 |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 
 `POST /api/beans/extract` のみ `code` フィールドを伴う構造化エラーを返す。
 
-### 1.4 全エンドポイント一覧
+### 全エンドポイント一覧
 
 | メソッド | パス | 用途 | スコープ |
 | --- | --- | --- | --- |
@@ -58,11 +58,9 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 | GET | `/api/flavors` | フレーバーマスタ一覧 | 認証ユーザー |
 | GET / POST | `/api/auth/[...nextauth]` | Auth.js のコールバック | 公開 |
 
----
+## Beans API
 
-## 2. Beans API
-
-### 2.1 GET /api/beans
+### GET /api/beans
 
 自分が登録した豆の一覧を返す。
 
@@ -72,7 +70,7 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 | クエリ | なし |
 | 200 ボディ | `Bean[]` |
 
-### 2.2 POST /api/beans
+### POST /api/beans
 
 豆を新規作成する。
 
@@ -83,14 +81,14 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 | 201 ボディ | `{ "id": "<uuid>" }` |
 | 400 | バリデーションエラー |
 
-### 2.3 GET /api/beans/{id}
+### GET /api/beans/{id}
 
 | 項目 | 値 |
 | --- | --- |
 | 200 ボディ | `Bean` |
 | 404 | 存在しない / 他ユーザー所有 |
 
-### 2.4 PUT /api/beans/{id}
+### PUT /api/beans/{id}
 
 | 項目 | 値 |
 | --- | --- |
@@ -99,16 +97,16 @@ Brewia の HTTP API 仕様。すべてのエンドポイントは Next.js App Ro
 | 400 | バリデーションエラー |
 | 404 | 対象なし |
 
-### 2.5 DELETE /api/beans/{id}
+### DELETE /api/beans/{id}
 
 | 項目 | 値 |
 | --- | --- |
 | 204 | 削除成功 |
 | 404 | 対象なし |
 
-> 紐づく `brew` と `brew_flavor` も Repository のトランザクション内でカスケード削除される。
+紐づく `brew` と `brew_flavor` も Repository のトランザクション内でカスケード削除される。
 
-### 2.6 POST /api/beans/extract
+### POST /api/beans/extract
 
 豆袋などの写真から豆フィールド候補を LLM で抽出する。
 
@@ -146,11 +144,9 @@ LLM 出力は次のとおり正規化される。
 - `roast`: `ROAST_LEVELS` に大文字小文字無視で一致するもののみ採用
 - 文字列は `trim` され、空のものは省略
 
----
+## Brews API
 
-## 3. Brews API
-
-### 3.1 GET /api/brews
+### GET /api/brews
 
 | 項目 | 値 |
 | --- | --- |
@@ -158,7 +154,7 @@ LLM 出力は次のとおり正規化される。
 | 200 ボディ（`beanId` なし） | `Brew[]` |
 | 200 ボディ（`beanId` あり） | `BrewWithBean[]`（豆 + フレーバー結合） |
 
-### 3.2 POST /api/brews
+### POST /api/brews
 
 | 項目 | 値 |
 | --- | --- |
@@ -166,16 +162,18 @@ LLM 出力は次のとおり正規化される。
 | 201 ボディ | `{ "id": "<uuid>" }` |
 | 400 | バリデーションエラー |
 
-> `flavorIds` は重複除去された上で中間テーブル `brew_flavor` に挿入される。
+`flavorIds` は重複除去された上で中間テーブル `brew_flavor` に挿入される。
 
-### 3.3 GET /api/brews/{id}
+### GET /api/brews/{id}
 
 | 項目 | 値 |
 | --- | --- |
 | 200 ボディ | `BrewWithBean`（豆 + フレーバー一覧を含む） |
 | 404 | 対象なし / 他ユーザー所有 |
 
-### 3.4 PUT /api/brews/{id}
+### PUT /api/brews/{id}
+
+`PUT /api/brews/:id` のレイヤ間処理は「データフロー」セクションのシーケンス図を参照。
 
 | 項目 | 値 |
 | --- | --- |
@@ -183,24 +181,22 @@ LLM 出力は次のとおり正規化される。
 | 200 ボディ | `Brew`（更新後） |
 | 400 / 404 | 通常のエラー |
 
-> 更新時は中間テーブル `brew_flavor` を一旦全削除してから再作成する（差分更新ではなく全置換）。
+更新時は中間テーブル `brew_flavor` を一旦全削除してから再作成する（差分更新ではなく全置換）。
 
-### 3.5 DELETE /api/brews/{id}
+### DELETE /api/brews/{id}
 
 | 項目 | 値 |
 | --- | --- |
 | 204 | 削除成功 |
 | 404 | 対象なし |
 
----
+## Brew Presets API
 
-## 4. Brew Presets API
-
-### 4.1 GET /api/brew-presets
+### GET /api/brew-presets
 
 ユーザーのプリセット一覧。固定 / 組み込みプリセットは存在しない。
 
-### 4.2 POST /api/brew-presets
+### POST /api/brew-presets
 
 | 項目 | 値 |
 | --- | --- |
@@ -208,26 +204,24 @@ LLM 出力は次のとおり正規化される。
 | 201 ボディ | `{ "id": "<uuid>" }` |
 | 400 | `steps` が空のとき / バリデーションエラー |
 
-### 4.3 GET /api/brew-presets/{id}
+### GET /api/brew-presets/{id}
 
 | 項目 | 値 |
 | --- | --- |
 | 200 ボディ | `BrewPreset` |
 | 404 | 対象なし |
 
-### 4.4 PUT /api/brew-presets/{id}
+### PUT /api/brew-presets/{id}
 
 通常の更新。`steps` 配列は最低 1 件必要。
 
-### 4.5 DELETE /api/brew-presets/{id}
+### DELETE /api/brew-presets/{id}
 
 通常の削除。
 
----
+## Flavors API
 
-## 5. Flavors API
-
-### 5.1 GET /api/flavors
+### GET /api/flavors
 
 全ユーザー共通のフレーバーマスタを返す。
 
@@ -236,13 +230,11 @@ LLM 出力は次のとおり正規化される。
 | 認証 | 必須（middleware が `/api/*` を保護するため） |
 | 200 ボディ | `Flavor[]` |
 
-> `flavor` には `user_id` を持たせていない。アクセス制御は「Brew が当該ユーザーの所有である」ことで担保される。
+`flavor` には `user_id` を持たせていない。アクセス制御は「Brew が当該ユーザーの所有である」ことで行う。
 
----
+## Auth API
 
-## 6. Auth API
-
-### 6.1 GET / POST /api/auth/[...nextauth]
+### GET / POST /api/auth/[...nextauth]
 
 Auth.js が自動生成するハンドラ。次のサブパスを受け持つ。
 
@@ -252,13 +244,11 @@ Auth.js が自動生成するハンドラ。次のサブパスを受け持つ。
 
 middleware の `matcher` は `/api/auth/*` を素通しさせる。
 
----
-
-## 7. リクエスト DTO
+## リクエスト DTO
 
 各 DTO は `app/<resource>/schema.ts` に Zod スキーマとして定義されている。
 
-### 7.1 UpsertBeanDto
+### UpsertBeanDto
 
 | キー | 型 | 必須 | 制約 |
 | --- | --- | --- | --- |
@@ -273,7 +263,7 @@ middleware の `matcher` は `/api/auth/*` を素通しさせる。
 | `priceJpy` | number |  | 0 以上の整数。空文字 / null は 0 に正規化 |
 | `notes` | string |  | 既定 `""` |
 
-### 7.2 UpsertBrewDto
+### UpsertBrewDto
 
 | キー | 型 | 必須 | 制約 |
 | --- | --- | --- | --- |
@@ -293,7 +283,7 @@ middleware の `matcher` は `/api/auth/*` を素通しさせる。
 
 `BrewStep` は `{ time: number(>=0), water: number(>=0) }`。
 
-### 7.3 UpsertBrewPresetDto
+### UpsertBrewPresetDto
 
 | キー | 型 | 必須 | 制約 |
 | --- | --- | --- | --- |
@@ -303,9 +293,7 @@ middleware の `matcher` は `/api/auth/*` を素通しさせる。
 | `defaultWaterTemp` | number |  | 0–100 / 空文字は 0 |
 | `steps` | `BrewStep[]` | ◯ | 1 件以上 |
 
----
-
-## 8. レスポンス型
+## レスポンス型
 
 `lib/types.ts` を参照。代表的な型は次のとおり。
 
@@ -370,11 +358,9 @@ type Flavor = {
 }
 ```
 
----
+## データフロー
 
-## 9. データフロー（参考）
-
-`PUT /api/brews/:id` のレイヤ間処理。
+`PUT /api/brews/:id` のレイヤ間処理を示す。
 
 ```mermaid
 sequenceDiagram
@@ -409,9 +395,7 @@ sequenceDiagram
     end
 ```
 
----
-
-## 10. 環境変数
+## 環境変数
 
 サーバ動作に必要なキー。
 
@@ -427,9 +411,7 @@ ANTHROPIC_MODEL=                 # 任意。既定 claude-3-5-haiku-20241022
 
 `AUTH_URL` は Vercel デプロイで自動設定される。カスタムドメイン使用時のみ明示指定。
 
----
-
-## 11. Auth.js テーブル
+## Auth.js テーブル
 
 `/api/auth/*` 経由で次のテーブルが操作される（直接の API は提供しない）。
 
