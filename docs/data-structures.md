@@ -1,6 +1,8 @@
 # Data Structures
 
-`lib/types.ts` の型情報を、名称・変数名・型・概要で整理しています。
+`lib/types.ts` の型情報を、名称・変数名・型・概要で整理した早見表です。
+
+> DB スキーマ・テナント境界・マイグレーション履歴を含む正本のデータ仕様は [data-spec.md](./data-spec.md) を参照してください。
 
 ## Bean
 

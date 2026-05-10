@@ -24,5 +24,16 @@ pnpm start
 
 ## Documentation
 
+### 仕様書（開発資産）
+
+- [要件定義書](./docs/requirements.md)
+- [API 仕様書](./docs/api-spec.md)
+- [データ仕様書](./docs/data-spec.md)
+- [画面仕様書](./docs/screen-spec.md)
+
+### 開発ガイド
+
 - [Development Guide](./docs/development-guide.md)
-- [Data Structures](./docs/data-structures.md)
+- [認証アーキテクチャ](./docs/auth-architecture.md)
+- [写真フォーム抽出](./docs/photo-form-extraction.md)
+- [Data Structures（型早見表）](./docs/data-structures.md)
