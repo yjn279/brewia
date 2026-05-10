@@ -56,6 +56,8 @@ flowchart LR
 
 ### 共通要素
 
+各画面に共通して使用されるコンポーネントは以下のとおり。
+
 - ヘッダ: `PageHeader`（左に戻る / タイトル、右にアクション群と `UserMenu`）
 - ヘッダアクション: `HeaderAction`（`primary` / `secondary` バリアント）
 - ユーザーメニュー: メールアドレス表示 + Sign out
