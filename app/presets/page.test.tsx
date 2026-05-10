@@ -42,12 +42,6 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-vi.mock('@/app/presets/preset-edit-dialog', () => ({
-  PresetEditDialog: ({ preset }: { preset: { name: string } }) => (
-    <button type="button">{`Edit ${preset.name}`}</button>
-  ),
-}))
-
 vi.mock('@/components/delete-resource-button', () => ({
   DeleteResourceButton: () => <button type="button">Delete</button>,
 }))
@@ -84,7 +78,7 @@ describe('PresetsPage', () => {
     expect(screen.getByText('No saved presets yet')).toBeDefined()
   })
 
-  it('shows user preset with edit and delete controls when presets exist', async () => {
+  it('shows user preset with edit link and delete button when presets exist', async () => {
     const userPreset = {
       id: 'preset-1',
       userId: 'user-1',
@@ -103,8 +97,29 @@ describe('PresetsPage', () => {
 
     expect(screen.getByText('My Custom Preset')).toBeDefined()
     expect(screen.getByText('A great recipe')).toBeDefined()
-    expect(screen.getByRole('button', { name: /Edit My Custom Preset/i })).toBeDefined()
     expect(screen.getByRole('button', { name: 'Delete' })).toBeDefined()
+  })
+
+  it('renders edit link with href pointing to /presets/<id>/edit', async () => {
+    const userPreset = {
+      id: 'preset-1',
+      userId: 'user-1',
+      name: 'My Custom Preset',
+      description: 'A great recipe',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      steps: [{ time: 30, water: 50 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+    getBrewPresetsMock.mockResolvedValue([userPreset])
+
+    const page = await PresetsPage()
+    render(page)
+
+    const editLink = screen.getByRole('link', { name: /edit preset/i })
+    expect(editLink).toBeDefined()
+    expect(editLink.getAttribute('href')).toBe('/presets/preset-1/edit')
   })
 
   it('includes a back link to home', async () => {
