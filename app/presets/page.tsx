@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import { ArrowLeft, BookMarked } from 'lucide-react'
+import { ArrowLeft, BookMarked, Pencil } from 'lucide-react'
 import { brewPresetsService } from '@/app/brew-presets/service'
 import { requireUser } from '@/lib/auth/require-user'
 import { signOutAction } from '@/lib/auth/actions'
 import { DeleteResourceButton } from '@/components/delete-resource-button'
-import { PresetEditDialog } from '@/app/presets/preset-edit-dialog'
 import { PageHeader, HeaderAction } from '@/components/page-header'
+import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/components/user-menu'
 import {
   Empty,
@@ -82,7 +82,16 @@ export default async function PresetsPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
-                      <PresetEditDialog preset={preset} />
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 px-0"
+                      >
+                        <Link href={`/presets/${preset.id}/edit`} aria-label="Edit preset">
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
                       <DeleteResourceButton
                         endpoint={`/api/brew-presets/${preset.id}`}
                         redirectTo="/presets"
