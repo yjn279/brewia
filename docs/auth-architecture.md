@@ -8,7 +8,7 @@
 
 ### Goals
 
-- Auth.js (NextAuth v5 beta) + Google OAuth + Email Magic Link によるログイン/ログアウト
+- Auth.js (NextAuth v5 beta) + Google OAuth によるログイン/ログアウト
 - ユーザーセッションを Turso（libSQL/SQLite）に永続化
 - `bean` / `brew` をユーザー単位にスコープし、他ユーザーのデータに一切アクセスできないよう保護
 - 既存データの喪失なし（最初のログインユーザーが既存データを引き取る backfill）
@@ -28,7 +28,7 @@
 ## 2. 合意済みの方針（再掲）
 
 1. **認証プロバイダ**: Auth.js (NextAuth v5 beta / `next-auth@5`) + Drizzle Adapter (`@auth/drizzle-adapter`)。user/account/session/verificationToken テーブルを Turso に相乗り。
-2. **ログイン手段**: Google OAuth + Email Magic Link（実装時は Resend を想定、インターフェースは抽象化）。
+2. **ログイン手段**: Google OAuth のみ（Email Magic Link / Resend は Issue #107 で廃止済み）。
 3. **既存データ移行**: 最初にログインしたユーザーが既存の全 bean/brew/brew_flavor を引き取る backfill SQL。データ喪失は避ける。
 4. **`flavor` は共有マスタ**: `user_id` を付けない。全ユーザーで共有。
 5. **未認証ゲート**: `/login` と `/api/auth/*` 以外はすべてログイン必須。未認証は `/login` にリダイレクト。
@@ -417,7 +417,7 @@ app/layout.tsx
   セッションプロバイダ不要（Auth.js v5 は RSC ネイティブ）
 
 .env.example
-  AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, AUTH_RESEND_KEY, EMAIL_FROM 追加
+  AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET 追加（AUTH_RESEND_KEY / EMAIL_FROM は Issue #107 で削除済み）
 
 drizzle/
   0001_add_auth_tables.sql        # Auth.js 4テーブル追加
@@ -463,8 +463,8 @@ export const config = {
 
 - Server Component。`requireUser()` は呼ばない（ログインページ自体は公開）。
 - セッションがある場合は `/` にリダイレクト（`auth()` を呼んで確認）。
-- Google ログインボタンと Email Magic Link フォームを表示。
-- `signIn('google')` / `signIn('resend', { email })` を Server Action または Client Component から呼び出す。
+- Google ログインボタンのみを表示（Email Magic Link フォームは Issue #107 で廃止済み）。
+- `signIn('google')` を Server Action から呼び出す。
 
 ---
 
@@ -535,10 +535,10 @@ SQLite は `ALTER COLUMN` をサポートしないため、テーブル再作成
 
 ### スライス 1: Auth.js 基盤
 
-**目的**: Google OAuth + Email Magic Link でのログイン/ログアウトが動作する。セッションが Turso に保存される。
+**目的**: Google OAuth でのログイン/ログアウトが動作する。セッションが Turso に保存される。（Email Magic Link / Resend は Issue #107 で廃止済み）
 
 **対象ファイル**:
-- `package.json` に `next-auth@5`, `@auth/drizzle-adapter`, `resend` 追加
+- `package.json` に `next-auth@5`, `@auth/drizzle-adapter` 追加
 - `lib/db/schema.ts` に Auth.js 4テーブル追加
 - `lib/auth/config.ts`, `lib/auth/require-user.ts`, `lib/auth/index.ts`
 - `app/api/auth/[...nextauth]/route.ts`
@@ -549,7 +549,6 @@ SQLite は `ALTER COLUMN` をサポートしないため、テーブル再作成
 **受け入れ条件**:
 - `/` にアクセス → 未ログインなら `/login` にリダイレクト
 - Google ログイン → `/` に戻る
-- Email Magic Link → メールが届きクリックで `/` に戻る
 - ログアウト → `/login` に戻る
 - Turso DB に session/user/account 行が作成される
 - `/offline`, `/login`, `/api/auth/*` は未認証でアクセス可能
@@ -729,10 +728,6 @@ AUTH_SECRET=                    # openssl rand -base64 32 で生成。必須。
 AUTH_GOOGLE_ID=                 # Google Cloud Console の OAuth クライアント ID
 AUTH_GOOGLE_SECRET=             # Google Cloud Console の OAuth クライアントシークレット
 
-# Email Magic Link プロバイダ (Resend を想定)
-AUTH_RESEND_KEY=                # Resend API キー
-EMAIL_FROM=noreply@example.com  # 送信元メールアドレス
-
 # 既存（参考）
 TURSO_DATABASE_URL=
 TURSO_AUTH_TOKEN=
@@ -762,7 +757,7 @@ ANTHROPIC_API_KEY=
 
 ### 11.3 `app/login/page.tsx` のデザイン
 
-最低限の機能（Google ボタン + Email フォーム）でよいか、ブランドロゴや説明文のデザインが必要かを確認。
+Google ボタンのみの最小ログイン画面として実装済み（Issue #107 で Email フォームを廃止）。
 
 ### 11.4 `flavor` の管理
 

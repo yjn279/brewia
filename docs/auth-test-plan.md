@@ -19,7 +19,7 @@
 ### スコープ外
 
 - **Slice 6 (NOT NULL 化)**: 別 PR に切り出す。このテスト計画ではスコープ外。テスト除外項目一覧（セクション 5）に記載。
-- 実 OAuth フロー / 実メール送信（Resend）
+- 実 OAuth フロー（Email Magic Link / Resend は Issue #107 で廃止済み）
 - Drizzle Adapter の実 DB 動作確認
 - PWA オフライン時の認証挙動
 - マイグレーション SQL ファイルの内容検証
@@ -258,10 +258,10 @@ describe('LoginPage', () => {
   // Act: render(<LoginPage />)
   // Assert: screen.getByRole('button', { name: /Google/ }) または getByText(/Google/) が存在する
 
-  it('LP2: 未認証状態でレンダリングしたとき Email 入力フィールドが存在する')
+  it('LP2: 未認証状態でレンダリングしたとき Email 入力フィールドが存在しない（廃止済み: Issue #107）')
   // Arrange: authMock.mockResolvedValue(null)
   // Act: render(<LoginPage />)
-  // Assert: screen.getByRole('textbox', { name: /email/i }) または getByPlaceholderText(/email/i) が存在する
+  // Assert: screen.queryByRole('textbox') が null、screen.queryByPlaceholderText(/email/i) が null
 
   it('LP3: 認証済み状態でレンダリングしたとき redirect("/") が呼ばれる')
   // Arrange: authMock.mockResolvedValue({ user: { id: 'user-1', email: 'a@example.com' } })
@@ -276,8 +276,8 @@ describe('LoginPage', () => {
 2. `lib/auth/require-user.ts` を実装して green にする（`auth()` 呼び出しと null ガード + redirect のみ）。
 3. `middleware.test.ts` の M1〜M8 を書く（`middleware.ts` が存在しないので red）。
 4. `middleware.ts` を実装して green にする。
-5. `app/login/page.render.test.tsx` の LP1〜LP2 を書く（`app/login/page.tsx` が存在しないので red）。
-6. `app/login/page.tsx` を最小実装（ボタンと input フィールドのみ）して green にする。
+5. `app/login/page.render.test.tsx` の LP1〜LP3 を書く（`app/login/page.tsx` が存在しないので red）。
+6. `app/login/page.tsx` を最小実装（Google ボタンのみ）して green にする。
 
 #### 3.1.5 受け入れ条件との対応
 
@@ -289,13 +289,12 @@ describe('LoginPage', () => {
 | `requireUser()` 認証済み → user 返却 | RU1, RU4 |
 | `getAuthenticatedUser()` 未認証 → null | GAU2, GAU3 |
 | Google ログインボタンが存在 | LP1 |
-| Email Magic Link フォームが存在 | LP2 |
+| Email 入力フィールドが存在しない（Issue #107 で廃止） | LP2 |
 | ログイン済みで /login → / へリダイレクト | LP3 |
 
 #### 3.1.6 除外項目
 
 - 実 Google OAuth コールバックフロー（E2E レベル、手動確認）
-- 実 Resend メール送信（手動確認）
 - Drizzle Adapter による session/user/account テーブルへの書き込み確認（手動確認）
 - `lib/auth/config.ts` の providers/adapter 設定内容のテスト（Auth.js 内部実装に依存するため）
 
@@ -956,7 +955,7 @@ describe('DELETE /api/brews/[id]', () => {
 | S1 | `requireUser()` セッションなし → redirect('/login') | RU2, RU3 |
 | S1 | `getAuthenticatedUser()` セッションなし → null | GAU2, GAU3 |
 | S1 | ログインページに Google ボタンが存在 | LP1 |
-| S1 | ログインページに Email フォームが存在 | LP2 |
+| S1 | ログインページに Email 入力フィールドが存在しない（Issue #107 で廃止） | LP2 |
 | S1 | ログイン済みで `/login` → `/` リダイレクト | LP3 |
 | S2 | 1人目サインイン → NULL 行がそのユーザーに割り当てられる | BF1, BF2, BF3 |
 | S2 | 2回実行しても結果が変わらない（冪等） | BF4 |
@@ -993,7 +992,7 @@ describe('DELETE /api/brews/[id]', () => {
 | 除外項目 | 理由 | 確認方法 |
 |---|---|---|
 | 実 Google OAuth フロー | 外部サービス依存・E2E レベル | 手動確認（Vercel プレビュー環境） |
-| 実 Resend メール送信 | 外部サービス依存 | 手動確認（実メール受信） |
+| 実 Resend メール送信 | Issue #107 で廃止済み | 対応不要 |
 | Drizzle Adapter の session/user/account 書き込み | Auth.js 内部実装に依存 | 手動確認（DB 直接 SELECT） |
 | `lib/auth/config.ts` の providers/adapter 設定 | Auth.js v5 beta の API に依存 | 手動確認 + 型チェック |
 | マイグレーション SQL ファイルの内容検証 | SQL テスト環境が未整備 | 手動実行 + `SELECT COUNT(*)` 確認 |
