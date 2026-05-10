@@ -25,4 +25,8 @@ pnpm start
 ## Documentation
 
 - [Development Guide](./docs/development-guide.md)
+- [Requirements](./docs/requirements.md)
+- [API Spec](./docs/api-spec.md)
+- [Data Spec](./docs/data-spec.md)
+- [Screen Spec](./docs/screen-spec.md)
 - [Data Structures](./docs/data-structures.md)
