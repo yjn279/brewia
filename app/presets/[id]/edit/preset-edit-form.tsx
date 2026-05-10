@@ -21,12 +21,8 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [name, setName] = useState(preset.name)
   const [description, setDescription] = useState(preset.description)
-  // 0 は未入力扱いとして空欄表示にする
-  const [defaultBeanWeight, setDefaultBeanWeight] = useState(
-    preset.defaultBeanWeight > 0 ? String(preset.defaultBeanWeight) : ''
-  )
-  const [defaultWaterTemp, setDefaultWaterTemp] = useState(
-    preset.defaultWaterTemp > 0 ? String(preset.defaultWaterTemp) : ''
+  const [brewRatio, setBrewRatio] = useState(
+    preset.brewRatio > 0 ? String(preset.brewRatio) : ''
   )
   const [stepInputs, setStepInputs] = useState<Array<{ time: string; water: string }>>(
     preset.steps.length > 0
@@ -39,7 +35,6 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max)
 
-  // totalWater/totalTime の派生: max(300, ...stepInputs[].water/time)
   const totalWater = useMemo(() => {
     const waterValues = stepInputs
       .map((row) => parseFloat(row.water))
@@ -54,7 +49,6 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
     return Math.max(300, ...timeValues, 0)
   }, [stepInputs])
 
-  // PourChart に渡す整形済み steps（数値化・スナップ・クランプ・昇順・重複除去）
   const chartSteps = useMemo(() => {
     return stepInputs
       .map((row) => ({
@@ -109,8 +103,6 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
   const handleSave = async () => {
     if (!name.trim()) return
 
-    // stepInputs を BrewStep[] に変換（数値化、スナップ・クランプ済み、time 昇順、重複除去）
-    // 空文字列行を最初に除外（Number('') === 0 は isFinite だが空入力として扱わない）
     const steps = stepInputs
       .filter((row) => row.time.trim() !== '' && row.water.trim() !== '')
       .map((row) => ({
@@ -143,8 +135,7 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim(),
-          defaultBeanWeight: defaultBeanWeight ? parseFloat(defaultBeanWeight) : 0,
-          defaultWaterTemp: defaultWaterTemp ? parseFloat(defaultWaterTemp) : 0,
+          brewRatio: brewRatio ? parseFloat(brewRatio) : 0,
           steps,
         }),
       })
@@ -183,39 +174,24 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-preset-bean-weight">Bean Weight (g)</Label>
-            <Input
-              id="edit-preset-bean-weight"
-              type="number"
-              min={0}
-              step={0.1}
-              value={defaultBeanWeight}
-              onChange={(e) => setDefaultBeanWeight(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-preset-water-temp">Water Temp (°C)</Label>
-            <Input
-              id="edit-preset-water-temp"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              value={defaultWaterTemp}
-              onChange={(e) => setDefaultWaterTemp(e.target.value)}
-            />
-          </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-preset-brew-ratio">Brew Ratio (1:N)</Label>
+          <Input
+            id="edit-preset-brew-ratio"
+            type="number"
+            min={0}
+            step={0.1}
+            value={brewRatio}
+            onChange={(e) => setBrewRatio(e.target.value)}
+            placeholder="15"
+          />
         </div>
       </div>
 
-      {/* PourChart: Steps セクション直上 */}
       <div>
         <PourChart steps={chartSteps} totalWater={totalWater} variant="chart-only" />
       </div>
 
-      {/* Steps セクション: 行ベース入力 */}
       <div className="flex flex-col gap-2">
         <Label>Steps</Label>
         <div className="space-y-2">

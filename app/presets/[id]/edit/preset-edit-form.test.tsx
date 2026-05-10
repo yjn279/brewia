@@ -29,8 +29,7 @@ const samplePreset = {
   userId: 'user-1',
   name: 'My Preset',
   description: 'A description',
-  defaultBeanWeight: 20,
-  defaultWaterTemp: 93,
+  brewRatio: 15,
   steps: [{ time: 30, water: 50 }],
   created: '2026-01-01T00:00:00Z',
   updated: '2026-01-01T00:00:00Z',
@@ -47,22 +46,14 @@ describe('PresetEditForm', () => {
 
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('My Preset')
     expect((screen.getByLabelText('Description') as HTMLTextAreaElement).value).toBe('A description')
-    expect((screen.getByLabelText('Bean Weight (g)') as HTMLInputElement).value).toBe('20')
-    expect((screen.getByLabelText('Water Temp (°C)') as HTMLInputElement).value).toBe('93')
+    expect((screen.getByLabelText('Brew Ratio (1:N)') as HTMLInputElement).value).toBe('15')
   })
 
-  it('shows empty string for defaultBeanWeight when value is 0', () => {
-    const preset = { ...samplePreset, defaultBeanWeight: 0 }
+  it('shows empty string for brewRatio when value is 0', () => {
+    const preset = { ...samplePreset, brewRatio: 0 }
     render(<PresetEditForm preset={preset} />)
 
-    expect((screen.getByLabelText('Bean Weight (g)') as HTMLInputElement).value).toBe('')
-  })
-
-  it('shows empty string for defaultWaterTemp when value is 0', () => {
-    const preset = { ...samplePreset, defaultWaterTemp: 0 }
-    render(<PresetEditForm preset={preset} />)
-
-    expect((screen.getByLabelText('Water Temp (°C)') as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText('Brew Ratio (1:N)') as HTMLInputElement).value).toBe('')
   })
 
   it('initializes with one empty step row when steps is empty', () => {
@@ -97,7 +88,7 @@ describe('PresetEditForm', () => {
     expect(screen.getByTestId('pour-chart')).toBeDefined()
   })
 
-  it('calls PUT /api/brew-presets/:id with correct body on Save', async () => {
+  it('calls PUT /api/brew-presets/:id with brewRatio in body on Save', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -116,8 +107,7 @@ describe('PresetEditForm', () => {
     const body = JSON.parse(options.body as string)
     expect(body.name).toBe('My Preset')
     expect(body.description).toBe('A description')
-    expect(body.defaultBeanWeight).toBe(20)
-    expect(body.defaultWaterTemp).toBe(93)
+    expect(body.brewRatio).toBe(15)
     expect(Array.isArray(body.steps)).toBe(true)
   })
 
@@ -167,10 +157,8 @@ describe('PresetEditForm', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchMock)
 
-    // Render with one step that has concrete values
     render(<PresetEditForm preset={samplePreset} />)
 
-    // Clear both time and water inputs for step 1
     const step1TimeInput = screen.getByLabelText('Step 1 time')
     const step1WaterInput = screen.getByLabelText('Step 1 water')
     fireEvent.change(step1TimeInput, { target: { value: '' } })
@@ -192,13 +180,12 @@ describe('PresetEditForm', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchMock)
 
-    // steps out of order with a duplicate
     const preset = {
       ...samplePreset,
       steps: [
         { time: 60, water: 100 },
         { time: 30, water: 50 },
-        { time: 30, water: 50 }, // duplicate
+        { time: 30, water: 50 },
       ],
     }
     render(<PresetEditForm preset={preset} />)
@@ -213,9 +200,7 @@ describe('PresetEditForm', () => {
     const [, options] = fetchMock.mock.calls[0] as [string, RequestInit]
     const body = JSON.parse(options.body as string)
     const steps = body.steps as Array<{ time: number; water: number }>
-    // Should be sorted ascending by time
     expect(steps[0].time).toBeLessThan(steps[1].time)
-    // Duplicate should be removed
     expect(steps.length).toBe(2)
   })
 })

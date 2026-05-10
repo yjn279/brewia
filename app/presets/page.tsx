@@ -77,8 +77,7 @@ export default async function PresetsPage() {
                       )}
                       <p className="mt-1 text-xs text-muted-foreground">
                         {preset.steps.length} steps
-                        {preset.defaultBeanWeight > 0 && ` · ${preset.defaultBeanWeight}g bean`}
-                        {preset.defaultWaterTemp > 0 && ` · ${preset.defaultWaterTemp}°C`}
+                        {preset.brewRatio > 0 && ` · 1:${preset.brewRatio}`}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">

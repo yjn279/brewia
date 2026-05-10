@@ -46,8 +46,7 @@ const sampleRow = {
   userId: 'user-1',
   name: 'My Preset',
   description: 'A test preset',
-  defaultBeanWeight: 20,
-  defaultWaterTemp: 93,
+  brewRatio: 15,
   steps: JSON.stringify([{ time: 30, water: 50 }, { time: 60, water: 200 }]),
   created: '2026-01-01T00:00:00Z',
   updated: '2026-01-01T00:00:00Z',
@@ -67,13 +66,13 @@ describe('BrewPresetsRepository', () => {
     const result = await repo.create('user-1', {
       name: 'My Preset',
       description: 'A test preset',
-      defaultBeanWeight: 20,
-      defaultWaterTemp: 93,
+      brewRatio: 15,
       steps: [{ time: 30, water: 50 }, { time: 60, water: 200 }],
     })
 
     expect(result.id).toBe('preset-1')
     expect(result.name).toBe('My Preset')
+    expect(result.brewRatio).toBe(15)
     expect(result.steps).toEqual([{ time: 30, water: 50 }, { time: 60, water: 200 }])
   })
 
@@ -87,22 +86,23 @@ describe('BrewPresetsRepository', () => {
 
     expect(results).toHaveLength(1)
     expect(results[0].id).toBe('preset-1')
+    expect(results[0].brewRatio).toBe(15)
     expect(results[0].steps).toEqual([{ time: 30, water: 50 }, { time: 60, water: 200 }])
   })
 
   it('update: updates an existing preset and returns mapped record', async () => {
-    updateReturningMock.mockResolvedValue([{ ...sampleRow, name: 'Updated Preset' }])
+    updateReturningMock.mockResolvedValue([{ ...sampleRow, name: 'Updated Preset', brewRatio: 18 }])
 
     const result = await repo.update('user-1', 'preset-1', {
       name: 'Updated Preset',
       description: 'Updated',
-      defaultBeanWeight: 25,
-      defaultWaterTemp: 90,
+      brewRatio: 18,
       steps: [{ time: 30, water: 50 }],
     })
 
     expect(result).toBeDefined()
     expect(result?.name).toBe('Updated Preset')
+    expect(result?.brewRatio).toBe(18)
   })
 
   it('update: returns undefined when preset not found', async () => {
@@ -111,8 +111,7 @@ describe('BrewPresetsRepository', () => {
     const result = await repo.update('user-1', 'nonexistent', {
       name: 'X',
       description: '',
-      defaultBeanWeight: 0,
-      defaultWaterTemp: 0,
+      brewRatio: 0,
       steps: [{ time: 10, water: 20 }],
     })
 

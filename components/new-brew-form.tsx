@@ -83,6 +83,11 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     initialBrew !== undefined ? initialBrew.overall === 0 : false
   )
 
+  // Brew Ratio lock: ON = scaling enabled
+  const [ratioLocked, setRatioLocked] = useState(true)
+  // The reference pair that defines the ratio: { bean, water, steps } — immutable snapshot used for scaling
+  const [ratioBasis, setRatioBasis] = useState<{ bean: number; water: number; steps: number[] } | null>(null)
+
   const handleRecordLaterToggle = (checked: boolean) => {
     // When toggling OFF: if every rating is currently 0, reset to defaults
     if (!checked) {
@@ -214,19 +219,25 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       })
   }, [])
 
-  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; defaultBeanWeight?: number; defaultWaterTemp?: number }) => {
+  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; brewRatio?: number }) => {
     setStepInputs(
       preset.steps.map((s) => ({
         time: String(s.time),
         water: String(s.water),
       })),
     )
-    // 0 は未入力扱いなので空欄にする
-    if (preset.defaultBeanWeight != null && preset.defaultBeanWeight > 0) {
-      setBeanWeight(String(preset.defaultBeanWeight))
-    }
-    if (preset.defaultWaterTemp != null && preset.defaultWaterTemp > 0) {
-      setWaterTemp(String(preset.defaultWaterTemp))
+    // プリセットの brewRatio から、steps の water 合計を基準値として ratioBasis を構築する
+    // (Y方針: steps は基準豆量での絶対値として保存されている)
+    if (ratioLocked && preset.brewRatio != null && preset.brewRatio > 0) {
+      const stepWaterTotal = preset.steps.reduce((sum, s) => sum + s.water, 0)
+      if (stepWaterTotal > 0) {
+        const basisBean = stepWaterTotal / preset.brewRatio
+        setRatioBasis({
+          bean: basisBean,
+          water: stepWaterTotal,
+          steps: preset.steps.map((s) => s.water),
+        })
+      }
     }
   }
 
@@ -238,14 +249,16 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     }
     setIsSavingPreset(true)
     try {
+      const beanNum = beanWeight ? parseFloat(beanWeight) : 0
+      const waterNum = waterWeight ? parseFloat(waterWeight) : 0
+      const computedRatio = beanNum > 0 && waterNum > 0 ? waterNum / beanNum : 0
       const response = await fetch('/api/brew-presets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: presetName.trim(),
           description: presetDescription.trim(),
-          defaultBeanWeight: beanWeight ? parseFloat(beanWeight) : 0,
-          defaultWaterTemp: waterTemp ? parseFloat(waterTemp) : 0,
+          brewRatio: computedRatio,
           steps,
         }),
       })
@@ -269,6 +282,62 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       toast({ title: 'Failed to save preset', variant: 'destructive' })
     } finally {
       setIsSavingPreset(false)
+    }
+  }
+
+  const snapWater = (v: number) => Math.round(v / STEP_WATER_INTERVAL) * STEP_WATER_INTERVAL
+
+  const handleBeanWeightChange = (value: string) => {
+    setBeanWeight(value)
+    if (!ratioLocked || !ratioBasis) return
+    const newBean = parseFloat(value)
+    if (!Number.isFinite(newBean) || newBean <= 0) return
+    const scale = newBean / ratioBasis.bean
+    const newWater = snapWater(ratioBasis.water * scale)
+    setWaterWeight(String(newWater))
+    const basisSteps = ratioBasis.steps
+    setStepInputs((prev) =>
+      prev.map((row, i) => {
+        const basisW = basisSteps[i]
+        if (basisW === undefined) return row
+        return { ...row, water: String(snapWater(basisW * scale)) }
+      }),
+    )
+  }
+
+  const handleWaterWeightChange = (value: string) => {
+    setWaterWeight(value)
+    if (!ratioLocked || !ratioBasis) return
+    const newWater = parseFloat(value)
+    if (!Number.isFinite(newWater) || newWater <= 0) return
+    const scale = newWater / ratioBasis.water
+    const newBean = ratioBasis.bean * scale
+    setBeanWeight(String(newBean))
+    const basisSteps = ratioBasis.steps
+    setStepInputs((prev) =>
+      prev.map((row, i) => {
+        const basisW = basisSteps[i]
+        if (basisW === undefined) return row
+        return { ...row, water: String(snapWater(basisW * scale)) }
+      }),
+    )
+  }
+
+  const handleRatioLockedChange = (checked: boolean) => {
+    setRatioLocked(checked)
+    if (checked) {
+      // トグルを ON にした瞬間の現在値ペアと steps を基準として確定する
+      const bean = parseFloat(beanWeight)
+      const water = parseFloat(waterWeight)
+      if (Number.isFinite(bean) && bean > 0 && Number.isFinite(water) && water > 0) {
+        const currentSteps = stepInputs.map((row) => {
+          const w = parseFloat(row.water)
+          return Number.isFinite(w) ? w : 0
+        })
+        setRatioBasis({ bean, water, steps: currentSteps })
+      } else {
+        setRatioBasis(null)
+      }
     }
   }
 
@@ -345,7 +414,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 id="beanWeight"
                 type="number"
                 value={beanWeight}
-                onChange={(e) => setBeanWeight(e.target.value)}
+                onChange={(e) => handleBeanWeightChange(e.target.value)}
                 min="1"
                 step="any"
                 placeholder="0"
@@ -363,7 +432,7 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
                 id="waterWeight"
                 type="number"
                 value={waterWeight}
-                onChange={(e) => setWaterWeight(e.target.value)}
+                onChange={(e) => handleWaterWeightChange(e.target.value)}
                 min="1"
                 step="any"
                 required
@@ -410,9 +479,23 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
             </div>
           </Field>
         </div>
-        <div className="mt-4 flex items-center justify-center rounded-lg bg-secondary p-3">
-          <span className="text-sm text-muted-foreground">Brew Ratio</span>
-          <span className="ml-2 font-mono text-lg font-medium">1:{ratio}</span>
+        <div className="mt-4 flex items-center justify-between rounded-lg bg-secondary p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Brew Ratio</span>
+            <span className="font-mono text-lg font-medium">1:{ratio}</span>
+          </div>
+          <Label
+            htmlFor="ratio-lock-toggle"
+            className="flex cursor-pointer items-center gap-2 text-sm font-normal text-muted-foreground"
+          >
+            Keep ratio
+            <Switch
+              id="ratio-lock-toggle"
+              checked={ratioLocked}
+              onCheckedChange={handleRatioLockedChange}
+              aria-label="Keep ratio"
+            />
+          </Label>
         </div>
       </Card>
 

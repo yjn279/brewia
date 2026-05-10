@@ -43,6 +43,20 @@
       "when": 1778134726755,
       "tag": "0005_shocking_bloodscream",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1746847556000,
+      "tag": "0006_add_default_water_weight",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1778400000000,
+      "tag": "0007_replace_preset_weights_with_ratio",
+      "breakpoints": true
     }
   ]
 }

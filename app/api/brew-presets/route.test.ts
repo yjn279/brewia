@@ -24,8 +24,7 @@ import { GET, POST } from '@/app/api/brew-presets/route'
 const validBody = {
   name: 'My Custom Preset',
   description: 'A great preset',
-  defaultBeanWeight: 20,
-  defaultWaterTemp: 93,
+  brewRatio: 15,
   steps: [{ time: 30, water: 50 }, { time: 90, water: 200 }],
 }
 
@@ -79,11 +78,20 @@ describe('POST /api/brew-presets', () => {
     expect(createPresetMock).not.toHaveBeenCalled()
   })
 
-  it('given a negative defaultBeanWeight, returns 400', async () => {
-    const response = await POST(createRequest({ ...validBody, defaultBeanWeight: -1 }))
+  it('given a negative brewRatio, returns 400', async () => {
+    const response = await POST(createRequest({ ...validBody, brewRatio: -1 }))
 
     expect(response.status).toBe(400)
     expect(createPresetMock).not.toHaveBeenCalled()
+  })
+
+  it('given brewRatio is empty string, treats it as 0', async () => {
+    const response = await POST(createRequest({ ...validBody, brewRatio: '' }))
+
+    expect(response.status).toBe(201)
+    expect(createPresetMock).toHaveBeenCalledOnce()
+    const callArg = createPresetMock.mock.calls[0][1] as { brewRatio: number }
+    expect(callArg.brewRatio).toBe(0)
   })
 })
 

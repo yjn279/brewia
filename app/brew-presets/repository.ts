@@ -10,8 +10,7 @@ export interface BrewPresetRecord {
   userId: string
   name: string
   description: string
-  defaultBeanWeight: number
-  defaultWaterTemp: number
+  brewRatio: number
   steps: BrewStep[]
   created: string
   updated: string
@@ -20,8 +19,7 @@ export interface BrewPresetRecord {
 export interface BrewPresetMutationInput {
   name: string
   description: string
-  defaultBeanWeight: number
-  defaultWaterTemp: number
+  brewRatio: number
   steps: BrewStep[]
 }
 
@@ -31,8 +29,7 @@ function mapRow(row: typeof brewPresetsTable.$inferSelect): BrewPresetRecord {
     userId: row.userId,
     name: row.name,
     description: row.description,
-    defaultBeanWeight: row.defaultBeanWeight,
-    defaultWaterTemp: row.defaultWaterTemp,
+    brewRatio: row.brewRatio,
     steps: JSON.parse(row.steps) as BrewStep[],
     created: row.created,
     updated: row.updated,
@@ -67,8 +64,7 @@ export class BrewPresetsRepository {
         userId,
         name: input.name,
         description: input.description ?? '',
-        defaultBeanWeight: input.defaultBeanWeight,
-        defaultWaterTemp: input.defaultWaterTemp,
+        brewRatio: input.brewRatio,
         steps: JSON.stringify(input.steps),
       })
       .returning()
@@ -82,8 +78,7 @@ export class BrewPresetsRepository {
       .set({
         name: input.name,
         description: input.description ?? '',
-        defaultBeanWeight: input.defaultBeanWeight,
-        defaultWaterTemp: input.defaultWaterTemp,
+        brewRatio: input.brewRatio,
         steps: JSON.stringify(input.steps),
         updated: new Date().toISOString(),
       })
