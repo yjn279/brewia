@@ -18,9 +18,7 @@ export class BrewPresetsService {
     return brewPresetsRepository.create(userId, {
       name: dto.name,
       description: dto.description,
-      defaultBeanWeight: dto.defaultBeanWeight,
-      defaultWaterTemp: dto.defaultWaterTemp,
-      defaultWaterWeight: dto.defaultWaterWeight,
+      brewRatio: dto.brewRatio,
       steps: dto.steps,
     })
   }
@@ -29,9 +27,7 @@ export class BrewPresetsService {
     return brewPresetsRepository.update(userId, id, {
       name: dto.name,
       description: dto.description,
-      defaultBeanWeight: dto.defaultBeanWeight,
-      defaultWaterTemp: dto.defaultWaterTemp,
-      defaultWaterWeight: dto.defaultWaterWeight,
+      brewRatio: dto.brewRatio,
       steps: dto.steps,
     })
   }

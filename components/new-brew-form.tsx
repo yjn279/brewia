@@ -219,28 +219,25 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
       })
   }, [])
 
-  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; defaultBeanWeight?: number; defaultWaterTemp?: number; defaultWaterWeight?: number }) => {
+  const applyPreset = (preset: { steps: Array<{ time: number; water: number }>; brewRatio?: number }) => {
     setStepInputs(
       preset.steps.map((s) => ({
         time: String(s.time),
         water: String(s.water),
       })),
     )
-    // 0 は未入力扱いなので空欄にする
-    if (preset.defaultBeanWeight != null && preset.defaultBeanWeight > 0) {
-      setBeanWeight(String(preset.defaultBeanWeight))
-    }
-    if (preset.defaultWaterTemp != null && preset.defaultWaterTemp > 0) {
-      setWaterTemp(String(preset.defaultWaterTemp))
-    }
-    // トグル ON のとき、defaultWaterWeight が >0 なら waterWeight も上書きし、比率基準を確定する
-    if (ratioLocked && preset.defaultWaterWeight != null && preset.defaultWaterWeight > 0 && preset.defaultBeanWeight != null && preset.defaultBeanWeight > 0) {
-      setWaterWeight(String(preset.defaultWaterWeight))
-      setRatioBasis({
-        bean: preset.defaultBeanWeight,
-        water: preset.defaultWaterWeight,
-        steps: preset.steps.map((s) => s.water),
-      })
+    // プリセットの brewRatio から、steps の water 合計を基準値として ratioBasis を構築する
+    // (Y方針: steps は基準豆量での絶対値として保存されている)
+    if (ratioLocked && preset.brewRatio != null && preset.brewRatio > 0) {
+      const stepWaterTotal = preset.steps.reduce((sum, s) => sum + s.water, 0)
+      if (stepWaterTotal > 0) {
+        const basisBean = stepWaterTotal / preset.brewRatio
+        setRatioBasis({
+          bean: basisBean,
+          water: stepWaterTotal,
+          steps: preset.steps.map((s) => s.water),
+        })
+      }
     }
   }
 
@@ -252,15 +249,16 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     }
     setIsSavingPreset(true)
     try {
+      const beanNum = beanWeight ? parseFloat(beanWeight) : 0
+      const waterNum = waterWeight ? parseFloat(waterWeight) : 0
+      const computedRatio = beanNum > 0 && waterNum > 0 ? waterNum / beanNum : 0
       const response = await fetch('/api/brew-presets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: presetName.trim(),
           description: presetDescription.trim(),
-          defaultBeanWeight: beanWeight ? parseFloat(beanWeight) : 0,
-          defaultWaterTemp: waterTemp ? parseFloat(waterTemp) : 0,
-          defaultWaterWeight: waterWeight ? parseFloat(waterWeight) : 0,
+          brewRatio: computedRatio,
           steps,
         }),
       })
