@@ -163,29 +163,29 @@ describe('PresetEditForm', () => {
     })
   })
 
-  it('shows destructive toast "At least one valid step is required" when all steps produce empty filtered list', async () => {
-    // This test verifies the guard toast message key exists in the component.
-    // Since type="number" inputs sanitize non-numeric input to '' → Number('') = 0 which isFinite,
-    // empty rows resolve to {time:0, water:0}. We trigger this path by checking the guard
-    // indirectly — directly stub handleSave logic isn't possible without exposing it.
-    // Instead, we verify the toast IS called when fetch is undefined (mock returns ok:false path),
-    // and verify the "At least one valid step" path via inline component test that exercises guard.
-    // The guard is tested by rendering a modified component where step filter returns [].
-    // For now, we verify that when fetch returns ok:false, "Failed to update preset" toast is shown.
-    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+  it('shows "At least one valid step is required" destructive toast and does not call fetch when all step inputs are empty', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchMock)
 
+    // Render with one step that has concrete values
     render(<PresetEditForm preset={samplePreset} />)
+
+    // Clear both time and water inputs for step 1
+    const step1TimeInput = screen.getByLabelText('Step 1 time')
+    const step1WaterInput = screen.getByLabelText('Step 1 water')
+    fireEvent.change(step1TimeInput, { target: { value: '' } })
+    fireEvent.change(step1WaterInput, { target: { value: '' } })
 
     const saveButton = screen.getByRole('button', { name: /save/i })
     fireEvent.click(saveButton)
 
     await waitFor(() => {
       expect(toastMock).toHaveBeenCalledWith({
-        title: 'Failed to update preset',
+        title: 'At least one valid step is required',
         variant: 'destructive',
       })
     })
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('steps in PUT body are sorted ascending and deduplicated', async () => {

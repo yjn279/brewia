@@ -110,7 +110,9 @@ export function PresetEditForm({ preset }: PresetEditFormProps) {
     if (!name.trim()) return
 
     // stepInputs を BrewStep[] に変換（数値化、スナップ・クランプ済み、time 昇順、重複除去）
+    // 空文字列行を最初に除外（Number('') === 0 は isFinite だが空入力として扱わない）
     const steps = stepInputs
+      .filter((row) => row.time.trim() !== '' && row.water.trim() !== '')
       .map((row) => ({
         time: Number(row.time),
         water: Number(row.water),
