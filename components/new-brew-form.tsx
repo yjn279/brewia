@@ -85,8 +85,8 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
 
   // Brew Ratio lock: ON = scaling enabled
   const [ratioLocked, setRatioLocked] = useState(true)
-  // The reference pair that defines the ratio: { bean, water } both >0
-  const [ratioBasis, setRatioBasis] = useState<{ bean: number; water: number } | null>(null)
+  // The reference pair that defines the ratio: { bean, water, steps } — immutable snapshot used for scaling
+  const [ratioBasis, setRatioBasis] = useState<{ bean: number; water: number; steps: number[] } | null>(null)
 
   const handleRecordLaterToggle = (checked: boolean) => {
     // When toggling OFF: if every rating is currently 0, reset to defaults
@@ -236,7 +236,11 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     // トグル ON のとき、defaultWaterWeight が >0 なら waterWeight も上書きし、比率基準を確定する
     if (ratioLocked && preset.defaultWaterWeight != null && preset.defaultWaterWeight > 0 && preset.defaultBeanWeight != null && preset.defaultBeanWeight > 0) {
       setWaterWeight(String(preset.defaultWaterWeight))
-      setRatioBasis({ bean: preset.defaultBeanWeight, water: preset.defaultWaterWeight })
+      setRatioBasis({
+        bean: preset.defaultBeanWeight,
+        water: preset.defaultWaterWeight,
+        steps: preset.steps.map((s) => s.water),
+      })
     }
   }
 
@@ -293,11 +297,12 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     const scale = newBean / ratioBasis.bean
     const newWater = snapWater(ratioBasis.water * scale)
     setWaterWeight(String(newWater))
+    const basisSteps = ratioBasis.steps
     setStepInputs((prev) =>
-      prev.map((row) => {
-        const w = parseFloat(row.water)
-        if (!Number.isFinite(w)) return row
-        return { ...row, water: String(snapWater(w * scale)) }
+      prev.map((row, i) => {
+        const basisW = basisSteps[i]
+        if (basisW === undefined) return row
+        return { ...row, water: String(snapWater(basisW * scale)) }
       }),
     )
   }
@@ -310,11 +315,12 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
     const scale = newWater / ratioBasis.water
     const newBean = ratioBasis.bean * scale
     setBeanWeight(String(newBean))
+    const basisSteps = ratioBasis.steps
     setStepInputs((prev) =>
-      prev.map((row) => {
-        const w = parseFloat(row.water)
-        if (!Number.isFinite(w)) return row
-        return { ...row, water: String(snapWater(w * scale)) }
+      prev.map((row, i) => {
+        const basisW = basisSteps[i]
+        if (basisW === undefined) return row
+        return { ...row, water: String(snapWater(basisW * scale)) }
       }),
     )
   }
@@ -322,11 +328,15 @@ export function NewBrewForm({ mode = "create", initialBeanId, initialBrew, beans
   const handleRatioLockedChange = (checked: boolean) => {
     setRatioLocked(checked)
     if (checked) {
-      // トグルを ON にした瞬間の現在値ペアを基準として確定する
+      // トグルを ON にした瞬間の現在値ペアと steps を基準として確定する
       const bean = parseFloat(beanWeight)
       const water = parseFloat(waterWeight)
       if (Number.isFinite(bean) && bean > 0 && Number.isFinite(water) && water > 0) {
-        setRatioBasis({ bean, water })
+        const currentSteps = stepInputs.map((row) => {
+          const w = parseFloat(row.water)
+          return Number.isFinite(w) ? w : 0
+        })
+        setRatioBasis({ bean, water, steps: currentSteps })
       } else {
         setRatioBasis(null)
       }

@@ -1472,4 +1472,112 @@ describe('NewBrewForm', () => {
     const waterInput = screen.getByLabelText('Water') as HTMLInputElement
     expect(waterInput.value).toBe('300')
   })
+
+  // Ratio-7: bean round-trip B0→B1→B0 restores waterWeight and steps
+  it('Ratio-7: given ratio ON and preset applied (bean=20, water=300, steps=[150,300]), when bean changes 20→40→20, waterWeight=300 and steps=[150,300] are restored', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio7',
+      name: 'RoundTrip Bean Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }, { time: 90, water: 300 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Apply preset
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /RoundTrip Bean Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    const coffeeInput = screen.getByLabelText('Coffee') as HTMLInputElement
+    const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+
+    // Verify initial state after preset applied
+    expect(coffeeInput.value).toBe('20')
+    expect(waterInput.value).toBe('300')
+
+    // Change bean to 40
+    fireEvent.change(coffeeInput, { target: { value: '40' } })
+    expect(waterInput.value).toBe('600')
+
+    const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+    const step2Water = screen.getByLabelText('Step 2 water') as HTMLInputElement
+    expect(step1Water.value).toBe('300')
+    expect(step2Water.value).toBe('600')
+
+    // Change bean back to 20 — steps must restore to original values
+    fireEvent.change(coffeeInput, { target: { value: '20' } })
+    expect(waterInput.value).toBe('300')
+    expect(step1Water.value).toBe('150')
+    expect(step2Water.value).toBe('300')
+  })
+
+  // Ratio-8: water round-trip W0→W1→W0 restores beanWeight and steps
+  it('Ratio-8: given ratio ON and preset applied (bean=20, water=300, steps=[150,300]), when water changes 300→600→300, beanWeight=20 and steps=[150,300] are restored', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio8',
+      name: 'RoundTrip Water Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }, { time: 90, water: 300 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Apply preset
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /RoundTrip Water Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    const coffeeInput = screen.getByLabelText('Coffee') as HTMLInputElement
+    const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+
+    // Verify initial state after preset applied
+    expect(coffeeInput.value).toBe('20')
+    expect(waterInput.value).toBe('300')
+
+    // Change water to 600
+    fireEvent.change(waterInput, { target: { value: '600' } })
+    expect(coffeeInput.value).toBe('40')
+
+    const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+    const step2Water = screen.getByLabelText('Step 2 water') as HTMLInputElement
+    expect(step1Water.value).toBe('300')
+    expect(step2Water.value).toBe('600')
+
+    // Change water back to 300 — steps must restore to original values
+    fireEvent.change(waterInput, { target: { value: '300' } })
+    expect(coffeeInput.value).toBe('20')
+    expect(step1Water.value).toBe('150')
+    expect(step2Water.value).toBe('300')
+  })
 })
