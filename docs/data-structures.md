@@ -1,5 +1,7 @@
 # Data Structures
 
+> DB スキーマの正本は [データ仕様書](./data-spec.md) を参照。
+
 `lib/types.ts` の型情報を、名称・変数名・型・概要で整理しています。
 
 ## Bean
