@@ -14,6 +14,9 @@ export const upsertBrewPresetSchema = z.object({
   defaultWaterTemp: z.union([z.coerce.number().min(0).max(100), z.literal('')]).transform((v) => {
     return v === '' ? 0 : v
   }),
+  defaultWaterWeight: z.union([z.coerce.number().nonnegative(), z.literal('')]).transform((v) => {
+    return v === '' ? 0 : v
+  }).default(0),
   steps: z.array(brewStepSchema).min(1),
 })
 

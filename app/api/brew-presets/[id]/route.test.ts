@@ -30,6 +30,7 @@ const samplePreset = {
   description: 'A test',
   defaultBeanWeight: 20,
   defaultWaterTemp: 93,
+  defaultWaterWeight: 300,
   steps: [{ time: 30, water: 50 }],
   created: '2026-01-01T00:00:00Z',
   updated: '2026-01-01T00:00:00Z',
@@ -91,6 +92,7 @@ describe('PUT /api/brew-presets/:id', () => {
     description: 'Updated',
     defaultBeanWeight: 25,
     defaultWaterTemp: 90,
+    defaultWaterWeight: 375,
     steps: [{ time: 30, water: 50 }],
   }
 
@@ -101,6 +103,9 @@ describe('PUT /api/brew-presets/:id', () => {
     expect(response.status).toBe(200)
     const json = await response.json()
     expect(json.name).toBe('Updated Preset')
+    // Verify defaultWaterWeight is passed to the service
+    const callArg = updatePresetMock.mock.calls[0][2] as { defaultWaterWeight: number }
+    expect(callArg.defaultWaterWeight).toBe(375)
   })
 
   it('returns 401 when unauthenticated', async () => {

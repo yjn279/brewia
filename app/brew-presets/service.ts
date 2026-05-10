@@ -20,6 +20,7 @@ export class BrewPresetsService {
       description: dto.description,
       defaultBeanWeight: dto.defaultBeanWeight,
       defaultWaterTemp: dto.defaultWaterTemp,
+      defaultWaterWeight: dto.defaultWaterWeight,
       steps: dto.steps,
     })
   }
@@ -30,6 +31,7 @@ export class BrewPresetsService {
       description: dto.description,
       defaultBeanWeight: dto.defaultBeanWeight,
       defaultWaterTemp: dto.defaultWaterTemp,
+      defaultWaterWeight: dto.defaultWaterWeight,
       steps: dto.steps,
     })
   }

@@ -1256,8 +1256,220 @@ describe('NewBrewForm', () => {
     })
 
     const postCall = findPostCall()!
-    const postBody = JSON.parse((postCall[1] as RequestInit).body as string) as { name: string; steps: Array<{ time: number; water: number }> }
+    const postBody = JSON.parse((postCall[1] as RequestInit).body as string) as { name: string; defaultWaterWeight: number; steps: Array<{ time: number; water: number }> }
     expect(postBody.name).toBe('My New Preset')
     expect(postBody.steps.length).toBeGreaterThan(0)
+    // defaultWaterWeight should match the current waterWeight value (300)
+    expect(postBody.defaultWaterWeight).toBe(300)
+  })
+
+  // Ratio: "Keep ratio" toggle exists and is ON by default
+  it('Ratio-1: given the create mode form renders, then the "Keep ratio" switch exists and is ON by default', () => {
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    const toggle = screen.getByRole('switch', { name: 'Keep ratio' })
+    expect(toggle).toBeDefined()
+    expect(toggle.getAttribute('data-state')).toBe('checked')
+  })
+
+  // Ratio-2: applyPreset with defaultWaterWeight > 0 and ratioLocked ON overwrites beanWeight and waterWeight
+  it('Ratio-2: given a preset with defaultBeanWeight=20 and defaultWaterWeight=300, when applied with ratio ON, then beanWeight=20 and waterWeight=300', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio',
+      name: 'Ratio Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }, { time: 90, water: 300 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /Ratio Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    const coffeeInput = screen.getByLabelText('Coffee') as HTMLInputElement
+    const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+    expect(coffeeInput.value).toBe('20')
+    expect(waterInput.value).toBe('300')
+  })
+
+  // Ratio-3: toggle ON, beanWeight doubling scales waterWeight and steps
+  it('Ratio-3: given ratio ON and a preset applied (bean=20, water=300, steps=[150,300]), when beanWeight is doubled to 40, then waterWeight=600 and steps scale accordingly (STEP_WATER_INTERVAL rounded)', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio3',
+      name: 'Scale Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }, { time: 90, water: 300 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    // Apply preset
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /Scale Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    // Double the bean weight
+    fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '40' } })
+
+    const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+    expect(waterInput.value).toBe('600')
+
+    // Step water values should be doubled: 150*2=300, 300*2=600
+    const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+    expect(step1Water.value).toBe('300')
+    const step2Water = screen.getByLabelText('Step 2 water') as HTMLInputElement
+    expect(step2Water.value).toBe('600')
+  })
+
+  // Ratio-4: toggle ON, waterWeight change scales beanWeight
+  it('Ratio-4: given ratio ON and a preset applied (bean=20, water=300), when waterWeight is halved to 150, then beanWeight=10', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio4',
+      name: 'Halve Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /Halve Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    // Halve the water weight
+    fireEvent.change(screen.getByLabelText('Water'), { target: { value: '150' } })
+
+    const coffeeInput = screen.getByLabelText('Coffee') as HTMLInputElement
+    expect(coffeeInput.value).toBe('10')
+  })
+
+  // Ratio-5: toggle OFF, beanWeight change does NOT affect waterWeight or steps
+  it('Ratio-5: given ratio toggle is turned OFF, when beanWeight changes, then waterWeight and steps are unchanged', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio5',
+      name: 'No Scale Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /No Scale Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    // Turn ratio toggle OFF
+    const ratioToggle = screen.getByRole('switch', { name: 'Keep ratio' })
+    fireEvent.click(ratioToggle)
+
+    // Change bean weight
+    fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '40' } })
+
+    // waterWeight should remain unchanged
+    const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+    expect(waterInput.value).toBe('300')
+
+    // step water should remain unchanged
+    const step1Water = screen.getByLabelText('Step 1 water') as HTMLInputElement
+    expect(step1Water.value).toBe('150')
+  })
+
+  // Ratio-6: 0/empty beanWeight does not trigger scaling
+  it('Ratio-6: given ratio ON, when beanWeight is set to empty string, then waterWeight and steps do not change', async () => {
+    const presetWithWater = {
+      id: 'user-preset-ratio6',
+      name: 'Zero Input Preset',
+      description: '',
+      defaultBeanWeight: 20,
+      defaultWaterTemp: 93,
+      defaultWaterWeight: 300,
+      steps: [{ time: 45, water: 150 }],
+      created: '2026-01-01T00:00:00Z',
+      updated: '2026-01-01T00:00:00Z',
+    }
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/brew-presets') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([presetWithWater]) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    }))
+
+    render(<NewBrewForm beans={beans} flavors={flavors} />)
+
+    await waitFor(async () => {
+      const trigger = screen.getByRole('button', { name: 'Insert preset' })
+      fireEvent.click(trigger)
+      const presetItem = screen.getByRole('menuitem', { name: /Zero Input Preset/i })
+      fireEvent.click(presetItem)
+    })
+
+    // Clear the bean weight
+    fireEvent.change(screen.getByLabelText('Coffee'), { target: { value: '' } })
+
+    // waterWeight should remain unchanged
+    const waterInput = screen.getByLabelText('Water') as HTMLInputElement
+    expect(waterInput.value).toBe('300')
   })
 })

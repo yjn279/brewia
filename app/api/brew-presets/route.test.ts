@@ -26,6 +26,7 @@ const validBody = {
   description: 'A great preset',
   defaultBeanWeight: 20,
   defaultWaterTemp: 93,
+  defaultWaterWeight: 300,
   steps: [{ time: 30, water: 50 }, { time: 90, water: 200 }],
 }
 
@@ -84,6 +85,23 @@ describe('POST /api/brew-presets', () => {
 
     expect(response.status).toBe(400)
     expect(createPresetMock).not.toHaveBeenCalled()
+  })
+
+  it('given a negative defaultWaterWeight, returns 400', async () => {
+    const response = await POST(createRequest({ ...validBody, defaultWaterWeight: -1 }))
+
+    expect(response.status).toBe(400)
+    expect(createPresetMock).not.toHaveBeenCalled()
+  })
+
+  it('given defaultWaterWeight is omitted, returns 201 (defaults to 0)', async () => {
+    const { defaultWaterWeight: _w, ...bodyWithoutWaterWeight } = validBody
+    const response = await POST(createRequest(bodyWithoutWaterWeight))
+
+    expect(response.status).toBe(201)
+    expect(createPresetMock).toHaveBeenCalledOnce()
+    const callArg = createPresetMock.mock.calls[0][1] as { defaultWaterWeight: number }
+    expect(callArg.defaultWaterWeight).toBe(0)
   })
 })
 

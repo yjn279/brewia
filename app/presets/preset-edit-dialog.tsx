@@ -35,6 +35,9 @@ export function PresetEditDialog({ preset }: PresetEditDialogProps) {
   const [defaultWaterTemp, setDefaultWaterTemp] = useState(
     preset.defaultWaterTemp > 0 ? String(preset.defaultWaterTemp) : ''
   )
+  const [defaultWaterWeight, setDefaultWaterWeight] = useState(
+    preset.defaultWaterWeight > 0 ? String(preset.defaultWaterWeight) : ''
+  )
   const [stepsText, setStepsText] = useState(
     preset.steps.map((s) => `${s.time}s / ${s.water}g`).join('\n')
   )
@@ -68,6 +71,7 @@ export function PresetEditDialog({ preset }: PresetEditDialogProps) {
           description: description.trim(),
           defaultBeanWeight: defaultBeanWeight ? parseFloat(defaultBeanWeight) : 0,
           defaultWaterTemp: defaultWaterTemp ? parseFloat(defaultWaterTemp) : 0,
+          defaultWaterWeight: defaultWaterWeight ? parseFloat(defaultWaterWeight) : 0,
           steps,
         }),
       })
@@ -132,6 +136,17 @@ export function PresetEditDialog({ preset }: PresetEditDialogProps) {
                   step={0.1}
                   value={defaultBeanWeight}
                   onChange={(e) => setDefaultBeanWeight(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="edit-preset-water-weight">Water Weight (g)</Label>
+                <Input
+                  id="edit-preset-water-weight"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={defaultWaterWeight}
+                  onChange={(e) => setDefaultWaterWeight(e.target.value)}
                 />
               </div>
               <div className="flex flex-col gap-1.5">

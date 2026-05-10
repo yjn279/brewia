@@ -110,6 +110,7 @@ export const brewPresetsTable = sqliteTable('brew_preset', {
   description: text('description').notNull().default(''),
   defaultBeanWeight: real('default_bean_weight').notNull().default(0),
   defaultWaterTemp: real('default_water_temp').notNull().default(0),
+  defaultWaterWeight: real('default_water_weight').notNull().default(0),
   steps: text('steps').notNull(),
   created: text('created').notNull().default(sql`CURRENT_TIMESTAMP`),
   updated: text('updated').notNull().default(sql`CURRENT_TIMESTAMP`),
