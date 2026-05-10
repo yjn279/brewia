@@ -42,15 +42,13 @@ describe('LoginPage', () => {
     ).toBeTruthy()
   })
 
-  it('LP2: 未認証状態でレンダリングしたとき Email 入力フィールドが存在する', async () => {
+  it('LP2: 未認証状態でレンダリングしたとき Email 入力フィールドが存在しない', async () => {
     authMock.mockResolvedValue(null)
 
     render(await LoginPage())
 
-    expect(
-      screen.getByRole('textbox') ||
-      screen.getByPlaceholderText(/email/i)
-    ).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.queryByPlaceholderText(/email/i)).toBeNull()
   })
 
   it('LP3: 認証済み状態でレンダリングしたとき redirect("/") が呼ばれる', async () => {
