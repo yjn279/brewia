@@ -3,6 +3,7 @@ import * as WebBrowser from 'expo-web-browser'
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import { E2E_USER_ID, isE2EBypass } from './env'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -50,11 +51,41 @@ export interface SessionState {
   loading: boolean
 }
 
+/**
+ * Builds a synthetic Session for E2E test mode.
+ * Only called when isE2EBypass() is true (non-production + E2E_USER_ID set).
+ */
+function buildSyntheticSession(userId: string): Session {
+  const now = new Date().toISOString()
+  return {
+    access_token: 'e2e',
+    refresh_token: 'e2e',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer',
+    user: {
+      id: userId,
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: now,
+    },
+  } as Session
+}
+
 export function useSession(): SessionState {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // E2E bypass: synthesize a session without touching Supabase auth.
+    // This is active only in non-production builds when EXPO_PUBLIC_E2E_USER_ID is set.
+    if (isE2EBypass() && E2E_USER_ID) {
+      setSession(buildSyntheticSession(E2E_USER_ID))
+      setLoading(false)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
