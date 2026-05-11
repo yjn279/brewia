@@ -8,7 +8,7 @@ Brewia is a React Native + Expo mobile app backed by Supabase. It serves as a "c
 
 | Layer | Technology |
 |---|---|
-| Mobile runtime | Expo SDK 52 / React Native 0.76 |
+| Mobile runtime | Expo SDK 54 / React Native 0.81 |
 | Navigation | Expo Router (file-based) |
 | Auth | Supabase Auth (Google OAuth + deep link) |
 | Database | Supabase Postgres (via Supabase JS client) |
@@ -80,6 +80,72 @@ Scan the QR code with **Expo Go** on your device (iOS or Android).
 | `pnpm test` | Run jest tests |
 | `pnpm db:generate` | Run drizzle-kit generate (requires `SUPABASE_DB_URL`) |
 | `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm verify:web` | Browser E2E smoke via Playwright |
+
+## Run on Web
+
+Brewia supports running in a desktop/mobile browser via `react-native-web`.
+
+### Start natively (iOS / Android)
+
+```shell
+pnpm install
+pnpm start
+```
+
+### Start in the browser
+
+```shell
+pnpm exec expo start --web
+```
+
+Then open `http://localhost:8081` (or the printed port) in Chrome/Safari.
+
+### E2E test bypass (`EXPO_PUBLIC_E2E_USER_ID`)
+
+Google OAuth cannot be automated in a headless browser. For local/CI browser testing, set `EXPO_PUBLIC_E2E_USER_ID` to a UUID before starting Expo:
+
+```shell
+EXPO_PUBLIC_E2E_USER_ID=00000000-0000-0000-0000-000000000001 pnpm exec expo start --web
+```
+
+When this env var is set **and** `NODE_ENV !== 'production'`, `useSession()` returns a synthetic session with `user.id` equal to the supplied UUID, skipping the Google OAuth redirect. The app navigates directly to the `(tabs)` layout.
+
+> **Important:** Never set `EXPO_PUBLIC_E2E_USER_ID` in production builds. It is intentionally inactive when `NODE_ENV === 'production'` even if the variable is present.
+
+## Apply Supabase Migrations
+
+Run the following SQL files **in order** via the Supabase SQL Editor:
+
+1. `drizzle/0000_init.sql` — creates all tables with RLS policies
+2. `drizzle/0001_rename_brew_preset_to_preset.sql` — renames `brew_preset` to `preset`
+
+Open the editor at:  
+`https://supabase.com/dashboard/project/afpqxkhioltnkcrqifnr/sql/new`
+
+Paste each file's content and click **Run**.
+
+## Verify (automated)
+
+Run static checks:
+
+```shell
+pnpm typecheck   # TypeScript
+pnpm lint        # ESLint
+pnpm test        # jest unit tests
+```
+
+Run the browser end-to-end smoke:
+
+```shell
+# Install Playwright Chromium the first time:
+pnpm exec playwright install chromium
+
+# Run the full smoke (starts Metro, navigates tabs, asserts zero console errors):
+pnpm verify:web
+```
+
+`pnpm verify:web` spawns Metro with `EXPO_PUBLIC_E2E_USER_ID` set, opens headless Chromium, and navigates through Home / Beans / Brews / Presets. It exits 0 on success or 1 with a printed error summary on failure.
 
 ## Project Structure
 

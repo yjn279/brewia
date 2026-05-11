@@ -6,7 +6,7 @@ Brewia implementation guidelines for Expo + Supabase mobile.
 
 | Layer | Technology |
 |---|---|
-| Runtime | Expo SDK 52, React Native 0.76 |
+| Runtime | Expo SDK 54, React Native 0.81 |
 | Navigation | Expo Router (file-based, typed routes) |
 | Language | TypeScript (strict) |
 | Forms | react-hook-form + Zod |
@@ -112,6 +112,55 @@ pnpm test
 |---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL (exposed to app) |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (exposed to app) |
+| `EXPO_PUBLIC_E2E_USER_ID` | E2E session bypass UUID — **non-production only** |
 | `SUPABASE_DB_URL` | Postgres connection string for drizzle-kit only (never shipped to app) |
 
 Variables prefixed with `EXPO_PUBLIC_` are bundled into the app. The `SUPABASE_DB_URL` is only used by local `drizzle-kit` commands.
+
+`EXPO_PUBLIC_E2E_USER_ID` activates a session bypass in `useSession()` when set in non-production builds. See the [Auth Architecture](./auth-architecture.md#test-mode-e2e-session-bypass) docs for details.
+
+## Web Development & Verification
+
+### Running on Web
+
+```shell
+pnpm exec expo start --web
+```
+
+This uses `react-native-web` to render the app in a browser. Requires no additional setup beyond `pnpm install`.
+
+### E2E session bypass
+
+Google OAuth cannot run headlessly. For browser testing, start Expo with `EXPO_PUBLIC_E2E_USER_ID`:
+
+```shell
+EXPO_PUBLIC_E2E_USER_ID=00000000-0000-0000-0000-000000000001 pnpm exec expo start --web
+```
+
+The app skips OAuth and shows the `(tabs)` layout directly.
+
+### Running the verify-web smoke test
+
+```shell
+# First time only — install browser binary:
+pnpm exec playwright install chromium
+
+# Run the smoke (Metro + headless Chromium + zero-error assertion):
+pnpm verify:web
+```
+
+`pnpm verify:web` runs `scripts/verify-web.mjs` which:
+1. Finds a free TCP port.
+2. Spawns `expo start --web` with `EXPO_PUBLIC_E2E_USER_ID` in env.
+3. Waits until `/status` returns `packager-status:running`.
+4. Launches headless Chromium via Playwright.
+5. Navigates to `/`, `/beans`, `/brews`, `/presets`, `/beans/new`.
+6. Asserts zero `error`-level console messages on each page.
+7. Exits 0 on success, 1 with a printed error summary on failure.
+
+### Applying Supabase migrations
+
+Run these SQL files in order via the [Supabase SQL Editor](https://supabase.com/dashboard/project/afpqxkhioltnkcrqifnr/sql/new):
+
+1. `drizzle/0000_init.sql`
+2. `drizzle/0001_rename_brew_preset_to_preset.sql`

@@ -88,6 +88,50 @@ Row Level Security on the database provides a second layer of enforcement beyond
 
 RLS policies are defined in `drizzle/0000_init.sql`.
 
+## Test Mode: E2E Session Bypass
+
+For local development and automated browser testing, Brewia supports a session bypass that skips Supabase OAuth entirely.
+
+### Activation
+
+Set `EXPO_PUBLIC_E2E_USER_ID` to any UUID before starting the Expo dev server:
+
+```shell
+EXPO_PUBLIC_E2E_USER_ID=00000000-0000-0000-0000-000000000001 pnpm exec expo start --web
+```
+
+### Behavior
+
+`isE2EBypass()` in `src/lib/env.ts` returns `true` when **both** conditions are met:
+
+1. `EXPO_PUBLIC_E2E_USER_ID` is a non-empty string.
+2. `process.env.NODE_ENV !== 'production'`.
+
+When `isE2EBypass()` is `true`, `useSession()` in `src/lib/auth.ts`:
+- Does **not** call `supabase.auth.getSession()`.
+- Does **not** subscribe to `onAuthStateChange`.
+- Immediately sets a synthetic `Session` with `user.id = EXPO_PUBLIC_E2E_USER_ID`.
+- Returns `{ session: syntheticSession, loading: false }` on the first render.
+
+The root layout (`app/_layout.tsx`) sees `session !== null`, so it renders `<Stack />` directly without redirecting to `/(auth)/login`.
+
+### Security Guarantees
+
+- The bypass is a compile-time + runtime dead path in production. `NODE_ENV === 'production'` causes `isE2EBypass()` to return `false` unconditionally.
+- `EXPO_PUBLIC_E2E_USER_ID` should **never** be set in `eas build` secrets or production `.env`.
+- The synthetic session has `access_token: 'e2e'` which Supabase will reject on any authenticated API call. The bypass only affects the client-side session guard.
+- Row Level Security on the database still enforces real `auth.uid()` checks. Supabase API calls made with the synthetic token will fail with `401 Unauthorized`.
+
+### Usage in verify-web.mjs
+
+The `scripts/verify-web.mjs` smoke test automatically sets `EXPO_PUBLIC_E2E_USER_ID=00000000-0000-0000-0000-000000000001` when spawning Metro:
+
+```shell
+pnpm verify:web
+```
+
+This allows the browser to navigate through the authenticated tab layout without any Google OAuth interaction.
+
 ## Supabase Dashboard Setup Checklist
 
 1. Enable Google OAuth provider under Authentication > Providers
