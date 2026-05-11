@@ -1,61 +1,19 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1774771142137,
-      "tag": "0000_heavy_gladiator",
+      "version": "7",
+      "when": 1747000000000,
+      "tag": "0000_init",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "6",
-      "when": 1774771143000,
-      "tag": "0001_add_price_jpy",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1774771144000,
-      "tag": "0002_auth_tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1774771145000,
-      "tag": "0003_add_user_id_to_bean_brew",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1774771146000,
-      "tag": "0004_add_brew_preset",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1778134726755,
-      "tag": "0005_shocking_bloodscream",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1746847556000,
-      "tag": "0006_add_default_water_weight",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1778400000000,
-      "tag": "0007_replace_preset_weights_with_ratio",
+      "version": "7",
+      "when": 1747000001000,
+      "tag": "0001_rename_brew_preset_to_preset",
       "breakpoints": true
     }
   ]
