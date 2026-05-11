@@ -12,6 +12,8 @@
     "src/**/*",
     "drizzle/**/*",
     "*.ts",
-    "*.tsx"
+    "*.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }
