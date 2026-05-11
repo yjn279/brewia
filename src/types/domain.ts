@@ -46,25 +46,25 @@ export const COUNTRIES = [
 export type Country = (typeof COUNTRIES)[number]
 
 export const COUNTRY_FLAGS: Record<Country, string> = {
-  Brazil: '🇧🇷',
-  Burundi: '🇧🇮',
-  Colombia: '🇨🇴',
-  'Costa Rica': '🇨🇷',
-  'El Salvador': '🇸🇻',
-  Ethiopia: '🇪🇹',
-  Guatemala: '🇬🇹',
-  Honduras: '🇭🇳',
-  Indonesia: '🇮🇩',
-  Jamaica: '🇯🇲',
-  Kenya: '🇰🇪',
-  Nicaragua: '🇳🇮',
-  Panama: '🇵🇦',
-  'Papua New Guinea': '🇵🇬',
-  Rwanda: '🇷🇼',
-  Tanzania: '🇹🇿',
-  Vietnam: '🇻🇳',
-  Yemen: '🇾🇪',
-  Blended: '🏳️‍🌈',
+  Brazil: '\u{1F1E7}\u{1F1F7}',
+  Burundi: '\u{1F1E7}\u{1F1EE}',
+  Colombia: '\u{1F1E8}\u{1F1F4}',
+  'Costa Rica': '\u{1F1E8}\u{1F1F7}',
+  'El Salvador': '\u{1F1F8}\u{1F1FB}',
+  Ethiopia: '\u{1F1EA}\u{1F1F9}',
+  Guatemala: '\u{1F1EC}\u{1F1F9}',
+  Honduras: '\u{1F1ED}\u{1F1F3}',
+  Indonesia: '\u{1F1EE}\u{1F1E9}',
+  Jamaica: '\u{1F1EF}\u{1F1F2}',
+  Kenya: '\u{1F1F0}\u{1F1EA}',
+  Nicaragua: '\u{1F1F3}\u{1F1EE}',
+  Panama: '\u{1F1F5}\u{1F1E6}',
+  'Papua New Guinea': '\u{1F1F5}\u{1F1EC}',
+  Rwanda: '\u{1F1F7}\u{1F1FC}',
+  Tanzania: '\u{1F1F9}\u{1F1FF}',
+  Vietnam: '\u{1F1FB}\u{1F1F3}',
+  Yemen: '\u{1F1FE}\u{1F1EA}',
+  Blended: '\u{1F3F3}\u{200D}\u{1F308}',
 }
 
 export interface Bean {
@@ -98,7 +98,7 @@ export interface Brew {
   waterWeight: number
   waterTemp: number
   steps: BrewStep[]
-  aroma: number // 1-5 scale
+  aroma: number
   acidity: number
   sweetness: number
   body: number
@@ -121,6 +121,17 @@ export interface BrewFlavor {
   id: string
   brewId: string
   flavorId: string
+  created: string
+  updated: string
+}
+
+export interface Preset {
+  id: string
+  userId: string
+  name: string
+  description: string
+  brewRatio: number
+  steps: BrewStep[]
   created: string
   updated: string
 }
