@@ -13,6 +13,7 @@ import {
   real,
   text,
   timestamp,
+  uuid,
 } from 'drizzle-orm/pg-core'
 import { v7 as uuidv7 } from 'uuid'
 
@@ -22,7 +23,7 @@ import { v7 as uuidv7 } from 'uuid'
 
 export const beansTable = pgTable('bean', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
-  userId: text('user_id').notNull(),
+  userId: uuid('user_id').notNull(),
   name: text('name').notNull(),
   country: text('country').notNull(),
   region: text('region').notNull().default(''),
@@ -43,7 +44,7 @@ export const beansTable = pgTable('bean', {
 
 export const brewsTable = pgTable('brew', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
-  userId: text('user_id').notNull(),
+  userId: uuid('user_id').notNull(),
   beanId: text('bean_id').notNull(),
   beanWeight: real('bean_weight').notNull(),
   beanGrind: real('bean_grind').notNull().default(0),
@@ -92,7 +93,7 @@ export const brewFlavorsTable = pgTable('brew_flavor', {
 
 export const presetTable = pgTable('preset', {
   id: text('id').primaryKey().$defaultFn(() => uuidv7()),
-  userId: text('user_id').notNull(),
+  userId: uuid('user_id').notNull(),
   name: text('name').notNull(),
   description: text('description').notNull().default(''),
   brewRatio: real('brew_ratio').notNull().default(0),
